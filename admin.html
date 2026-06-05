@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyCast — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0e0e12;color:#f0eff4;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .card{background:#16161d;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:40px;max-width:480px;width:100%;}
+    .logo{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
+    .logo span{color:#f0544f;}
+    .sub{font-size:13px;color:#8b8a99;margin-bottom:32px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+    label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#8b8a99;font-weight:500;}
+    input{background:#1e1e28;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:#f0eff4;width:100%;transition:border-color 0.15s;}
+    input:focus{outline:none;border-color:#f0544f;}
+    .hint{font-size:11px;color:#8b8a99;}
+    .hint a{color:#5b9cf6;}
+    .btn{width:100%;padding:14px;background:#f0544f;color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+    .btn:hover{background:#d94440;}
+    .btn-reset{width:100%;padding:10px;background:transparent;color:#8b8a99;border:1px solid rgba(255,255,255,0.08);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:10px;transition:all 0.15s;}
+    .btn-reset:hover{color:#f0eff4;border-color:rgba(255,255,255,0.2);}
+    .status{display:none;padding:12px 16px;border-radius:8px;font-size:13px;margin-top:16px;text-align:center;}
+    .status.ok{background:rgba(61,214,140,0.1);border:1px solid rgba(61,214,140,0.3);color:#3dd68c;display:block;}
+    .status.err{background:rgba(240,84,79,0.1);border:1px solid rgba(240,84,79,0.3);color:#f0544f;display:block;}
+    .saved-badge{display:none;font-size:11px;color:#3dd68c;margin-top:4px;}
+    .saved-badge.show{display:block;}
+    .link-box{background:#1e1e28;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px 14px;font-size:12px;color:#8b8a99;margin-top:24px;word-break:break-all;}
+    .link-box span{color:#5b9cf6;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Study<span>Cast</span> <span style="font-size:14px;color:#8b8a99;font-family:'DM Sans',sans-serif;font-weight:400;">Admin</span></div>
+  <div class="sub">Configura tus keys una sola vez. Se guardan en este navegador — los estudiantes nunca las ven.</div>
+
+  <div class="form-group">
+    <label>Groq API Key</label>
+    <input type="password" id="cfg-groq" placeholder="gsk_..." />
+    <div class="hint">Consíguela en <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys</div>
+    <div class="saved-badge" id="badge-groq">✓ Key guardada</div>
+  </div>
+
+  <div class="form-group">
+    <label>Google Apps Script URL</label>
+    <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec" />
+    <div class="hint">La URL que copiaste al implementar el Apps Script</div>
+    <div class="saved-badge" id="badge-url">✓ URL guardada</div>
+  </div>
+
+  <button class="btn" onclick="guardar()">Guardar configuración</button>
+  <button class="btn-reset" onclick="borrar()">Borrar configuración guardada</button>
+
+  <div class="status" id="status"></div>
+
+  <div class="link-box">
+    URL para estudiantes:<br/>
+    <span id="student-url"></span>
+  </div>
+</div>
+
+<script>
+  // Mostrar valores guardados al cargar
+  window.addEventListener('DOMContentLoaded', () => {
+    const key = localStorage.getItem('sc_groq_key');
+    const url = localStorage.getItem('sc_apps_url');
+    if (key) {
+      document.getElementById('cfg-groq').placeholder = 'gsk_••••••••••••••••';
+      document.getElementById('badge-groq').classList.add('show');
+    }
+    if (url) {
+      document.getElementById('cfg-url').value = url;
+      document.getElementById('badge-url').classList.add('show');
+    }
+    // Mostrar URL de estudiantes
+    const base = window.location.href.replace('admin.html','');
+    document.getElementById('student-url').textContent = base + 'index.html';
+  });
+
+  function guardar() {
+    const key = document.getElementById('cfg-groq').value.trim();
+    const url = document.getElementById('cfg-url').value.trim();
+    const st  = document.getElementById('status');
+
+    if (key && !key.startsWith('gsk_')) {
+      st.textContent = 'La Groq API Key debe empezar con gsk_';
+      st.className = 'status err'; return;
+    }
+    if (url && !url.includes('script.google.com')) {
+      st.textContent = 'La URL de Apps Script no parece válida';
+      st.className = 'status err'; return;
+    }
+    if (!key && !url) {
+      st.textContent = 'Ingresa al menos una de las dos values';
+      st.className = 'status err'; return;
+    }
+
+    if (key) { localStorage.setItem('sc_groq_key', key); document.getElementById('badge-groq').classList.add('show'); }
+    if (url) { localStorage.setItem('sc_apps_url', url); document.getElementById('badge-url').classList.add('show'); }
+
+    st.textContent = '✓ Configuración guardada correctamente';
+    st.className = 'status ok';
+    document.getElementById('cfg-groq').value = '';
+    document.getElementById('cfg-groq').placeholder = 'gsk_••••••••••••••••';
+  }
+
+  function borrar() {
+    if (!confirm('¿Seguro que quieres borrar la configuración?')) return;
+    localStorage.removeItem('sc_groq_key');
+    localStorage.removeItem('sc_apps_url');
+    document.getElementById('cfg-groq').value = '';
+    document.getElementById('cfg-groq').placeholder = 'gsk_...';
+    document.getElementById('cfg-url').value = '';
+    document.getElementById('badge-groq').classList.remove('show');
+    document.getElementById('badge-url').classList.remove('show');
+    const st = document.getElementById('status');
+    st.textContent = 'Configuración borrada';
+    st.className = 'status err';
+  }
+</script>
+</body>
+</html>
