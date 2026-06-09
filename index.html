@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foné</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#080c14;--bg2:#0d1524;--bg3:#111d30;
+      --border:rgba(99,179,237,0.1);--border2:rgba(99,179,237,0.2);
+      --text:#e8f0fe;--muted:#6b8cba;
+      --accent:#3b82f6;--accent2:#60a5fa;--green:#34d399;--blue:#93c5fd;
+      --radius:14px;--font-display:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+    }
+    body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;line-height:1.6;}
+    .header{display:flex;align-items:center;padding:18px 32px;border-bottom:1px solid var(--border);background:rgba(14,14,18,0.92);backdrop-filter:blur(12px);}
+    .logo{font-family:var(--font-display);font-weight:800;font-size:22px;letter-spacing:-0.5px;}
+    .logo span{color:#60a5fa;}
+    .main{max-width:640px;margin:0 auto;padding:40px 24px;}
+
+    /* Steps indicator */
+    .steps-bar{display:flex;align-items:center;gap:0;margin-bottom:36px;}
+    .step-item{display:flex;align-items:center;gap:8px;flex:1;}
+    .step-num{width:32px;height:32px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--muted);transition:all 0.3s;flex-shrink:0;}
+    .step-num.active{border-color:var(--accent);color:var(--accent);background:rgba(240,84,79,0.1);}
+    .step-num.done{border-color:var(--green);color:var(--green);background:rgba(61,214,140,0.1);}
+    .step-label{font-size:12px;color:var(--muted);transition:color 0.3s;}
+    .step-label.active{color:var(--text);}
+    .step-line{flex:1;height:1px;background:var(--border);margin:0 8px;max-width:40px;}
+
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px;margin-bottom:16px;}
+    .card-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:8px;}
+    .card-title{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:8px;}
+    .card-desc{font-size:14px;color:#c0bfcc;line-height:1.75;margin-bottom:28px;}
+    .card-desc ul{padding-left:20px;margin-top:8px;}
+    .card-desc li{margin-bottom:4px;}
+
+    /* Grupo buttons */
+    .grupo-grid{display:flex;flex-direction:column;gap:12px;}
+    .grupo-btn{padding:18px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;transition:all 0.2s;color:var(--text);}
+    .grupo-btn:hover{border-color:var(--accent);background:rgba(240,84,79,0.06);}
+    .grupo-btn .gb-title{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:3px;}
+    .grupo-btn .gb-sub{font-size:12px;color:var(--muted);}
+
+    /* Cédula */
+    .cedula-wrap{display:flex;flex-direction:column;gap:12px;}
+    .cedula-input{background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:14px 18px;font-size:22px;font-family:var(--font-display);font-weight:700;color:var(--text);letter-spacing:3px;text-align:center;transition:border-color 0.2s;width:100%;}
+    .cedula-input:focus{outline:none;border-color:var(--accent);}
+    .cedula-error{font-size:13px;color:var(--accent);text-align:center;min-height:20px;}
+    .cedula-ok{font-size:13px;color:var(--green);text-align:center;min-height:20px;}
+
+    /* Buttons */
+    .btn-primary{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:var(--font-display);font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-primary:hover{background:#d94440;transform:translateY(-1px);}
+    .btn-primary:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;transform:none;}
+    .btn-secondary{padding:9px 18px;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+    .btn-secondary:hover{border-color:var(--border2);}
+    .btn-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:0;margin-bottom:20px;font-family:var(--font-body);}
+    .btn-back:hover{color:var(--text);}
+
+    /* Recorder */
+    .recorder-area{display:flex;flex-direction:column;align-items:center;padding:32px 24px;background:var(--bg3);border-radius:12px;border:1px dashed var(--border2);margin-bottom:20px;}
+    .rec-ring{width:88px;height:88px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;margin-bottom:14px;transition:border-color 0.3s;}
+    .rec-ring.recording{border-color:var(--accent);animation:ring-pulse 1.5s ease-in-out infinite;}
+    .rec-ring.done{border-color:var(--green);}
+    @keyframes ring-pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.3)}50%{box-shadow:0 0 0 12px rgba(59,130,246,0)}}
+    .rec-btn{width:64px;height:64px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;font-size:26px;transition:all 0.2s;}
+    .rec-btn:hover{transform:scale(1.06);}
+    .rec-btn.recording{background:#c53030;}
+    .rec-btn.done{background:#1e6e4a;}
+    .rec-label{font-size:13px;color:var(--muted);margin-bottom:6px;text-align:center;}
+    .rec-timer{font-family:var(--font-display);font-size:32px;font-weight:700;letter-spacing:3px;min-height:40px;}
+    .waveform{display:flex;align-items:center;gap:3px;height:44px;margin:14px 0 0;}
+    .wave-bar{width:3px;border-radius:2px;background:var(--border2);transition:height 0.08s ease;height:6px;}
+    .wave-bar.active{background:var(--accent);}
+    .or-divider{display:flex;align-items:center;gap:14px;margin:16px 0;font-size:12px;color:var(--muted);}
+    .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+    .upload-zone{border:1px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.15s;font-size:13px;color:var(--muted);position:relative;}
+    .upload-zone:hover{border-color:var(--accent);color:var(--text);}
+    .upload-zone.has-file{border-color:var(--green);color:var(--green);}
+    .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    audio{width:100%;height:36px;border-radius:8px;margin-top:12px;filter:invert(1) hue-rotate(180deg);}
+
+    /* Processing */
+    .processing-wrap{display:flex;flex-direction:column;align-items:center;padding:48px 24px;text-align:center;}
+    .spinner-ring{width:52px;height:52px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite;margin-bottom:20px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .proc-title{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:6px;}
+    .proc-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+    .proc-steps{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;}
+    .proc-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:9px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);}
+    .proc-step.active{color:var(--text);border-color:var(--accent);}
+    .proc-step.done{color:var(--green);border-color:rgba(61,214,140,0.3);}
+    .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;}
+    .proc-step.active .step-dot{background:var(--accent);animation:blink 1s infinite;}
+    .proc-step.done .step-dot{background:var(--green);}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+    /* Dashboard */
+    .dash-hero{background:linear-gradient(135deg,#080c14 0%,#0d1a3a 100%);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:16px;position:relative;overflow:hidden;}
+    .dash-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(59,130,246,0.15) 0%,transparent 70%);pointer-events:none;}
+    .dash-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);margin-bottom:8px;}
+    .dash-title{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:12px;}
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
+    .badge-red{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.25);}
+    .badge-gray{background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
+    .metrics-section-title{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:500;margin:20px 0 10px;}
+    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
+    .metrics-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px;}
+    @media(max-width:600px){.metrics-grid,.metrics-grid-3{grid-template-columns:repeat(2,1fr);}}
+    .metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;}
+    .metric.warn{border-color:rgba(245,197,66,0.3);background:rgba(245,197,66,0.05);}
+    .metric.good{border-color:rgba(61,214,140,0.3);background:rgba(61,214,140,0.05);}
+    .metric.bad{border-color:rgba(240,84,79,0.3);background:rgba(240,84,79,0.05);}
+    .metric-label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+    .metric-value{font-family:var(--font-display);font-size:22px;font-weight:700;}
+    .metric-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .transcript-scroll{background:var(--bg3);border-radius:10px;padding:16px;font-size:13px;line-height:1.85;color:#c8c7d4;max-height:220px;overflow-y:auto;border:1px solid var(--border);margin-bottom:16px;}
+    .transcript-scroll::-webkit-scrollbar{width:4px;}
+    .transcript-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+    .actions-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .drive-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(91,156,246,0.1);border:1px solid rgba(91,156,246,0.25);border-radius:8px;color:var(--blue);font-size:13px;text-decoration:none;transition:all 0.15s;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .toast.success{border-color:rgba(61,214,140,0.4);color:var(--green);}
+    .toast.error{border-color:rgba(240,84,79,0.4);color:var(--accent);}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Fo<span>né</span></div>
+</div>
+
+<div class="main">
+
+  <!-- PASO 1: Rol -->
+  <div id="view-grupo">
+
+    <!-- Selector de rol — siempre arriba, sin card ni steps -->
+    <div id="rol-selector">
+      <div style="display:flex;gap:12px;margin-bottom:28px;">
+        <button class="grupo-btn" style="flex:1;" onclick="mostrarRol('estudiante')">
+          <div class="gb-title">🎓 Soy estudiante</div>
+        </button>
+        <button class="grupo-btn" style="flex:1;" onclick="mostrarRol('profesor')">
+          <div class="gb-title">👨‍🏫 Soy profesor</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bienvenida estudiante -->
+    <div id="rol-estudiante" style="display:none;">
+      <div class="steps-bar">
+        <div class="step-item"><div class="step-num active">1</div><div class="step-label active">Grupo</div></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-label">Cédula</div></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow">Estudiante</div>
+        <div class="card-title">🎓 ¡Hola!</div>
+        <div class="card-desc">
+          Después de clase graba un audio de 1 minuto contando:
+          <ul>
+            <li>¿Qué aprendiste hoy?</li>
+            <li>¿Qué se te dificultó?</li>
+            <li>¿Cómo va el ritmo del curso?</li>
+          </ul>
+          <br/>Primero dinos, ¿a qué grupo perteneces? 👇
+        </div>
+        <div class="grupo-grid">
+          <button class="grupo-btn" onclick="seleccionarGrupo('santiago')">
+            <div class="gb-title">Santiago Aparicio</div>
+            <div class="gb-sub">Matemáticas I</div>
+          </button>
+          <button class="grupo-btn" onclick="seleccionarGrupo('omar')">
+            <div class="gb-title">Omar Palacios</div>
+            <div class="gb-sub">Data Mining</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bienvenida profesor -->
+    <div id="rol-profesor" style="display:none;">
+      <div class="steps-bar">
+        <div class="step-item"><div class="step-num active">1</div><div class="step-label active">Grupo</div></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-num">2</div><div class="step-label">Identificación</div></div>
+        <div class="step-line"></div>
+        <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow">Docente</div>
+        <div class="card-title">👨‍🏫 ¡Hola, profe!</div>
+        <div class="card-desc">
+          Tu audio es la referencia de la sesión. Graba un minuto contando:
+          <ul>
+            <li>¿Qué temas abordaste hoy?</li>
+            <li>¿Qué conceptos o palabras clave son esenciales de esta sesión?</li>
+            <li>¿Cómo conecta lo de hoy con lo visto anteriormente?</li>
+          </ul>
+          <br/>Confirma tu grupo para continuar 👇
+        </div>
+        <div class="grupo-grid">
+          <button class="grupo-btn" onclick="seleccionarGrupo('profesor-santiago')">
+            <div class="gb-title">Santiago Aparicio</div>
+            <div class="gb-sub">Matemáticas I</div>
+          </button>
+          <button class="grupo-btn" onclick="seleccionarGrupo('profesor-omar')">
+            <div class="gb-title">Omar Palacios</div>
+            <div class="gb-sub">Data Mining</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2: Cédula -->
+  <div id="view-cedula" style="display:none;">
+    <div class="steps-bar">
+      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Cédula</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+    </div>
+    <div class="card">
+      <button class="btn-back" onclick="showView('grupo')">← Cambiar grupo</button>
+      <div class="card-eyebrow" id="cedula-grupo-label"></div>
+      <div class="card-title">¿Cuál es tu cédula?</div>
+      <div class="card-desc">Ingresa tu número de documento para verificar tu registro.</div>
+      <div class="cedula-wrap">
+        <input class="cedula-input" type="number" id="cedula-input" placeholder="_ _ _ _ _ _ _ _ _ _"
+          oninput="validarCedula()" onkeydown="if(event.key==='Enter') continuarCedula()" />
+        <div class="cedula-error" id="cedula-error"></div>
+        <div class="cedula-ok" id="cedula-ok"></div>
+        <button class="btn-primary" id="btn-cedula" onclick="continuarCedula()" disabled>
+          Continuar →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2 PROFESOR: Cédula -->
+  <div id="view-cedula-profesor" style="display:none;">
+    <div class="steps-bar">
+      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Identificación</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+    </div>
+    <div class="card">
+      <button class="btn-back" onclick="showView('grupo')">← Volver</button>
+      <div class="card-eyebrow" id="cedula-prof-grupo-label"></div>
+      <div class="card-title">¿Cuál es tu cédula?</div>
+      <div class="card-desc">Ingresa tu número de documento para verificar tu acceso docente.</div>
+      <div class="cedula-wrap">
+        <input class="cedula-input" type="number" id="cedula-prof-input" placeholder="_ _ _ _ _ _ _ _ _ _"
+          oninput="validarCedulaProf()" onkeydown="if(event.key==='Enter') continuarProfesor()" />
+        <div class="cedula-error" id="cedula-prof-error"></div>
+        <div class="cedula-ok" id="cedula-prof-ok"></div>
+        <button class="btn-primary" id="btn-cedula-prof" onclick="continuarProfesor()" disabled>
+          Continuar →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3: Grabar -->
+  <div id="view-grabar" style="display:none;">
+    <div class="steps-bar">
+      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Cédula</div></div>
+      <div class="step-line"></div>
+      <div class="step-item"><div class="step-num active">3</div><div class="step-label active">Grabar</div></div>
+    </div>
+    <div class="card">
+      <button class="btn-back" onclick="showView('cedula')">← Volver</button>
+      <div class="card-eyebrow" id="grabar-info"></div>
+      <div class="card-title">Graba tu audio</div>
+      <div class="card-desc">1 minuto contando qué aprendiste, qué se te dificultó y cómo va el ritmo.</div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px;">Sesión</label>
+        <select id="sesion-select" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:14px;font-family:var(--font-body);color:var(--text);width:100%;"></select>
+      </div>
+
+      <div class="recorder-area">
+        <div class="rec-ring" id="rec-ring">
+          <button class="rec-btn" id="rec-btn" onclick="toggleRecording()">🎙️</button>
+        </div>
+        <div class="rec-label" id="rec-label">Toca para comenzar a grabar</div>
+        <div class="rec-timer" id="rec-timer"></div>
+        <div class="waveform" id="waveform">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+        <div id="audio-preview-wrap" style="width:100%;display:none;">
+          <audio id="audio-preview" controls></audio>
+        </div>
+      </div>
+
+      <br/>
+      <button class="btn-primary" onclick="submitAudio()">🚀 Enviar audio</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="view-processing" style="display:none;">
+    <div class="card">
+      <div class="processing-wrap">
+        <div class="spinner-ring"></div>
+        <div class="proc-title">Procesando tu audio</div>
+        <div class="proc-sub">Whisper está transcribiendo tu clase...</div>
+        <div class="proc-steps">
+          <div class="proc-step" id="step-1"><div class="step-dot"></div><span>Preparando audio</span></div>
+          <div class="proc-step" id="step-2"><div class="step-dot"></div><span>Transcribiendo con Groq Whisper</span></div>
+          <div class="proc-step" id="step-3"><div class="step-dot"></div><span>Calculando variables lingüísticas</span></div>
+          <div class="proc-step" id="step-4"><div class="step-dot"></div><span>Subiendo audio a Google Drive</span></div>
+          <div class="proc-step" id="step-5"><div class="step-dot"></div><span>Guardando en Google Sheets</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" style="display:none;">
+    <button class="btn-back" onclick="reiniciar()">← Enviar otro audio</button>
+    <div id="dash-content"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+const CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzwAphnxrn82KyesVOLsY8TufJG5bWIwZthd7h6kuYfBg2zVTzOjVS2Vug74ut8pz9O/exec'
+};
+
+// ── Datos ──
+const SESIONES = [
+  {value:'09/06/2026', label:'Sesión 1 — Martes 09/06/2026'},
+  {value:'10/06/2026', label:'Sesión 2 — Miércoles 10/06/2026'},
+  {value:'11/06/2026', label:'Sesión 3 — Jueves 11/06/2026'},
+  {value:'12/06/2026', label:'Sesión 4 — Viernes 12/06/2026'},
+  {value:'16/06/2026', label:'Sesión 5 — Martes 16/06/2026'},
+  {value:'17/06/2026', label:'Sesión 6 — Miércoles 17/06/2026'},
+  {value:'18/06/2026', label:'Sesión 7 — Jueves 18/06/2026'},
+  {value:'19/06/2026', label:'Sesión 8 — Viernes 19/06/2026'},
+  {value:'22/06/2026', label:'Sesión 9 — Lunes 22/06/2026'},
+  {value:'23/06/2026', label:'Sesión 10 — Martes 23/06/2026'},
+  {value:'24/06/2026', label:'Sesión 11 — Miércoles 24/06/2026'},
+  {value:'25/06/2026', label:'Sesión 12 — Jueves 25/06/2026'},
+  {value:'26/06/2026', label:'Sesión 13 — Viernes 26/06/2026'},
+  {value:'30/06/2026', label:'Sesión 14 — Martes 30/06/2026'},
+  {value:'01/07/2026', label:'Sesión 15 — Miércoles 01/07/2026'},
+  {value:'02/07/2026', label:'Sesión 16 — Jueves 02/07/2026'},
+  {value:'03/07/2026', label:'Sesión 17 — Viernes 03/07/2026'},
+  {value:'06/07/2026', label:'Sesión 18 — Lunes 06/07/2026'},
+  {value:'07/07/2026', label:'Sesión 19 — Martes 07/07/2026'},
+  {value:'08/07/2026', label:'Sesión 20 — Miércoles 08/07/2026'},
+  {value:'09/07/2026', label:'Sesión 21 — Jueves 09/07/2026'},
+  {value:'10/07/2026', label:'Sesión 22 — Viernes 10/07/2026'},
+];
+
+const CEDULAS = {
+  santiago: ['1147486525','1025063386','1013125100','1010965081','1023165228','1029141009','1096068485','1013258532','1033102141','1011323304','1024509578','1014868162','1054895361','1109549575','1011324854','1031424164','1141517449','1023164975','1021634975','1034519179','1018434360','1140916332','1032877729','1014867126','1030220057'],
+  omar: ['1010964822','1014482009','1016946301','1028885900','1029220048','1033097334','1034779730','1107842573','1012344638','1054287150','1022354452','1141715942','1034662097','654321'],
+  profesores: { 'santiago': '1020793732', 'omar': '1032394491' }
+};
+
+const GRUPOS = {
+  santiago: 'Santiago Aparicio — Matemáticas I',
+  omar: 'Omar Palacios — Data Mining'
+};
+
+// ── State ──
+let grupoActual = '', cedulaActual = '', esProfesor = false;
+let mediaRecorder=null, audioChunks=[], isRecording=false;
+let recInterval=null, recSeconds=0;
+let audioBlob=null, uploadedFile=null, waveInterval=null;
+let currentEntry=null;
+
+// ── Views ──
+function showView(v) {
+  ['grupo','cedula','cedula-profesor','grabar','processing','dashboard'].forEach(id =>
+    document.getElementById('view-'+id).style.display = id===v?'':'none');
+  if (v==='grupo') {
+    document.getElementById('rol-estudiante').style.display='none';
+    document.getElementById('rol-profesor').style.display='none';
+    document.querySelectorAll('#rol-selector .grupo-btn').forEach(b=>b.style.borderColor='');
+  }
+}
+
+// ── Paso 1: Rol ──
+function mostrarRol(rol) {
+  document.getElementById('rol-estudiante').style.display = rol==='estudiante' ? '' : 'none';
+  document.getElementById('rol-profesor').style.display   = rol==='profesor'   ? '' : 'none';
+  // Resaltar botón activo
+  document.querySelectorAll('#rol-selector .grupo-btn').forEach(b => b.style.borderColor='');
+  if (rol==='estudiante') document.querySelectorAll('#rol-selector .grupo-btn')[0].style.borderColor='var(--accent)';
+  if (rol==='profesor')   document.querySelectorAll('#rol-selector .grupo-btn')[1].style.borderColor='var(--accent)';
+}
+
+// ── Paso 1: Grupo ──
+function seleccionarGrupo(g) {
+  if (g === 'profesor-santiago' || g === 'profesor-omar') {
+    grupoActual = g === 'profesor-santiago' ? 'santiago' : 'omar';
+    document.getElementById('cedula-prof-grupo-label').textContent = GRUPOS[grupoActual];
+    document.getElementById('cedula-prof-input').value = '';
+    document.getElementById('cedula-prof-error').textContent = '';
+    document.getElementById('cedula-prof-ok').textContent = '';
+    document.getElementById('btn-cedula-prof').disabled = true;
+    showView('cedula-profesor');
+  } else {
+    grupoActual = g;
+    document.getElementById('cedula-grupo-label').textContent = GRUPOS[g];
+    document.getElementById('cedula-input').value = '';
+    document.getElementById('cedula-error').textContent = '';
+    document.getElementById('cedula-ok').textContent = '';
+    document.getElementById('btn-cedula').disabled = true;
+    showView('cedula');
+  }
+}
+
+// ── Paso 2: Cédula ──
+function validarCedula() {
+  const val = document.getElementById('cedula-input').value.trim();
+  const err = document.getElementById('cedula-error');
+  const ok  = document.getElementById('cedula-ok');
+  const btn = document.getElementById('btn-cedula');
+
+  if (!val) { err.textContent=''; ok.textContent=''; btn.disabled=true; return; }
+  if (CEDULAS[grupoActual].includes(val)) {
+    err.textContent='';
+    ok.textContent='✓ Cédula verificada';
+    btn.disabled=false;
+  } else {
+    ok.textContent='';
+    err.textContent='Cédula no encontrada en este grupo';
+    btn.disabled=true;
+  }
+}
+
+function continuarCedula() {
+  const val = document.getElementById('cedula-input').value.trim();
+  if (!CEDULAS[grupoActual].includes(val)) return;
+  cedulaActual = val;
+  esProfesor = false;
+  cargarSesiones();
+  document.getElementById('grabar-info').textContent = GRUPOS[grupoActual];
+  showView('grabar');
+}
+
+// ── Paso 2 Profesor ──
+function validarCedulaProf() {
+  const val = document.getElementById('cedula-prof-input').value.trim();
+  const err = document.getElementById('cedula-prof-error');
+  const ok  = document.getElementById('cedula-prof-ok');
+  const btn = document.getElementById('btn-cedula-prof');
+  if (!val) { err.textContent=''; ok.textContent=''; btn.disabled=true; return; }
+  if (CEDULAS.profesores[grupoActual] === val) {
+    err.textContent=''; ok.textContent='✓ Cédula verificada'; btn.disabled=false;
+  } else {
+    ok.textContent=''; err.textContent='Cédula no autorizada para este grupo'; btn.disabled=true;
+  }
+}
+
+function continuarProfesor() {
+  const val = document.getElementById('cedula-prof-input').value.trim();
+  if (CEDULAS.profesores[grupoActual] !== val) return;
+  cedulaActual = val;
+  esProfesor = true;
+  cargarSesiones();
+  document.getElementById('grabar-info').textContent = '👨‍🏫 Profesor — ' + GRUPOS[grupoActual];
+  showView('grabar');
+}
+
+function cargarSesionesProf() {
+  cargarSesiones();
+}
+
+// ── Sesiones select ──
+function cargarSesiones() {
+  const sel = document.getElementById('sesion-select');
+  sel.innerHTML = SESIONES.map(s => `<option value="${s.value}">${s.label}</option>`).join('');
+  const hoy = new Date();
+  let closest = SESIONES[0].value;
+  let minDiff = Infinity;
+  SESIONES.forEach(s => {
+    const [d,m,y] = s.value.split('/');
+    const fecha = new Date(`${y}-${m}-${d}`);
+    const diff = Math.abs(fecha - hoy);
+    if (diff < minDiff) { minDiff=diff; closest=s.value; }
+  });
+  sel.value = closest;
+}
+
+// ── Grabación ──
+async function toggleRecording() {
+  if (!isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      mediaRecorder = new MediaRecorder(stream, { mimeType });
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type:'audio/webm' });
+        document.getElementById('audio-preview').src = URL.createObjectURL(audioBlob);
+        document.getElementById('audio-preview-wrap').style.display='';
+        stream.getTracks().forEach(t=>t.stop());
+        stopWave();
+        document.getElementById('rec-ring').className='rec-ring done';
+        document.getElementById('rec-btn').className='rec-btn done';
+        document.getElementById('rec-btn').textContent='✓';
+        document.getElementById('rec-label').textContent='Grabación lista';
+        uploadedFile=null;
+        document.getElementById('upload-zone').classList.remove('has-file');
+      };
+      mediaRecorder.start(200);
+      isRecording=true; recSeconds=0;
+      document.getElementById('rec-ring').className='rec-ring recording';
+      document.getElementById('rec-btn').className='rec-btn recording';
+      document.getElementById('rec-btn').textContent='⏹';
+      document.getElementById('rec-label').textContent='Grabando... toca para detener';
+      recInterval=setInterval(()=>{
+        recSeconds++;
+        document.getElementById('rec-timer').textContent=
+          String(Math.floor(recSeconds/60)).padStart(2,'0')+':'+String(recSeconds%60).padStart(2,'0');
+      },1000);
+      startWave();
+    } catch(e){ toast('No se pudo acceder al micrófono','error'); }
+  } else {
+    isRecording=false; mediaRecorder.stop(); clearInterval(recInterval);
+  }
+}
+
+function startWave(){
+  document.querySelectorAll('.wave-bar').forEach(b=>b.classList.add('active'));
+  waveInterval=setInterval(()=>{
+    document.querySelectorAll('.wave-bar').forEach(b=>{ b.style.height=(4+Math.random()*32)+'px'; });
+  },100);
+}
+function stopWave(){
+  clearInterval(waveInterval);
+  const h=[6,14,22,10,18,8,28,12,20,6,16,24,8,18,10,14];
+  document.querySelectorAll('.wave-bar').forEach((b,i)=>{ b.style.height=(h[i]||8)+'px'; b.classList.remove('active'); });
+}
+function handleFile(input){
+  const file=input.files[0]; if(!file) return;
+  if(file.size>25*1024*1024){toast('Archivo supera 25MB','error');return;}
+  uploadedFile=file; audioBlob=null;
+  document.getElementById('upload-zone').classList.add('has-file');
+  document.getElementById('upload-zone').querySelector('div:nth-child(2)').textContent='📎 '+file.name;
+  document.getElementById('audio-preview-wrap').style.display='none';
+  document.getElementById('rec-ring').className='rec-ring done';
+  document.getElementById('rec-btn').className='rec-btn done';
+  document.getElementById('rec-btn').textContent='✓';
+  document.getElementById('rec-label').textContent='Archivo cargado';
+}
+
+// ── Steps processing ──
+const STEPS=['step-1','step-2','step-3','step-4','step-5'];
+let stepIdx=0;
+function advanceStep(){
+  if(stepIdx>0) document.getElementById(STEPS[stepIdx-1]).className='proc-step done';
+  if(stepIdx<STEPS.length){ document.getElementById(STEPS[stepIdx]).className='proc-step active'; stepIdx++; }
+}
+function resetSteps(){ stepIdx=0; STEPS.forEach(id=>{ document.getElementById(id).className='proc-step'; }); }
+
+// ── Submit ──
+async function submitAudio(){
+  if(!audioBlob&&!uploadedFile){toast('Graba o sube un audio primero','error');return;}
+  const sesion=document.getElementById('sesion-select').value;
+  if(!sesion){toast('Selecciona una sesión','error');return;}
+
+  // Nombre del profesor si aplica
+  let nombreProf='';
+  if(esProfesor) nombreProf=document.getElementById('prof-nombre').value.trim();
+
+  showView('processing'); resetSteps();
+  advanceStep();
+
+  try {
+    const file=audioBlob
+      ?new File([audioBlob],`audio_${Date.now()}.webm`,{type:'audio/webm'})
+      :uploadedFile;
+
+    advanceStep(); advanceStep();
+    const fileBase64=await fileToBase64(file);
+    advanceStep();
+
+    const payload={
+      grupo: GRUPOS[grupoActual],
+      cedula: cedulaActual,
+      sesion,
+      es_profesor: esProfesor,
+      nombre_profesor: nombreProf,
+      duracion_segundos: recSeconds||0,
+      fileBase64, fileName:file.name, fileType:file.type,
+    };
+
+    const res=await fetch(CONFIG.APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error('Error del servidor: '+await res.text());
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Error desconocido');
+
+    advanceStep();
+    await new Promise(r=>setTimeout(r,500));
+
+    currentEntry={...payload, date:new Date().toISOString(), ...data};
+    renderDashboard(currentEntry);
+    showView('dashboard');
+    toast('Audio enviado ✓','success');
+
+  } catch(err){
+    console.error(err);
+    toast('Error: '+err.message,'error');
+    showView('grabar');
+  }
+}
+
+// ── Dashboard ──
+function renderDashboard(e){
+  const mins=Math.floor((e.duracion_segundos||0)/60);
+  const secs=String((e.duracion_segundos||0)%60).padStart(2,'0');
+  function cls(val,bueno,malo,inv=false){
+    if(inv){return val<=bueno?'good':val>=malo?'bad':'warn';}
+    return val>=bueno?'good':val<=malo?'bad':'warn';
+  }
+  document.getElementById('dash-content').innerHTML=`
+    <div class="dash-hero">
+      <div class="dash-eyebrow">Audio enviado exitosamente</div>
+      <div class="dash-title">Sesión ${esc(e.sesion)}</div>
+      <div class="badge-row">
+        <span class="badge badge-red">📚 ${esc(e.grupo)}</span>
+        <span class="badge badge-gray">${e.es_profesor?'👨‍🏫 Profesor':'🪪 '+esc(e.cedula)}</span>
+      </div>
+    </div>
+    <div class="metrics-section-title">📊 General</div>
+    <div class="metrics-grid">
+      <div class="metric"><div class="metric-label">Palabras</div><div class="metric-value">${(e.num_palabras||0).toLocaleString()}</div><div class="metric-sub">total</div></div>
+      <div class="metric"><div class="metric-label">Únicas</div><div class="metric-value">${(e.palabras_unicas||0).toLocaleString()}</div><div class="metric-sub">distintas</div></div>
+      <div class="metric"><div class="metric-label">Duración</div><div class="metric-value">${mins}:${secs}</div><div class="metric-sub">min</div></div>
+      <div class="metric"><div class="metric-label">Caracteres</div><div class="metric-value">${(e.num_caracteres||0).toLocaleString()}</div><div class="metric-sub">total</div></div>
+    </div>
+    <div class="metrics-section-title">🧠 Riqueza lingüística</div>
+    <div class="metrics-grid-3">
+      <div class="metric ${cls(e.riqueza_lexica,0.5,0.3)}">
+        <div class="metric-label">Riqueza léxica</div>
+        <div class="metric-value">${((e.riqueza_lexica||0)*100).toFixed(1)}%</div>
+        <div class="metric-sub">únicas / total</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Long. promedio</div>
+        <div class="metric-value">${(e.promedio_longitud_palabra||0).toFixed(2)}</div>
+        <div class="metric-sub">letras / palabra</div>
+      </div>
+      <div class="metric ${cls(e.porcentaje_palabras_raras,0.6,0.3)}">
+        <div class="metric-label">Palabras raras</div>
+        <div class="metric-value">${((e.porcentaje_palabras_raras||0)*100).toFixed(1)}%</div>
+        <div class="metric-sub">aparecen 1 vez</div>
+      </div>
+    </div>
+    <div class="metrics-section-title">⚠️ Indicadores de dificultad</div>
+    <div class="metrics-grid-3">
+      <div class="metric ${cls(e.conteo_muletillas,0,5,true)}">
+        <div class="metric-label">Muletillas</div>
+        <div class="metric-value">${e.conteo_muletillas||0}</div>
+        <div class="metric-sub">freq: ${((e.frecuencia_muletillas||0)*100).toFixed(2)}%</div>
+      </div>
+      <div class="metric ${cls(e.conteo_dudas,0,3,true)}">
+        <div class="metric-label">Expresiones de duda</div>
+        <div class="metric-value">${e.conteo_dudas||0}</div>
+        <div class="metric-sub">freq: ${((e.frecuencia_dudas||0)*100).toFixed(2)}%</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Negaciones</div>
+        <div class="metric-value">${e.conteo_negaciones||0}</div>
+        <div class="metric-sub">freq: ${((e.frecuencia_negaciones||0)*100).toFixed(2)}%</div>
+      </div>
+    </div>
+    <div class="metrics-section-title">🏆 Top palabras</div>
+    <div class="metric" style="margin-bottom:16px;">
+      <div class="metric-label">Más repetida: "${esc(e.palabra_mas_repetida||'')}"</div>
+      <div class="metric-value">${e.frecuencia_palabra_top||0} <span style="font-size:14px;color:var(--muted)">veces</span></div>
+      <div class="metric-sub" style="margin-top:6px;">Top 5: ${esc(e.top_5_palabras||'')}</div>
+    </div>
+    ${e.driveUrl||e.sheetUrl?`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      ${e.driveUrl?`<a href="${e.driveUrl}" target="_blank" class="drive-link">🎵 Audio en Drive</a>`:''}
+      ${e.sheetUrl?`<a href="${e.sheetUrl}" target="_blank" class="drive-link">📊 Google Sheets</a>`:''}
+    </div>`:''}
+    <div class="metrics-section-title">📝 Transcripción</div>
+    <div class="transcript-scroll">${esc(e.texto||'')}</div>
+    <div class="actions-row">
+      <button class="btn-secondary" onclick="copyText(currentEntry.texto||'')">📋 Copiar</button>
+      <button class="btn-secondary" onclick="downloadTxt(currentEntry)">⬇️ Descargar .txt</button>
+    </div>
+  `;
+}
+
+function reiniciar(){
+  audioBlob=null; uploadedFile=null; isRecording=false;
+  clearInterval(recInterval); clearInterval(waveInterval);
+  document.getElementById('rec-ring').className='rec-ring';
+  document.getElementById('rec-btn').className='rec-btn';
+  document.getElementById('rec-btn').textContent='🎙️';
+  document.getElementById('rec-label').textContent='Toca para comenzar a grabar';
+  document.getElementById('rec-timer').textContent='';
+  document.getElementById('audio-preview-wrap').style.display='none';
+  document.getElementById('upload-zone').classList.remove('has-file');
+  stopWave();
+  showView('grupo');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function copyText(t){navigator.clipboard.writeText(t).then(()=>toast('Copiado ✓','success'));}
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+
+function downloadTxt(e){
+  if(!e) return;
+  const lines=[
+    'STUDYCAST — Audio de Clase','=================================',
+    `Grupo:     ${e.grupo}`,`Sesión:    ${e.sesion}`,
+    `Cédula:    ${e.cedula}`,`Fecha:     ${new Date(e.date).toLocaleString('es-CO')}`,
+    '','── ESTADÍSTICAS ──',
+    `Palabras:        ${e.num_palabras}`,`Palabras únicas: ${e.palabras_unicas}`,
+    `Riqueza léxica:  ${((e.riqueza_lexica||0)*100).toFixed(2)}%`,
+    `Muletillas:      ${e.conteo_muletillas}`,`Dudas:           ${e.conteo_dudas}`,
+    `Negaciones:      ${e.conteo_negaciones}`,`Top 5:           ${e.top_5_palabras}`,
+    '','── TRANSCRIPCIÓN ──',e.texto||''
+  ];
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));
+  a.download=`studycast_${e.cedula}_${(e.sesion||'').replace(/\//g,'-')}.txt`;
+  a.click();
+}
+
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(el._t); el._t=setTimeout(()=>{el.className='toast';},3200);
+}
+</script>
+</body>
+</html>
