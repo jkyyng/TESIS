@@ -596,7 +596,7 @@ function validarCedula() {
   const btn = document.getElementById('btn-continuar-cedula');
   const inp = document.getElementById('inp-cedula');
   if (!val) { msg.textContent=''; msg.className='field-msg'; btn.disabled=true; inp.classList.remove('valid'); return; }
-  if (CEDULAS[grupoActual].includes(val)) {
+  if (CEDULAS[grupoActual].map(String).includes(String(val))) {
     msg.textContent='✓ Cédula verificada'; msg.className='field-msg ok';
     inp.classList.add('valid'); btn.disabled=false;
   } else {
@@ -607,7 +607,7 @@ function validarCedula() {
 
 function irAGrabar() {
   const val = document.getElementById('inp-cedula').value.trim();
-  if (!CEDULAS[grupoActual].includes(val)) return;
+  if (!CEDULAS[grupoActual].map(String).includes(String(val))) return;
   cedulaActual = val;
   prepararGrabar();
   showView('grabar');
