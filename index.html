@@ -439,6 +439,7 @@
       <button class="btn-ghost" id="btn-volver-cedula" onclick="volverACedula()" style="margin-bottom:18px;">← Volver</button>
       <div class="card-eyebrow" id="lbl-grabar-info"></div>
       <div class="card-title">Graba tu audio</div>
+      <div id="grabar-recordatorio" class="card-desc" style="margin-bottom:16px;"></div>
 
       <label class="field-label">Sesión</label>
       <select class="field-select" id="sel-sesion"></select>
@@ -533,7 +534,7 @@ const SESIONES = [
 
 const CEDULAS = {
   santiago: ['1147486525','1025063386','1010965081','1096068485','1013258532','1033102141','1011323304','1014867126','1024509578','1014868162','1054895361','1109549575','1011324854','1031424164','1141517449','1023164975','1021634975','1034519179','1030220057','1018434360','1140916332','1032877729','1150184438','1057570650','1025531736','654321'],
-  omar: ['1010964822','1014482009','1016946301','1028885900','1029220048','1033097334','1034779730','1107842573','1012344638','1054287150','1022354452','1141715942','1034662097','654321'],
+  omar: ['1010964822','1014482009','1016946301','1028885900','1029220048','1033097334','1034779730','1107842573','1012344638','1054287150','1022354452','1141715942','1034662097','654321','1000329597'],
   profesores: { santiago:'1020793732', omar:'1032394491', test:'654321' }
 };
 
@@ -649,6 +650,21 @@ function volverACedula() {
 function prepararGrabar() {
   const label = esProfesor ? '👨‍🏫 Profesor — ' + GRUPOS[grupoActual] : GRUPOS[grupoActual];
   document.getElementById('lbl-grabar-info').textContent = label;
+
+  const rec = document.getElementById('grabar-recordatorio');
+  if (esProfesor) {
+    rec.innerHTML = `Recuerda contar:<ul>
+      <li>¿Qué temas abordaste hoy?</li>
+      <li>¿Qué conceptos o palabras clave son esenciales?</li>
+      <li>¿Cómo conecta lo de hoy con lo visto anteriormente?</li>
+    </ul>`;
+  } else {
+    rec.innerHTML = `Recuerda contar:<ul>
+      <li>¿Qué aprendiste hoy?</li>
+      <li>¿Qué se te dificultó?</li>
+      <li>¿Cómo va el ritmo del curso?</li>
+    </ul>`;
+  }
   // Cargar sesiones
   const sel = document.getElementById('sel-sesion');
   sel.innerHTML = SESIONES.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
