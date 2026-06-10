@@ -777,18 +777,79 @@ async function submitAudio(){
 
 // ── Dashboard ──
 function renderDashboard(e){
+  const mins=Math.floor((e.duracion_segundos||0)/60);
+  const secs=String((e.duracion_segundos||0)%60).padStart(2,'0');
+  function cls(val,bueno,malo,inv=false){
+    if(inv)return val<=bueno?'good':val>=malo?'bad':'warn';
+    return val>=bueno?'good':val<=malo?'bad':'warn';
+  }
   const sesionLabel = SESIONES.find(s=>s.value===e.sesion)?.label || e.sesion;
   document.getElementById('dash-content').innerHTML=`
-    <div class="card" style="text-align:center;padding:48px 28px;">
-      <div style="font-size:56px;margin-bottom:16px;">✅</div>
-      <div class="card-eyebrow" style="text-align:center;">Audio recibido</div>
-      <div class="card-title" style="text-align:center;font-size:20px;">¡Listo, gracias!</div>
-      <div style="font-size:14px;color:#8aaace;line-height:1.8;margin-top:12px;">
-        Tu audio de la <strong style="color:var(--text);">${esc(sesionLabel)}</strong><br/>
-        fue enviado y guardado correctamente.<br/><br/>
-        Tu participación es muy valiosa para el proyecto. 🙌
+    <div class="dash-hero">
+      <div class="dash-eyebrow">Audio enviado correctamente</div>
+      <div class="dash-title">${esc(sesionLabel)}</div>
+      <div class="badge-row">
+        <span class="badge badge-blue">📚 ${esc(e.grupo)}</span>
+        <span class="badge badge-gray">${e.es_profesor?'👨‍🏫 Profesor':'🪪 '+esc(e.cedula)}</span>
+        <span class="badge badge-green">✓ Guardado</span>
       </div>
     </div>
+
+    <div class="metrics-title">📊 General</div>
+    <div class="metrics-grid-4">
+      <div class="metric"><div class="metric-label">Palabras</div><div class="metric-value">${(e.num_palabras||0).toLocaleString()}</div><div class="metric-sub">total</div></div>
+      <div class="metric"><div class="metric-label">Únicas</div><div class="metric-value">${(e.palabras_unicas||0).toLocaleString()}</div><div class="metric-sub">distintas</div></div>
+      <div class="metric"><div class="metric-label">Duración</div><div class="metric-value">${mins}:${secs}</div><div class="metric-sub">min</div></div>
+      <div class="metric"><div class="metric-label">Caracteres</div><div class="metric-value">${(e.num_caracteres||0).toLocaleString()}</div><div class="metric-sub">total</div></div>
+    </div>
+
+    <div class="metrics-title">🧠 Riqueza lingüística</div>
+    <div class="metrics-grid-3">
+      <div class="metric ${cls(e.riqueza_lexica,0.5,0.3)}">
+        <div class="metric-label">Riqueza léxica</div>
+        <div class="metric-value">${((e.riqueza_lexica||0)*100).toFixed(1)}%</div>
+        <div class="metric-sub">únicas / total</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Long. promedio</div>
+        <div class="metric-value">${(e.promedio_longitud_palabra||0).toFixed(2)}</div>
+        <div class="metric-sub">letras / palabra</div>
+      </div>
+      <div class="metric ${cls(e.porcentaje_palabras_raras,0.6,0.3)}">
+        <div class="metric-label">Palabras raras</div>
+        <div class="metric-value">${((e.porcentaje_palabras_raras||0)*100).toFixed(1)}%</div>
+        <div class="metric-sub">aparecen 1 vez</div>
+      </div>
+    </div>
+
+    <div class="metrics-title">⚠️ Indicadores de dificultad</div>
+    <div class="metrics-grid-3">
+      <div class="metric ${cls(e.conteo_muletillas,0,5,true)}">
+        <div class="metric-label">Muletillas</div>
+        <div class="metric-value">${e.conteo_muletillas||0}</div>
+        <div class="metric-sub">${((e.frecuencia_muletillas||0)*100).toFixed(2)}%</div>
+      </div>
+      <div class="metric ${cls(e.conteo_dudas,0,3,true)}">
+        <div class="metric-label">Expresiones de duda</div>
+        <div class="metric-value">${e.conteo_dudas||0}</div>
+        <div class="metric-sub">${((e.frecuencia_dudas||0)*100).toFixed(2)}%</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Negaciones</div>
+        <div class="metric-value">${e.conteo_negaciones||0}</div>
+        <div class="metric-sub">${((e.frecuencia_negaciones||0)*100).toFixed(2)}%</div>
+      </div>
+    </div>
+
+    <div class="metrics-title">🏆 Palabras frecuentes</div>
+    <div class="metric" style="margin-bottom:16px;">
+      <div class="metric-label">Más repetida — "${esc(e.palabra_mas_repetida||'')}"</div>
+      <div class="metric-value">${e.frecuencia_palabra_top||0} <span style="font-size:14px;color:var(--muted)">veces</span></div>
+      <div class="metric-sub" style="margin-top:5px;">Top 5: ${esc(e.top_5_palabras||'')}</div>
+    </div>
+
+    <div class="metrics-title">📝 Transcripción</div>
+    <div class="transcript-box">${esc(e.texto||'Sin transcripción')}</div>
   `;
 }
 
