@@ -439,6 +439,9 @@
       <button class="btn-ghost" id="btn-volver-cedula" onclick="volverACedula()" style="margin-bottom:18px;">← Volver</button>
       <div class="card-eyebrow" id="lbl-grabar-info"></div>
       <div class="card-title">Graba tu audio</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;">
+        🕐 Hora Bogotá: <span id="reloj-bogota" style="font-family:var(--font-d);font-weight:700;color:var(--text);letter-spacing:1px;"></span>
+      </div>
       <div id="grabar-recordatorio" class="card-desc" style="margin-bottom:16px;"></div>
 
       <label class="field-label">Sesión</label>
@@ -668,12 +671,14 @@ function prepararGrabar() {
   // Cargar sesiones
   const sel = document.getElementById('sel-sesion');
   sel.innerHTML = SESIONES.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
-  // Preseleccionar la más cercana a hoy
-  const hoy = new Date();
+  // Preseleccionar la más cercana a hoy en hora Bogotá
+  const hoyBog = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  hoyBog.setHours(0,0,0,0);
   let closest=SESIONES[0].value, minDiff=Infinity;
   SESIONES.forEach(s=>{
     const [d,m,y]=s.value.split('/');
-    const diff=Math.abs(new Date(`${y}-${m}-${d}`)-hoy);
+    const fecha=new Date(`${y}-${m}-${d}T00:00:00`);
+    const diff=Math.abs(fecha-hoyBog);
     if(diff<minDiff){minDiff=diff;closest=s.value;}
   });
   sel.value=closest;
@@ -903,6 +908,13 @@ function toast(msg,type=''){
   el.textContent=msg;el.className='toast show'+(type?' '+type:'');
   clearTimeout(el._t);el._t=setTimeout(()=>{el.className='toast';},3200);
 }
+
+// Reloj Bogotá
+setInterval(()=>{
+  const el=document.getElementById('reloj-bogota');
+  if(!el) return;
+  el.textContent=new Date().toLocaleTimeString('es-CO',{timeZone:'America/Bogota',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
 </script>
 </body>
 </html>
