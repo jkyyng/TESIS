@@ -536,7 +536,7 @@ const SESIONES = [
 ];
 
 const CEDULAS = {
-  santiago: ['1147486525','1025063386','1010965081','1096068485','1013258532','1033102141','1011323304','1014867126','1024509578','1014868162','1054895361','1109549575','1011324854','1031424164','1141517449','1023164975','1021634975','1034519179','1030220057','1018434360','1140916332','1032877729','1150184438','1057570650','1025531736','654321'],
+  santiago: ['1147486525','1025063386','1010965081','1096068485','1013258532','1033102141','1011323304','1014867126','1024509578','1014868162','1054895361','1109549575','1011324854','1031424164','1141517449','1023164975','1021634975','1034519179','1030220057','1018434360','1140916332','1032877729','1150184438','1057570650','1025531736','654321','1013123384','1012378143','1032877807','1029141009','1014990403'],
   omar: ['1010964822','1014482009','1016946301','1028885900','1029220048','1033097334','1034779730','1107842573','1012344638','1054287150','1022354452','1141715942','1034662097','654321','1000329597'],
   profesores: { santiago:'1020793732', omar:'1032394491', test:'654321' }
 };
@@ -609,12 +609,12 @@ function validarCedula() {
   }
 }
 
-function irAGrabar() {
+async function irAGrabar() {
   const val = document.getElementById('inp-cedula').value.trim();
   if (!CEDULAS[grupoActual].map(String).includes(String(val))) return;
   cedulaActual = val;
-  prepararGrabar();
   showView('grabar');
+  await prepararGrabar();
 }
 
 // ── Paso 2: Cédula profesor ──
@@ -634,13 +634,13 @@ function validarCedulaProf() {
   }
 }
 
-function irAGrabarProf() {
+async function irAGrabarProf() {
   const val = document.getElementById('inp-cedula-prof').value.trim();
   const valida = CEDULAS.profesores[grupoActual]===val || val==='654321';
   if (!valida) return;
   cedulaActual = val;
-  prepararGrabar();
   showView('grabar');
+  await prepararGrabar();
 }
 
 function volverACedula() {
@@ -650,7 +650,7 @@ function volverACedula() {
 }
 
 // ── Paso 3: Grabar ──
-function prepararGrabar() {
+async function prepararGrabar() {
   const label = esProfesor ? '👨‍🏫 Profesor — ' + GRUPOS[grupoActual] : GRUPOS[grupoActual];
   document.getElementById('lbl-grabar-info').textContent = label;
 
@@ -668,20 +668,51 @@ function prepararGrabar() {
       <li>¿Cómo va el ritmo del curso?</li>
     </ul>`;
   }
+
   // Cargar sesiones
   const sel = document.getElementById('sel-sesion');
   sel.innerHTML = SESIONES.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
-  // Preseleccionar la más cercana a hoy en hora Bogotá
+
+  // Hora Bogotá
   const hoyBog = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
   hoyBog.setHours(0,0,0,0);
   let closest=SESIONES[0].value, minDiff=Infinity;
   SESIONES.forEach(s=>{
     const [d,m,y]=s.value.split('/');
-    const fecha=new Date(`${y}-${m}-${d}T00:00:00`);
-    const diff=Math.abs(fecha-hoyBog);
+    const diff=Math.abs(new Date(`${y}-${m}-${d}T00:00:00`)-hoyBog);
     if(diff<minDiff){minDiff=diff;closest=s.value;}
   });
   sel.value=closest;
+
+  // Quitar advertencia previa
+  const prevWarn = document.getElementById('warn-pendientes');
+  if (prevWarn) prevWarn.remove();
+
+  // Verificar pendientes solo para estudiantes
+  if (!esProfesor) {
+    try {
+      const url = `${CONFIG.APPS_SCRIPT_URL}?cedula=${cedulaActual}&grupo=${grupoActual}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.ok) {
+        const pasadas = SESIONES.filter(s => {
+          const [d,m,y] = s.value.split('/');
+          return new Date(`${y}-${m}-${d}T00:00:00`) <= hoyBog;
+        }).map(s => s.value);
+        const pendientes = pasadas.filter(s => !data.enviadas.includes(s));
+        if (pendientes.length > 0) {
+          sel.value = pendientes[0];
+          const warn = document.createElement('div');
+          warn.id = 'warn-pendientes';
+          warn.style.cssText = 'background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24;line-height:1.7;';
+          const labels = pendientes.map(v => SESIONES.find(s=>s.value===v)?.label || v);
+          warn.innerHTML = `⚠️ <strong>Tienes ${pendientes.length} sesión${pendientes.length>1?'es':''} pendiente${pendientes.length>1?'s':''}:</strong><br/>${labels.join('<br/>')}`;
+          document.getElementById('sel-sesion').insertAdjacentElement('afterend', warn);
+        }
+      }
+    } catch(e) { /* si falla la consulta, continuar normal */ }
+  }
+
   resetRecorder();
 }
 
