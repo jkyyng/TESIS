@@ -317,7 +317,7 @@ function mkChart(id,type,labels,datasets,opts={}){
 // DASHBOARD PROFESOR
 // ══════════════════════════════════════════════════════
 function renderProf(reg, notas){
-  const est=reg.filter(r=>r.Es_Profesor!=='SÍ');
+  const est=reg.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
   const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
   const cumpl=Math.round((est.length/(ceds.length*sesVistas.length))*100)||0;
@@ -547,7 +547,7 @@ function renderEst(reg, allNotas, ced){
   const miCl=clasificar(miNP?.promedio||null);
 
   // Comparativa grupo — todos los estudiantes del mismo grupo
-  const grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ');
+  const grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const ceds=[...new Set(grupoReg.map(r=>String(r.Cedula)))];
   const grupoPerfiles=ceds.map(c=>{
     const rows=grupoReg.filter(r=>String(r.Cedula)===c);
@@ -590,9 +590,10 @@ function renderEst(reg, allNotas, ced){
     </div>`:''}
 
     <div class="card">
-      <div class="card-title">📅 Historial de sesiones</div>
-      <div class="sg">
-        ${SS.map(s=>{const env=sesEnv.includes(s.v);return `<div class="sc ${env?'ok':'no'}"><span class="sn">${s.l}</span><span class="sf">${s.v}</span><span class="st">${env?'✓ Enviado':'Pendiente'}</span></div>`;}).join('')}
+      <div class="card-title">📅 Sesiones grabadas</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+        Has enviado <strong style="color:var(--text);font-size:18px;font-family:var(--font-d)">${sesEnv.length}</strong> audios de un total de <strong style="color:var(--text)">${SS.length}</strong> sesiones del curso.
+        ${misReg.length>0?`<br/>Última sesión grabada: <span style="color:var(--accent2);font-family:var(--font-m)">${ns(ord[ord.length-1]?.Sesion||'')}</span>`:''}
       </div>
     </div>
 
