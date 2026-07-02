@@ -351,7 +351,20 @@ function clasificar(prom){
   if(n>=3.0)return{cls:'b-yellow',label:'Medio',emoji:'🟡'};
   return{cls:'b-red',label:'Bajo',emoji:'🔴'};
 }
-// Marca el ~10% con peor desempeño como "en riesgo" (outlier estadístico).
+// Elige mejor/peor del grupo por nota promedio (la variable de resultado real).
+// Si menos de 3 estudiantes del grupo tienen nota registrada aún (ej. antes del Parcial 1),
+// cae de vuelta a riqueza léxica como proxy temporal — no hay suficiente base para usar nota.
+function elegirMejorPeor(perfiles){
+  const conNota=perfiles.filter(pf=>pf.np);
+  if(conNota.length>=3){
+    const mejor=conNota.reduce((a,b)=>b.np.promedio>a.np.promedio?b:a,conNota[0]);
+    const peor=conNota.reduce((a,b)=>b.np.promedio<a.np.promedio?b:a,conNota[0]);
+    return{mejor,peor,criterio:'nota'};
+  }
+  const mejor=perfiles.reduce((a,b)=>b.rl>a.rl?b:a,perfiles[0]);
+  const peor=perfiles.reduce((a,b)=>b.rl<a.rl?b:a,perfiles[0]);
+  return{mejor,peor,criterio:'riqueza_lexica'};
+}
 // Usa la nota promedio si hay suficientes datos; si no, un proxy con riqueza léxica/muletillas/dudas.
 function calcularRiesgo(perfiles){
   const conNota=perfiles.filter(pf=>pf.np);
@@ -370,7 +383,7 @@ function calcularRiesgo(perfiles){
   });
 }
 // Traduce las métricas crudas a lectura en lenguaje sencillo.
-function interpretar(yo,mejor,peor){
+function interpretar(yo,mejor,peor,criterio){
   const out=[];
   // Riqueza léxica
   if(yo.rl>=0.65) out.push({icon:'🟢',text:`<b>Vocabulario variado.</b> Usa palabras distintas con frecuencia, lo que suele reflejar buen dominio del tema.`});
@@ -384,12 +397,19 @@ function interpretar(yo,mejor,peor){
   if(yo.dds<=1) out.push({icon:'🟢',text:`<b>Habla con seguridad.</b> Pocas expresiones de duda en sus respuestas.`});
   else if(yo.dds<=3) out.push({icon:'🟡',text:`<b>Duda ocasional.</b> Normal en explicaciones más complejas.`});
   else out.push({icon:'🔴',text:`<b>Duda frecuente.</b> Repasar el tema antes de grabar podría ayudar a responder con más confianza.`});
-  // Comparativa vs grupo
-  if(mejor&&peor&&mejor.rl!==peor.rl){
-    const rango=mejor.rl-peor.rl;
-    const posicion=(yo.rl-peor.rl)/rango;
-    if(posicion>=0.7) out.push({icon:'⭐',text:`Está entre los estudiantes con <b>mejor vocabulario del grupo</b>.`});
-    else if(posicion<=0.3) out.push({icon:'⚠️',text:`Su riqueza léxica está <b>por debajo del promedio del grupo</b> — vale la pena reforzar este punto.`});
+  // Comparativa vs grupo — según el criterio que realmente se usó para elegir mejor/peor
+  if(mejor&&peor){
+    if(criterio==='nota' && yo.nota!=null && mejor.np && peor.np && mejor.np.promedio!==peor.np.promedio){
+      const rango=mejor.np.promedio-peor.np.promedio;
+      const posicion=(yo.nota-peor.np.promedio)/rango;
+      if(posicion>=0.7) out.push({icon:'⭐',text:`Su nota está entre las <b>más altas del grupo</b>.`});
+      else if(posicion<=0.3) out.push({icon:'⚠️',text:`Su nota está <b>por debajo del promedio del grupo</b> — vale la pena revisar qué está pasando.`});
+    } else if(mejor.rl!==peor.rl){
+      const rango=mejor.rl-peor.rl;
+      const posicion=(yo.rl-peor.rl)/rango;
+      if(posicion>=0.7) out.push({icon:'⭐',text:`Está entre los estudiantes con <b>mejor vocabulario del grupo</b>.`});
+      else if(posicion<=0.3) out.push({icon:'⚠️',text:`Su riqueza léxica está <b>por debajo del promedio del grupo</b> — vale la pena reforzar este punto.`});
+    }
   }
   return out;
 }
@@ -533,8 +553,7 @@ function verEstudianteProf(ced){
   });
   calcularRiesgo(perfiles);
   const pf=perfiles.find(x=>x.ced===ced);
-  const mejor=perfiles.reduce((a,b)=>b.rl>a.rl?b:a,perfiles[0]);
-  const peor=perfiles.reduce((a,b)=>b.rl<a.rl?b:a,perfiles[0]);
+  const {mejor,peor,criterio}=elegirMejorPeor(perfiles);
   const ord=[...rows].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
   const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
 
@@ -555,7 +574,7 @@ function verEstudianteProf(ced){
     </div>
     <div class="card">
       <div class="card-title">🧭 Lectura rápida</div>
-      ${interpretar({rl:pf.rl,mts:pf.mts,dds:pf.dds},mejor,peor).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
+      ${interpretar({rl:pf.rl,mts:pf.mts,dds:pf.dds,nota:pf.np?.promedio},mejor,peor,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
     </div>
     <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-det-rl"></canvas></div></div>
   `;
@@ -712,12 +731,12 @@ function renderEst(reg, allNotas, ced){
   const ceds=[...new Set(grupoReg.map(r=>String(r.Cedula)))];
   const grupoPerfiles=ceds.map(c=>{
     const rows=grupoReg.filter(r=>String(r.Cedula)===c);
-    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras')};
+    const np=calcPromedio(notaEst(notas,c),grupoKey);
+    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),np};
   });
 
-  const mejor=grupoPerfiles.reduce((a,b)=>b.rl>a.rl?b:a,grupoPerfiles[0]);
-  const peor=grupoPerfiles.reduce((a,b)=>b.rl<a.rl?b:a,grupoPerfiles[0]);
-  const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras')};
+  const {mejor,peor,criterio}=elegirMejorPeor(grupoPerfiles);
+  const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras'),nota:miNP?.promedio};
 
   const vars=[
     {k:'rl',l:'Riqueza léxica',f:v=>(v*100).toFixed(1)+'%',max:1},
@@ -742,7 +761,7 @@ function renderEst(reg, allNotas, ced){
 
     <div class="card">
       <div class="card-title">🧭 Qué significa esto</div>
-      ${interpretar(yo,mejor,peor).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
+      ${interpretar(yo,mejor,peor,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
     </div>
 
     ${miNP?`
@@ -770,6 +789,7 @@ function renderEst(reg, allNotas, ced){
 
     <div class="card">
       <div class="card-title">🔍 Tú vs el grupo — comparativa</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Mejor/peor del grupo según ${criterio==='nota'?'nota promedio':'riqueza léxica (aún sin suficientes notas registradas)'}</div>
       <div class="cmp-legend">
         <span><span class="cmp-dot" style="background:#60a5fa"></span>Tú</span>
         <span><span class="cmp-dot" style="background:#34d399"></span>Mejor del grupo</span>
