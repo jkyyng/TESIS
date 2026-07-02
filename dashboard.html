@@ -293,7 +293,7 @@ async function cargar(){
     const res=await fetch(`${URL_AS}?action=getDashboard`);
     const d=await res.json();
     if(!d.ok)throw new Error(d.error||'Error');
-    DATA=d.registros;
+    DATA=dedupUltimaPorSesion(d.registros);
     NOTAS=d.notas||{};
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED);
@@ -304,6 +304,14 @@ async function cargar(){
 
 // ── Utils ──
 function ns(s){return String(s||'').split(' ')[0].trim();}
+// Si un estudiante (o profesor) mandó más de un audio para la misma sesión, se queda solo con el
+// más reciente. Las filas llegan del backend en orden cronológico (siempre se agregan al final),
+// así que la última que pisa cada clave Cedula+Sesion es la correcta.
+function dedupUltimaPorSesion(rows){
+  const m={};
+  rows.forEach(r=>{ m[String(r.Cedula)+'|'+ns(r.Sesion)]=r; });
+  return Object.values(m);
+}
 function p(rows,key){const v=rows.map(r=>parseFloat(r[key])).filter(v=>!isNaN(v));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
 function gb(arr,key){return arr.reduce((acc,r)=>{const k=ns(r[key]||r['Sesion']||key);(acc[k]=acc[k]||[]).push(r);return acc;},{});}
 function gbc(arr,key){return arr.reduce((acc,r)=>{(acc[r[key]]=acc[r[key]]||[]).push(r);return acc;},{});}
