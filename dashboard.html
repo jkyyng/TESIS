@@ -226,6 +226,11 @@ const SS=[
   {v:'03/07/2026',l:'S17'},{v:'06/07/2026',l:'S18'},{v:'07/07/2026',l:'S19'},{v:'08/07/2026',l:'S20'},
   {v:'09/07/2026',l:'S21'},{v:'10/07/2026',l:'S22'},
 ];
+// Las fechas de Sesion vienen como texto 'dd/MM/yyyy', así que ordenarlas con .sort() o
+// .localeCompare() las trata como texto y las desordena (ej: '01/07/2026' queda antes que
+// '09/06/2026' porque empieza por '0','1'). Este índice da el orden cronológico real.
+const SS_ORDEN=Object.fromEntries(SS.map((s,i)=>[s.v,i]));
+function ordenSesion(v){ const o=SS_ORDEN[v]; return o===undefined?Infinity:o; }
 const CD={plugins:{legend:{labels:{color:'#5a7a9e',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#5a7a9e',font:{size:10},maxRotation:0},grid:{color:'rgba(99,179,237,0.05)'}},y:{ticks:{color:'#5a7a9e',font:{size:10}},grid:{color:'rgba(99,179,237,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
@@ -400,7 +405,7 @@ function mkChart(id,type,labels,datasets,opts={}){
 // ══════════════════════════════════════════════════════
 function renderProf(reg, notas){
   const est=reg.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
   const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
   const cumpl=Math.round((est.length/(ceds.length*sesVistas.length))*100)||0;
 
@@ -515,7 +520,7 @@ function verEstudianteProf(ced){
   const d=DATA.filter(r=>r.Grupo===GP);
   const est=d.filter(r=>r.Es_Profesor!=='SÍ');
   const rows=est.filter(r=>String(r.Cedula)===ced);
-  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
   const grupoSinTest=est.filter(r=>String(r.Cedula)!=='654321');
   const ceds=[...new Set(grupoSinTest.map(r=>String(r.Cedula)))];
   const perfiles=ceds.map(c=>{
@@ -530,7 +535,7 @@ function verEstudianteProf(ced){
   const pf=perfiles.find(x=>x.ced===ced);
   const mejor=perfiles.reduce((a,b)=>b.rl>a.rl?b:a,perfiles[0]);
   const peor=perfiles.reduce((a,b)=>b.rl<a.rl?b:a,perfiles[0]);
-  const ord=[...rows].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
+  const ord=[...rows].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
   const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
 
   detalle.innerHTML=`
@@ -625,7 +630,7 @@ function st(tab,btn){
   if(DATA) setTimeout(()=>{
     const d=DATA.filter(r=>r.Grupo===GP);
     const est=d.filter(r=>r.Es_Profesor!=='SÍ');
-    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
     const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
     const pfs=ceds.map(ced=>{
       const rows=est.filter(r=>String(r.Cedula)===ced);
@@ -695,7 +700,7 @@ function renderEst(reg, allNotas, ced){
 
   // Mis sesiones
   const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
-  const ord=[...misReg].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
+  const ord=[...misReg].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
 
   // Mis notas
   const miNota=notaEst(notas,ced);
