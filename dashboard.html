@@ -83,6 +83,19 @@
     .b-yellow{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.2);}
     .b-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
     .b-blue{background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.2);}
+    /* Riesgo / outliers */
+    tr.row-risk td{background:rgba(248,113,113,0.09);}
+    tr.row-risk td:first-child{box-shadow:inset 3px 0 0 var(--red);}
+    .b-risk{background:rgba(248,113,113,0.18);color:#fecaca;border:1px solid rgba(248,113,113,0.4);animation:pulseRisk 2s infinite;}
+    @keyframes pulseRisk{0%,100%{opacity:1}50%{opacity:0.65}}
+    /* Interpretación */
+    .interp{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
+    .interp:last-child{border-bottom:none;}
+    .interp .ii{font-size:20px;line-height:1;}
+    .interp .it{font-size:13px;color:var(--text);line-height:1.5;}
+    .interp .it b{color:var(--accent2);}
+    .sel-est{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);font-family:var(--font-b);}
+    .sel-est:focus{outline:none;border-color:var(--accent);}
     /* Sesiones */
     .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
     .sc{padding:10px 8px;border-radius:10px;text-align:center;border:1px solid var(--border);transition:all 0.2s;}
@@ -186,6 +199,25 @@ const KE = {
   '1150184438':'M5IGQ','1057570650':'PKI7P','1025531736':'5TB94','1013123384':'874FR',
   '1012378143':'HOCN9','1032877807':'J2QP8','1029141009':'9UZFK','1014990403':'8UT0C',
 };
+const NOMBRES = {
+  '1147486525':'GUZMAN_SAHRA','1025063386':'LOBO_DAVID','1010965081':'MATEUS_ANDRES','1096068485':'NUNEZ_GABRIELA',
+  '1013258532':'OBANDO_SIMON','1033102141':'OSTOS_JUANITA','1011323304':'OTALORA_ALEJANDRO','1014867126':'MESA_PEDRO',
+  '1024509578':'QUINTERO_CRISTHIAN','1014868162':'QUIROGA_MARIANA','1054895361':'RAMIREZ_LEONELA','1109549575':'REYES_LEIDY',
+  '1011324854':'RODRIGUEZ_GABRIELA','1031424164':'SALAMANCA_SANTIAGO','1141517449':'SANABRIA_NICOLAS','1023164975':'SANDOVAL_DAVID',
+  '1021634975':'SARMIENTO_SEBASTIAN','1034519179':'TARQUINO_JUAN','1030220057':'URIBE_MARIA','1018434360':'VALDIVIESO_GUSTAVO',
+  '1140916332':'VARGAS_LAURA','1032877729':'VILLABONA_JUAN','1150184438':'POVEDA_ANA','1057570650':'BARRERA_JUAN',
+  '1025531736':'CARDENAS_NATALIA','1013123384':'ARTUNDUAGA_ESTHEFANIA','1012378143':'CONDE_LUNA','1032877807':'MORA_PABLO',
+  '1029141009':'NARVAEZ_HENRY','1014990403':'GUTIERREZ_GABRIELA',
+  '1010964822':'PINEDA_DIEGO','1014482009':'ARGUELLO_SOFIA','1016946301':'PALACIOS_SANTIAGO','1028885900':'HERNANDEZ_DAVID',
+  '1029220048':'QUINTERO_SANTIAGO','1033097334':'CALDERON_ISABELLA','1034779730':'ZAPATA_JUAN','1107842573':'JURADO_JUAN',
+  '1012344638':'PACHECO_DANIEL','1054287150':'RODRIGUEZ_PAULA','1022354452':'SIERRA_JUAN','1141715942':'GUERRA_JULIANA',
+  '1034662097':'JIMENEZ_JUAN','1000329597':'ORTIZ_DAMIAN',
+};
+function nombreDe(ced){
+  const n=NOMBRES[String(ced)];
+  if(!n)return String(ced);
+  return n.split('_').map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' ');
+}
 const SS=[
   {v:'09/06/2026',l:'S1'},{v:'10/06/2026',l:'S2'},{v:'11/06/2026',l:'S3'},{v:'12/06/2026',l:'S4'},
   {v:'16/06/2026',l:'S5'},{v:'17/06/2026',l:'S6'},{v:'18/06/2026',l:'S7'},{v:'19/06/2026',l:'S8'},
@@ -306,6 +338,48 @@ function clasificar(prom){
   if(n>=3.0)return{cls:'b-yellow',label:'Medio',emoji:'🟡'};
   return{cls:'b-red',label:'Bajo',emoji:'🔴'};
 }
+// Marca el ~10% con peor desempeño como "en riesgo" (outlier estadístico).
+// Usa la nota promedio si hay suficientes datos; si no, un proxy con riqueza léxica/muletillas/dudas.
+function calcularRiesgo(perfiles){
+  const conNota=perfiles.filter(pf=>pf.np);
+  const usarNota=conNota.length>=3;
+  const base=usarNota?conNota:perfiles;
+  const val=pf=>usarNota?pf.np.promedio:(pf.rl*100 - pf.mts*2 - pf.dds*2);
+  const vals=base.map(val);
+  const media=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const desv=Math.sqrt(vals.reduce((s,v)=>s+(v-media)**2,0)/vals.length)||1;
+  const orden=[...base].sort((a,b)=>val(a)-val(b));
+  const nOutliers=Math.max(1,Math.round(orden.length*0.10));
+  const enRiesgo=new Set(orden.slice(0,nOutliers).map(pf=>pf.ced));
+  perfiles.forEach(pf=>{
+    pf.riesgo=enRiesgo.has(pf.ced);
+    pf.zscore=((val(pf)-media)/desv);
+  });
+}
+// Traduce las métricas crudas a lectura en lenguaje sencillo.
+function interpretar(yo,mejor,peor){
+  const out=[];
+  // Riqueza léxica
+  if(yo.rl>=0.65) out.push({icon:'🟢',text:`<b>Vocabulario variado.</b> Usa palabras distintas con frecuencia, lo que suele reflejar buen dominio del tema.`});
+  else if(yo.rl>=0.45) out.push({icon:'🟡',text:`<b>Vocabulario adecuado.</b> Está en un rango normal, aunque repetir menos palabras podría mejorar la claridad.`});
+  else out.push({icon:'🔴',text:`<b>Vocabulario limitado.</b> Repite bastantes palabras; ampliar el vocabulario usado en las respuestas podría ayudar.`});
+  // Muletillas
+  if(yo.mts<=2) out.push({icon:'🟢',text:`<b>Discurso fluido.</b> Casi no usa muletillas ("o sea", "eh", etc.).`});
+  else if(yo.mts<=5) out.push({icon:'🟡',text:`<b>Algunas muletillas.</b> Es un nivel normal, no representa una alerta por sí solo.`});
+  else out.push({icon:'🔴',text:`<b>Muchas muletillas.</b> Puede indicar nerviosismo o que la respuesta no fue preparada con anticipación.`});
+  // Dudas
+  if(yo.dds<=1) out.push({icon:'🟢',text:`<b>Habla con seguridad.</b> Pocas expresiones de duda en sus respuestas.`});
+  else if(yo.dds<=3) out.push({icon:'🟡',text:`<b>Duda ocasional.</b> Normal en explicaciones más complejas.`});
+  else out.push({icon:'🔴',text:`<b>Duda frecuente.</b> Repasar el tema antes de grabar podría ayudar a responder con más confianza.`});
+  // Comparativa vs grupo
+  if(mejor&&peor&&mejor.rl!==peor.rl){
+    const rango=mejor.rl-peor.rl;
+    const posicion=(yo.rl-peor.rl)/rango;
+    if(posicion>=0.7) out.push({icon:'⭐',text:`Está entre los estudiantes con <b>mejor vocabulario del grupo</b>.`});
+    else if(posicion<=0.3) out.push({icon:'⚠️',text:`Su riqueza léxica está <b>por debajo del promedio del grupo</b> — vale la pena reforzar este punto.`});
+  }
+  return out;
+}
 function mkChart(id,type,labels,datasets,opts={}){
   const c=document.getElementById(id);
   if(!c)return;
@@ -335,6 +409,8 @@ function renderProf(reg, notas){
       enviadas:rows.length};
   }).sort((a,b)=>(b.np?.promedio||0)-(a.np?.promedio||0));
 
+  calcularRiesgo(perfiles);
+
   const conNota=perfiles.filter(p=>p.np);
   const sinNota=perfiles.filter(p=>!p.np);
   const nAlto=conNota.filter(p=>p.cl.label==='Alto').length;
@@ -350,6 +426,7 @@ function renderProf(reg, notas){
       <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/ceds.length*10)/10} prom/est</div></div>
       <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${cumpl}%</div><div class="kpi-sub">audios / esperados</div></div>
       <div class="kpi highlight"><div class="kpi-label">Distribución</div><div class="kpi-value" style="font-size:18px">🟢${nAlto} 🟡${nMedio} 🔴${nBajo}</div><div class="kpi-sub">${sinNota.length} sin nota aún</div></div>
+      <div class="kpi" style="border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.05)"><div class="kpi-label">En riesgo</div><div class="kpi-value" style="color:var(--red)">🚨 ${perfiles.filter(pf=>pf.riesgo).length}</div><div class="kpi-sub">10% con peor desempeño relativo</div></div>
     </div>
 
     <div class="tabs">
@@ -382,25 +459,96 @@ function tResumen(perfiles,sesVistas,est){
 }
 
 function tEstudiantes(perfiles,sesVistas){
+  const nRiesgo=perfiles.filter(pf=>pf.riesgo).length;
   const rows=perfiles.map(pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
-    return `<tr>
-      <td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td>
+    return `<tr class="${pf.riesgo?'row-risk':''}">
+      <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
       <td>${(pf.rl*100).toFixed(1)}%</td>
       <td>${pf.mts.toFixed(1)}</td>
       <td>${pf.dds.toFixed(1)}</td>
       <td>${isNaN(pf.sim)||pf.sim===0?'—':(pf.sim*100).toFixed(0)+'%'}</td>
       <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
-      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></td>
+      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?' <span class="badge b-risk">🚨 En riesgo</span>':''}</td>
     </tr>`;
   }).join('');
-  return `<div class="card"><div class="card-title">Todos los estudiantes — ordenados por nota</div>
-    <div class="tw"><table>
-      <tr><th>Cédula</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Nota prom.</th><th>Nivel</th></tr>
-      ${rows}
-    </table></div></div>`;
+  const opciones=perfiles.map(pf=>`<option value="${pf.ced}">${pf.riesgo?'🚨 ':''}${nombreDe(pf.ced)}</option>`).join('');
+  return `
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:var(--muted)">Ver estudiante:</span>
+        <select class="sel-est" id="sel-est" onchange="verEstudianteProf(this.value)">
+          <option value="">Todos (tabla completa)</option>
+          ${opciones}
+        </select>
+      </div>
+      ${nRiesgo>0?`<span class="badge b-risk">🚨 ${nRiesgo} estudiante${nRiesgo>1?'s':''} en riesgo (10% con peor desempeño relativo)</span>`:`<span class="badge b-green">✅ Sin outliers marcados</span>`}
+    </div>
+    <div id="wrap-tabla-est">
+      <div class="card"><div class="card-title">Todos los estudiantes — ordenados por nota</div>
+        <div class="tw"><table>
+          <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Nota prom.</th><th>Nivel</th></tr>
+          ${rows}
+        </table></div>
+      </div>
+    </div>
+    <div id="wrap-detalle-est" style="display:none"></div>`;
+}
+
+// Cuando el profesor elige un estudiante puntual en el filtro
+function verEstudianteProf(ced){
+  const tabla=document.getElementById('wrap-tabla-est');
+  const detalle=document.getElementById('wrap-detalle-est');
+  if(!ced){ tabla.style.display=''; detalle.style.display='none'; return; }
+  tabla.style.display='none';
+  detalle.style.display='';
+  const d=DATA.filter(r=>r.Grupo===GP);
+  const est=d.filter(r=>r.Es_Profesor!=='SÍ');
+  const rows=est.filter(r=>String(r.Cedula)===ced);
+  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+  const grupoSinTest=est.filter(r=>String(r.Cedula)!=='654321');
+  const ceds=[...new Set(grupoSinTest.map(r=>String(r.Cedula)))];
+  const perfiles=ceds.map(c=>{
+    const rs=grupoSinTest.filter(r=>String(r.Cedula)===c);
+    const nr=notaEst(NOTAS[GK]||[],c);
+    const np=calcPromedio(nr,GK);
+    return{ced:c,rows:rs,np,cl:clasificar(np?.promedio||null),
+      rl:p(rs,'riqueza_lexica'),mts:p(rs,'conteo_muletillas'),dds:p(rs,'conteo_dudas'),
+      neg:p(rs,'conteo_negaciones'),sim:p(rs,'similitud_coseno'),pal:p(rs,'num_palabras'),enviadas:rs.length};
+  });
+  calcularRiesgo(perfiles);
+  const pf=perfiles.find(x=>x.ced===ced);
+  const mejor=perfiles.reduce((a,b)=>b.rl>a.rl?b:a,perfiles[0]);
+  const peor=perfiles.reduce((a,b)=>b.rl<a.rl?b:a,perfiles[0]);
+  const ord=[...rows].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
+  const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
+
+  detalle.innerHTML=`
+    <div class="card">
+      <div class="card-title">${nombreDe(pf.ced)} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${pf.ced}</span>
+        ${pf.riesgo?'<span class="badge b-risk">🚨 En riesgo</span>':''}
+        <span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>
+      </div>
+      <div class="mr">
+        <div class="ms"><div class="msl">Sesiones enviadas</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
+        <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(pf.rl*100).toFixed(1)}%</div></div>
+        <div class="ms"><div class="msl">Muletillas</div><div class="msv">${pf.mts.toFixed(1)}</div></div>
+        <div class="ms"><div class="msl">Dudas</div><div class="msv">${pf.dds.toFixed(1)}</div></div>
+        <div class="ms"><div class="msl">Sim. coseno</div><div class="msv">${isNaN(pf.sim)||pf.sim===0?'—':(pf.sim*100).toFixed(0)+'%'}</div></div>
+        <div class="ms"><div class="msl">Nota prom.</div><div class="msv">${pf.np?pf.np.promedio.toFixed(1):'—'}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🧭 Lectura rápida</div>
+      ${interpretar({rl:pf.rl,mts:pf.mts,dds:pf.dds},mejor,peor).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
+    </div>
+    <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-det-rl"></canvas></div></div>
+  `;
+  setTimeout(()=>{
+    mkChart('ch-det-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#60a5fa',pointRadius:4}]);
+  },50);
 }
 
 function tSesiones(){
@@ -577,6 +725,11 @@ function renderEst(reg, allNotas, ced){
       <div class="kpi"><div class="kpi-label">Riqueza léxica</div><div class="kpi-value">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sub">promedio personal</div></div>
       ${miNP?`<div class="kpi highlight"><div class="kpi-label">Tu desempeño</div><div class="kpi-value" style="font-size:22px">${miCl.emoji} ${miNP.promedio.toFixed(1)}</div><div class="kpi-sub"><span class="badge ${miCl.cls}">${miCl.label}</span></div></div>`
       :`<div class="kpi"><div class="kpi-label">Desempeño</div><div class="kpi-value" style="font-size:18px">—</div><div class="kpi-sub">Sin nota registrada aún</div></div>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧭 Qué significa esto</div>
+      ${interpretar(yo,mejor,peor).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
     </div>
 
     ${miNP?`
