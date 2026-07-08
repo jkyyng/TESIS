@@ -337,12 +337,29 @@ function goTab(tab){
   }
 }
 
+function parseFechaEnvio(s){
+  // "10/6/2026, 9:35:08 p. m." -> timestamp aproximado para comparar
+  if(!s)return 0;
+  const str=String(s).replace(/\u202f/g,' ').replace(/\xa0/g,' ');
+  const t=Date.parse(str.replace(/(\d+)\/(\d+)\/(\d+)/,'$3-$2-$1'));
+  return isNaN(t)?0:t;
+}
+function dedupUltimoPorSesion(rows){
+  const map={};
+  rows.forEach(r=>{
+    const key=String(r.Cedula)+'|'+ns(r.Sesion);
+    const t=parseFechaEnvio(r.Fecha);
+    if(!map[key]||t>=map[key]._t){ r._t=t; map[key]=r; }
+  });
+  return Object.values(map);
+}
+
 async function cargar(){
   try{
     const res=await fetch(`${URL_AS}?action=getDashboard`);
     const d=await res.json();
     if(!d.ok)throw new Error(d.error||'Error');
-    DATA=d.registros; NOTAS=d.notas||{};
+    DATA=dedupUltimoPorSesion(d.registros); NOTAS=d.notas||{};
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED);
   }catch(err){
