@@ -228,6 +228,22 @@ const URL_AS='https://script.google.com/macros/s/AKfycbw12TxEJDssZ8JYEx7GH7nd0TD
 const KP={'XAJI0':{grupo:'Santiago Aparicio — Matemáticas I',key:'santiago'},'OHGI1':{grupo:'Omar Palacios — Data Mining',key:'omar'}};
 const KE={'1010964822':'Y6DPB','1014482009':'HSAHX','1016946301':'THV3A','1028885900':'3ZMF8','1029220048':'MDD4V','1033097334':'30T9N','1034779730':'T3W5U','1107842573':'ZBIKC','1012344638':'IDKWN','1054287150':'NHJ7X','1022354452':'VG0FN','1141715942':'9XUY4','1034662097':'1IBLJ','1000329597':'H75LX','1147486525':'O6QJI','1025063386':'UJV6O','1010965081':'H9SDB','1096068485':'DW2PC','1013258532':'N9T84','1033102141':'AZYTJ','1011323304':'XEPQ8','1014867126':'5JSG6','1024509578':'5KXVF','1014868162':'1T2TA','1054895361':'LA753','1109549575':'LC58D','1011324854':'RC11E','1031424164':'RTJ5P','1141517449':'HT0HL','1023164975':'9XPSE','1021634975':'IMVIH','1034519179':'CWI64','1030220057':'CIYHE','1018434360':'7UR23','1140916332':'GDPPQ','1032877729':'0Y9DO','1150184438':'M5IGQ','1057570650':'PKI7P','1025531736':'5TB94','1013123384':'874FR','1012378143':'HOCN9','1032877807':'J2QP8','1029141009':'9UZFK','1014990403':'8UT0C'};
 const SS=[{v:'09/06/2026',l:'S1'},{v:'10/06/2026',l:'S2'},{v:'11/06/2026',l:'S3'},{v:'12/06/2026',l:'S4'},{v:'16/06/2026',l:'S5'},{v:'17/06/2026',l:'S6'},{v:'18/06/2026',l:'S7'},{v:'19/06/2026',l:'S8'},{v:'22/06/2026',l:'S9'},{v:'23/06/2026',l:'S10'},{v:'24/06/2026',l:'S11'},{v:'25/06/2026',l:'S12'},{v:'26/06/2026',l:'S13'},{v:'30/06/2026',l:'S14'},{v:'01/07/2026',l:'S15'},{v:'02/07/2026',l:'S16'},{v:'03/07/2026',l:'S17'},{v:'06/07/2026',l:'S18'},{v:'07/07/2026',l:'S19'},{v:'08/07/2026',l:'S20'},{v:'09/07/2026',l:'S21'},{v:'10/07/2026',l:'S22'}];
+const NOMBRES={
+  '1147486525':'Sahra Guzmán','1025063386':'David Lobo','1010965081':'Andrés Mateus','1096068485':'Gabriela Núñez',
+  '1013258532':'Simón Obando','1033102141':'Juanita Ostos','1011323304':'Alejandro Otálora','1014867126':'Pedro Mesa',
+  '1024509578':'Cristhian Quintero','1014868162':'Mariana Quiroga','1054895361':'Leonela Ramírez','1109549575':'Leidy Reyes',
+  '1011324854':'Gabriela Rodríguez','1031424164':'Santiago Salamanca','1141517449':'Nicolás Sanabria','1023164975':'David Sandoval',
+  '1021634975':'Sebastián Sarmiento','1034519179':'Juan Tarquino','1030220057':'María Uribe','1018434360':'Gustavo Valdivieso',
+  '1140916332':'Laura Vargas','1032877729':'Juan Villabona','1150184438':'Ana Poveda','1057570650':'Juan Barrera',
+  '1025531736':'Natalia Cárdenas','1013123384':'Esthefania Artunduaga','1012378143':'Luna Conde','1032877807':'Pablo Mora',
+  '1029141009':'Henry Narváez','1014990403':'Gabriela Gutiérrez',
+  '1010964822':'Diego Pineda','1014482009':'Sofía Arguello','1016946301':'Santiago Palacios','1028885900':'David Hernández',
+  '1029220048':'Santiago Quintero','1033097334':'Isabella Calderón','1034779730':'Juan Zapata','1107842573':'Juan Jurado',
+  '1012344638':'Daniel Pacheco','1054287150':'Paula Rodríguez','1022354452':'Juan Sierra','1141715942':'Juliana Guerra',
+  '1034662097':'Juan Jiménez','1000329597':'Damián Ortiz','654321':'Prueba John',
+};
+function nombreDe(ced){return NOMBRES[String(ced)]||String(ced);}
+function fechaKey(s){const[d,m,y]=ns(s).split('/');return `${y}${m}${d}`;}
 const CD={plugins:{legend:{labels:{color:'#7d8fac',font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:'#7d8fac',font:{size:10},maxRotation:0},grid:{color:'rgba(120,150,200,0.05)'}},y:{ticks:{color:'#7d8fac',font:{size:10}},grid:{color:'rgba(120,150,200,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
@@ -309,7 +325,7 @@ function goTab(tab){
   if(DATA){
     const d=DATA.filter(r=>r.Grupo===GP);
     const est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort((a,b)=>fechaKey(a).localeCompare(fechaKey(b)));
     const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
     const pfs=ceds.map(ced=>{
       const rows=est.filter(r=>String(r.Cedula)===ced);
@@ -364,7 +380,7 @@ function mkChart(id,type,labels,datasets,opts={}){
 
 function renderProf(reg,notas){
   const est=reg.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort((a,b)=>fechaKey(a).localeCompare(fechaKey(b)));
   const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
   const cumpl=Math.round((est.length/(ceds.length*sesVistas.length))*100)||0;
 
@@ -418,7 +434,7 @@ function tEstudiantes(perfiles,sesVistas){
   const rows=perfiles.map(pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     return `<tr>
-      <td style="font-family:var(--f-m);font-size:11px">${pf.ced}</td>
+      <td style="font-family:var(--f-m);font-size:11px">${nombreDe(pf.ced)}</td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--ink-faint);font-size:11px">(${pct}%)</span></td>
       <td>${(pf.rl*100).toFixed(1)}%</td>
       <td>${pf.mts.toFixed(1)}</td>
@@ -460,11 +476,11 @@ function tAlertas(perfiles,sesVistas){
     ?`<div class="card"><div class="card-tt">${title}</div><div style="color:var(--good);font-size:13px">Sin alertas en este indicador</div></div>`
     :`<div class="card"><div class="card-tt">${title}</div><div class="tbl-wrap"><table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${items.map(fn).join('')}</table></div></div>`;
   return `
-    ${mk('Bajo desempeño',bajo,['Cédula','Nota','Riqueza léx.','Muletillas'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.np?.promedio.toFixed(1)||'—'}</td><td>${(x.rl*100).toFixed(1)}%</td><td>${x.mts.toFixed(1)}</td></tr>`)}
-    ${mk('Bajo cumplimiento (&lt;60%)',pocas,['Cédula','Enviadas','%'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.enviadas}/${sesVistas.length}</td><td>${Math.round(x.enviadas/sesVistas.length*100)}%</td></tr>`)}
+    ${mk('Bajo desempeño',bajo,['Cédula','Nota','Riqueza léx.','Muletillas'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${nombreDe(x.ced)}</td><td>${x.np?.promedio.toFixed(1)||'—'}</td><td>${(x.rl*100).toFixed(1)}%</td><td>${x.mts.toFixed(1)}</td></tr>`)}
+    ${mk('Bajo cumplimiento (&lt;60%)',pocas,['Cédula','Enviadas','%'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${nombreDe(x.ced)}</td><td>${x.enviadas}/${sesVistas.length}</td><td>${Math.round(x.enviadas/sesVistas.length*100)}%</td></tr>`)}
     <div class="grid2">
-      ${mk('Muchas muletillas (&gt;5)',mts,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.mts.toFixed(1)}</td></tr>`)}
-      ${mk('Muchas dudas (&gt;3)',dds,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.dds.toFixed(1)}</td></tr>`)}
+      ${mk('Muchas muletillas (&gt;5)',mts,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${nombreDe(x.ced)}</td><td>${x.mts.toFixed(1)}</td></tr>`)}
+      ${mk('Muchas dudas (&gt;3)',dds,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${nombreDe(x.ced)}</td><td>${x.dds.toFixed(1)}</td></tr>`)}
     </div>`;
 }
 
@@ -517,20 +533,20 @@ function tTranscripciones(sesVistas,perfiles){
   const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
   return `<div class="card"><div class="card-tt">Filtros</div><div class="filters">
     <div><label class="fld-lb">Sesión</label><select class="fld" id="f-sesion" onchange="filtrarTranscripciones()"><option value="">Todas</option>${sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('')}</select></div>
-    <div><label class="fld-lb">Estudiante</label><select class="fld" id="f-estudiante" onchange="filtrarTranscripciones()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${x.ced}">${x.ced}</option>`).join('')}</select></div>
+    <div><label class="fld-lb">Estudiante</label><select class="fld" id="f-estudiante" onchange="filtrarTranscripciones()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${nombreDe(x.ced)}">${nombreDe(x.ced)}</option>`).join('')}</select></div>
   </div></div><div id="lista-transcripciones"></div>`;
 }
 function filtrarTranscripciones(){
   const fs=document.getElementById('f-sesion').value, fe=document.getElementById('f-estudiante').value;
   let est=DATA.filter(r=>r.Grupo===GP&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   if(fs)est=est.filter(r=>ns(r.Sesion)===fs);
-  if(fe)est=est.filter(r=>String(r.Cedula)===fe);
-  est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
+  if(fe)est=est.filter(r=>nombreDe(r.Cedula)===fe);
+  est.sort((a,b)=>fechaKey(a.Sesion).localeCompare(fechaKey(b.Sesion))||nombreDe(a.Cedula).localeCompare(nombreDe(b.Cedula)));
   const cont=document.getElementById('lista-transcripciones');
   if(!est.length){cont.innerHTML='<div class="empty"><div class="ic">📭</div><div class="tt">Sin resultados</div></div>';return;}
   cont.innerHTML=est.map(r=>{
     const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
-    return `<div class="detail-item"><div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${r.Cedula}</span><span class="di-fecha">${ns(r.Sesion)}</span></div><div class="di-quick"><span>${r.num_palabras||0} palabras</span><span>${r.duracion_segundos||0}s</span><span>Riqueza ${((parseFloat(r.riqueza_lexica)||0)*100).toFixed(1)}%</span></div></div>${hlLegend()}<div class="transcript-box">${highlightText(r.Transcripcion)}</div></div>`;
+    return `<div class="detail-item"><div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${nombreDe(r.Cedula)}</span><span class="di-fecha">${ns(r.Sesion)}</span></div><div class="di-quick"><span>${r.num_palabras||0} palabras</span><span>${r.duracion_segundos||0}s</span><span>Riqueza ${((parseFloat(r.riqueza_lexica)||0)*100).toFixed(1)}%</span></div></div>${hlLegend()}<div class="transcript-box">${highlightText(r.Transcripcion)}</div></div>`;
   }).join('');
 }
 
@@ -538,15 +554,15 @@ function tDetalle(sesVistas,perfiles){
   const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
   return `<div class="card"><div class="card-tt">Filtros</div><div class="filters">
     <div><label class="fld-lb">Sesión</label><select class="fld" id="d-sesion" onchange="filtrarDetalle()"><option value="">Todas</option>${sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('')}</select></div>
-    <div><label class="fld-lb">Estudiante</label><select class="fld" id="d-estudiante" onchange="filtrarDetalle()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${x.ced}">${x.ced}</option>`).join('')}</select></div>
+    <div><label class="fld-lb">Estudiante</label><select class="fld" id="d-estudiante" onchange="filtrarDetalle()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${nombreDe(x.ced)}">${nombreDe(x.ced)}</option>`).join('')}</select></div>
   </div></div><div id="lista-detalle"></div>`;
 }
 function filtrarDetalle(){
   const fs=document.getElementById('d-sesion').value, fe=document.getElementById('d-estudiante').value;
   let est=DATA.filter(r=>r.Grupo===GP&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   if(fs)est=est.filter(r=>ns(r.Sesion)===fs);
-  if(fe)est=est.filter(r=>String(r.Cedula)===fe);
-  est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
+  if(fe)est=est.filter(r=>nombreDe(r.Cedula)===fe);
+  est.sort((a,b)=>fechaKey(a.Sesion).localeCompare(fechaKey(b.Sesion))||nombreDe(a.Cedula).localeCompare(nombreDe(b.Cedula)));
   const cont=document.getElementById('lista-detalle');
   if(!est.length){cont.innerHTML='<div class="empty"><div class="ic">📭</div><div class="tt">Sin resultados</div></div>';return;}
   const campos=[
@@ -562,7 +578,7 @@ function filtrarDetalle(){
   cont.innerHTML=est.map(r=>{
     const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
     return `<div class="detail-item">
-      <div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${r.Cedula}</span><span class="di-fecha">${r.Fecha||''}</span></div>${r['Audio (Drive)']?`<a href="${r['Audio (Drive)']}" target="_blank" class="audio-link">↗ Ver audio</a>`:''}</div>
+      <div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${nombreDe(r.Cedula)}</span><span class="di-fecha">${r.Fecha||''}</span></div>${r['Audio (Drive)']?`<a href="${r['Audio (Drive)']}" target="_blank" class="audio-link">↗ Ver audio</a>`:''}</div>
       <div class="ms-grid" style="margin-bottom:14px;">${campos.map(c=>{let v=r[c.k];if(v===undefined||v===null||v==='')v='—';else if(c.pct){const n=parseFloat(v);v=isNaN(n)?'—':(n*100).toFixed(2)+'%';}return `<div class="ms"><div class="ms-lb">${c.l}</div><div class="ms-val" style="font-size:13px;word-break:break-word;">${v}</div></div>`;}).join('')}</div>
       <div style="font-size:10.5px;color:var(--ink-faint);margin-bottom:7px;font-weight:600;letter-spacing:0.5px;">TRANSCRIPCIÓN</div>
       ${hlLegend()}
@@ -612,7 +628,7 @@ function renderEst(reg,allNotas,ced){
   const grupoKey=grupoNombre.includes('Santiago')?'santiago':'omar';
   const notas=allNotas[grupoKey]||[];
   const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
-  const ord=[...misReg].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
+  const ord=[...misReg].sort((a,b)=>fechaKey(a.Sesion).localeCompare(fechaKey(b.Sesion)));
   const miNota=notaEst(notas,ced), miNP=calcPromedio(miNota), miCl=clasificar(miNP?.promedio||null);
 
   const grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
