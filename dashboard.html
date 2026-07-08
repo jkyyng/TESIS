@@ -1,208 +1,241 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Foné — Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    :root{
-      --bg:#060a12;--bg2:#0b1220;--bg3:#101a2e;--bg4:#162038;
-      --border:rgba(99,179,237,0.1);--border2:rgba(99,179,237,0.22);
-      --text:#e8f0fe;--muted:#5a7a9e;
-      --accent:#3b82f6;--accent2:#60a5fa;
-      --green:#34d399;--yellow:#fbbf24;--red:#f87171;--purple:#a78bfa;
-      --font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;
-    }
-    body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;}
-    /* Header */
-    .header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:rgba(6,10,18,0.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;}
-    .logo{font-family:var(--font-d);font-weight:800;font-size:20px;}
-    .logo span{color:var(--accent2);}
-    .header-right{display:flex;align-items:center;gap:10px;}
-    .user-badge{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--accent2);font-family:var(--font-m);}
-    .btn-sm{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--font-b);transition:all 0.15s;}
-    .btn-sm:hover{color:var(--text);border-color:var(--border2);}
-    /* Login */
-    .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(59,130,246,0.08) 0%,transparent 60%);}
-    .login-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:40px;max-width:400px;width:100%;}
-    .login-title{font-family:var(--font-d);font-size:26px;font-weight:800;margin-bottom:4px;}
-    .login-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-    .rol-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;}
-    .rol-opt{padding:18px 12px;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);}
-    .rol-opt:hover{border-color:var(--accent);transform:translateY(-2px);}
-    .rol-opt.selected{border-color:var(--accent);background:rgba(59,130,246,0.1);}
-    .rol-opt .ri{font-size:28px;margin-bottom:6px;display:block;}
-    .rol-opt .rl{font-size:13px;font-weight:700;font-family:var(--font-d);}
-    .fl{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:500;display:block;margin-bottom:6px;}
-    .fi{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14px;font-family:var(--font-b);color:var(--text);width:100%;transition:border-color 0.15s;margin-bottom:10px;}
-    .fi:focus{outline:none;border-color:var(--accent);}
-    .fm{font-size:12px;min-height:18px;margin-bottom:10px;}
-    .fm.err{color:var(--red);}
-    .fm.ok{color:var(--green);}
-    .btn-p{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:10px;font-family:var(--font-d);font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;}
-    .btn-p:hover{background:#2563eb;transform:translateY(-1px);}
-    .btn-p:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;transform:none;}
-    /* Main */
-    .main{padding:28px;max-width:1200px;margin:0 auto;}
-    .page-title{font-family:var(--font-d);font-size:26px;font-weight:800;margin-bottom:4px;}
-    .page-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
-    /* Tabs */
-    .tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid var(--border);}
-    .tab{padding:10px 22px;background:none;border:none;color:var(--muted);font-family:var(--font-b);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;}
-    .tab:hover{color:var(--text);}
-    .tab.active{color:var(--accent2);border-bottom-color:var(--accent2);font-weight:600;}
-    .tab-content{display:none;}
-    .tab-content.active{display:block;}
-    /* KPIs */
-    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-    @media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
-    .kpi{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;}
-    .kpi.highlight{border-color:rgba(59,130,246,0.3);background:rgba(59,130,246,0.05);}
-    .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px;}
-    .kpi-value{font-family:var(--font-d);font-size:30px;font-weight:800;}
-    .kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
-    /* Cards */
-    .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
-    .card-title{font-family:var(--font-d);font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:8px;}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-    @media(max-width:700px){.grid-2,.grid-3{grid-template-columns:1fr;}}
-    /* Table */
-    .tw{overflow-x:auto;}
-    table{width:100%;border-collapse:collapse;font-size:13px;}
-    th{text-align:left;padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
-    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);}
-    tr:last-child td{border-bottom:none;}
-    tr:hover td{background:rgba(59,130,246,0.03);}
-    /* Badges */
-    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
-    .b-green{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
-    .b-yellow{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.2);}
-    .b-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
-    .b-blue{background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.2);}
-    /* Sesiones */
-    .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
-    .sc{padding:10px 8px;border-radius:10px;text-align:center;border:1px solid var(--border);transition:all 0.2s;}
-    .sc.ok{background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.3);}
-    .sc.no{background:rgba(248,113,113,0.05);border-color:rgba(248,113,113,0.15);}
-    .sc .sn{font-family:var(--font-d);font-weight:700;font-size:15px;display:block;margin-bottom:2px;}
-    .sc .sf{font-size:10px;color:var(--muted);}
-    .sc .st{font-size:10px;margin-top:3px;display:block;}
-    .sc.ok .st{color:var(--green);}
-    .sc.no .st{color:var(--red);}
-    /* Progress bar comparativa */
-    .cmp-row{display:flex;flex-direction:column;gap:12px;}
-    .cmp-item{display:grid;grid-template-columns:140px 1fr 50px;align-items:center;gap:10px;font-size:12px;}
-    .cmp-label{color:var(--muted);text-align:right;}
-    .cmp-bar{background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;position:relative;}
-    .cmp-fill{height:100%;border-radius:4px;transition:width 0.6s ease;}
-    .cmp-fill.me{background:var(--accent2);}
-    .cmp-fill.best{background:var(--green);}
-    .cmp-fill.worst{background:var(--red);}
-    .cmp-val{font-family:var(--font-m);font-size:11px;color:var(--text);}
-    .cmp-legend{display:flex;gap:16px;margin-bottom:14px;font-size:11px;}
-    .cmp-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
-    /* Notas */
-    .nota-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
-    .nota-card{background:var(--bg3);border-radius:10px;padding:14px;text-align:center;}
-    .nota-card-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
-    .nota-card-value{font-family:var(--font-d);font-size:22px;font-weight:800;}
-    /* Spinner */
-    .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:50px auto;}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-msg{text-align:center;color:var(--muted);font-size:13px;padding:8px;}
-    /* Chart */
-    .cw{position:relative;height:220px;}
-    .cw-tall{position:relative;height:280px;}
-    /* Metric mini */
-    .mr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-    @media(max-width:600px){.mr{grid-template-columns:repeat(2,1fr);}}
-    .ms{background:var(--bg3);border-radius:10px;padding:12px 14px;}
-    .msl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;}
-    .msv{font-family:var(--font-d);font-size:18px;font-weight:700;}
-    .mss{font-size:10px;color:var(--muted);margin-top:2px;}
-    /* Toast */
-    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none;}
-    .toast.show{opacity:1;transform:translateY(0);}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Foné — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080b12; --surface:#0f1420; --surface2:#141b2b; --raised:#1a2338;
+  --line:rgba(120,150,200,0.10); --line2:rgba(120,150,200,0.20);
+  --ink:#e6ecf7; --ink-dim:#7d8fac; --ink-faint:#4d5972;
+  --signal:#4f8ef7; --signal-soft:rgba(79,142,247,0.12);
+  --good:#3ecf8e; --good-soft:rgba(62,207,142,0.12);
+  --warn:#f5a623; --warn-soft:rgba(245,166,35,0.12);
+  --bad:#ef5972; --bad-soft:rgba(239,89,114,0.12);
+  --f-d:'Space Grotesk',sans-serif; --f-b:'Inter',sans-serif; --f-m:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-b);min-height:100vh;font-size:14px;line-height:1.5;}
+::selection{background:var(--signal-soft);}
+
+.wf{height:20px;display:flex;align-items:center;gap:2px;opacity:0.5;margin:2px 0;}
+.wf i{flex:1;background:var(--signal);border-radius:2px;opacity:0.35;}
+
+.login-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:
+  radial-gradient(ellipse 600px 400px at 20% 10%, rgba(79,142,247,0.10), transparent 60%),
+  radial-gradient(ellipse 500px 400px at 85% 90%, rgba(62,207,142,0.06), transparent 60%);}
+.login-box{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:44px 40px;max-width:400px;width:100%;position:relative;z-index:1;}
+.login-mark{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.login-mark .wave{display:flex;align-items:center;gap:2px;height:22px;}
+.login-mark .wave i{width:3px;background:var(--signal);border-radius:2px;}
+.login-mark .wave i:nth-child(1){height:40%;} .login-mark .wave i:nth-child(2){height:100%;}
+.login-mark .wave i:nth-child(3){height:60%;} .login-mark .wave i:nth-child(4){height:85%;}
+.login-mark .wave i:nth-child(5){height:35%;}
+.login-title{font-family:var(--f-d);font-weight:700;font-size:24px;letter-spacing:-0.02em;}
+.login-desc{font-size:13px;color:var(--ink-dim);margin:6px 0 28px;line-height:1.6;}
+.role-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px;}
+.role-card{padding:16px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;cursor:pointer;text-align:center;transition:.15s;}
+.role-card:hover{border-color:var(--line2);}
+.role-card.on{border-color:var(--signal);background:var(--signal-soft);}
+.role-card .ic{font-size:22px;display:block;margin-bottom:5px;}
+.role-card .lb{font-family:var(--f-d);font-weight:600;font-size:12.5px;}
+.fld-lb{font-size:10.5px;text-transform:uppercase;letter-spacing:0.9px;color:var(--ink-faint);font-weight:600;display:block;margin-bottom:7px;}
+.fld{background:var(--surface2);border:1.5px solid var(--line);border-radius:10px;padding:12px 15px;font-size:14px;font-family:var(--f-b);color:var(--ink);width:100%;transition:.15s;margin-bottom:8px;}
+.fld:focus{outline:none;border-color:var(--signal);}
+.fld-msg{font-size:11.5px;min-height:16px;margin-bottom:14px;font-weight:500;}
+.fld-msg.err{color:var(--bad);} .fld-msg.ok{color:var(--good);}
+.btn-go{width:100%;padding:13px;background:var(--signal);color:#fff;border:none;border-radius:10px;font-family:var(--f-d);font-weight:600;font-size:14px;cursor:pointer;transition:.15s;}
+.btn-go:hover:not(:disabled){background:#3d7ce0;}
+.btn-go:disabled{background:var(--surface2);color:var(--ink-faint);cursor:not-allowed;}
+
+.shell{display:flex;min-height:100vh;}
+.side{width:216px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.side-top{padding:22px 20px 18px;border-bottom:1px solid var(--line);}
+.side-mark{display:flex;align-items:center;gap:8px;font-family:var(--f-d);font-weight:700;font-size:18px;}
+.side-mark .wave{display:flex;align-items:center;gap:1.5px;height:16px;}
+.side-mark .wave i{width:2.5px;background:var(--signal);border-radius:1px;}
+.side-mark .wave i:nth-child(1){height:40%;} .side-mark .wave i:nth-child(2){height:100%;}
+.side-mark .wave i:nth-child(3){height:55%;} .side-mark .wave i:nth-child(4){height:80%;}
+.side-sub{font-size:11px;color:var(--ink-faint);margin-top:3px;}
+.side-nav{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--ink-dim);font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:var(--f-b);transition:.12s;}
+.nav-item:hover{background:var(--surface2);color:var(--ink);}
+.nav-item.on{background:var(--signal-soft);color:var(--signal);font-weight:600;}
+.nav-item .ic{font-size:15px;width:18px;text-align:center;}
+.side-bottom{padding:14px 20px 18px;border-top:1px solid var(--line);}
+.who{font-family:var(--f-m);font-size:11px;color:var(--ink-dim);margin-bottom:10px;word-break:break-all;}
+.btn-out{width:100%;padding:8px;background:none;border:1px solid var(--line);border-radius:8px;color:var(--ink-faint);font-size:12px;cursor:pointer;font-family:var(--f-b);transition:.15s;}
+.btn-out:hover{color:var(--ink);border-color:var(--line2);}
+
+.content{flex:1;min-width:0;}
+.topbar{padding:20px 32px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(8,11,18,0.85);backdrop-filter:blur(12px);z-index:10;}
+.tb-title{font-family:var(--f-d);font-weight:700;font-size:20px;letter-spacing:-0.01em;}
+.tb-sub{font-size:12.5px;color:var(--ink-dim);margin-top:2px;}
+.main{padding:28px 32px 60px;max-width:1140px;}
+
+.mnav{display:none;}
+@media(max-width:880px){
+  .side{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:.25s;z-index:200;}
+  .side.open{transform:translateX(0);}
+  .mnav{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);}
+  .mnav button{background:var(--surface2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 11px;font-size:16px;cursor:pointer;}
+  .main{padding:20px 18px 60px;}
+  .topbar{padding:16px 18px;}
+}
+
+.pane{display:none;}
+.pane.on{display:block;animation:fadein .2s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+.kpi.emph{border-color:rgba(79,142,247,0.28);background:linear-gradient(160deg,var(--signal-soft),transparent);}
+.kpi-lb{font-size:10.5px;text-transform:uppercase;letter-spacing:0.7px;color:var(--ink-faint);font-weight:600;margin-bottom:9px;}
+.kpi-val{font-family:var(--f-d);font-size:27px;font-weight:700;letter-spacing:-0.01em;}
+.kpi-sb{font-size:11px;color:var(--ink-dim);margin-top:4px;}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:16px;}
+.card-tt{font-family:var(--f-d);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;padding:9px 13px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);font-weight:600;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:10px 13px;border-bottom:1px solid var(--line);color:var(--ink);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(79,142,247,0.03);}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.p-good{background:var(--good-soft);color:var(--good);} .p-warn{background:var(--warn-soft);color:var(--warn);}
+.p-bad{background:var(--bad-soft);color:var(--bad);} .p-signal{background:var(--signal-soft);color:var(--signal);}
+.p-mute{background:rgba(125,143,172,0.12);color:var(--ink-dim);}
+
+.cmp-legend{display:flex;gap:18px;margin-bottom:16px;font-size:11.5px;color:var(--ink-dim);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+.cmp-block{margin-bottom:16px;}
+.cmp-block:last-child{margin-bottom:0;}
+.cmp-name{font-size:11.5px;color:var(--ink-dim);margin-bottom:7px;font-weight:500;}
+.cmp-line{display:grid;grid-template-columns:76px 1fr 48px;align-items:center;gap:9px;margin-bottom:5px;}
+.cmp-tag{font-size:10.5px;color:var(--ink-faint);text-align:right;}
+.cmp-track{background:var(--surface2);border-radius:4px;height:7px;overflow:hidden;}
+.cmp-fill{height:100%;border-radius:4px;transition:width .5s;}
+.cmp-num{font-family:var(--f-m);font-size:10.5px;text-align:right;}
+
+.ms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:600px){.ms-grid{grid-template-columns:repeat(2,1fr);}}
+.ms{background:var(--surface2);border-radius:11px;padding:13px 15px;}
+.ms-lb{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:5px;font-weight:600;}
+.ms-val{font-family:var(--f-d);font-size:18px;font-weight:700;}
+
+.note-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;}
+.note-card{background:var(--surface2);border-radius:12px;padding:16px;text-align:center;}
+.note-lb{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-faint);margin-bottom:7px;font-weight:600;}
+.note-val{font-family:var(--f-d);font-size:22px;font-weight:700;}
+
+.cw{position:relative;height:220px;}
+.cw-lg{position:relative;height:270px;}
+
+.spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--signal);border-radius:50%;animation:sp .7s linear infinite;margin:60px auto 14px;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.spin-msg{text-align:center;color:var(--ink-dim);font-size:12.5px;}
+
+.empty{text-align:center;padding:56px 24px;color:var(--ink-dim);}
+.empty .ic{font-size:36px;margin-bottom:12px;}
+.empty .tt{font-family:var(--f-d);font-size:15px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.filters{grid-template-columns:1fr;}}
+
+.detail-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px;}
+.di-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.di-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.di-cedula{font-family:var(--f-m);font-size:11.5px;color:var(--ink-dim);}
+.di-fecha{font-size:11px;color:var(--ink-faint);}
+.di-quick{display:flex;gap:13px;font-size:11px;color:var(--ink-dim);}
+.transcript-box{font-size:13px;line-height:1.85;color:var(--ink);background:var(--surface2);border-radius:11px;padding:15px 17px;}
+.hl{padding:1px 3px;border-radius:4px;font-weight:600;}
+.hl-mul{background:rgba(245,166,35,0.22);color:#ffc266;}
+.hl-dud{background:rgba(167,139,250,0.22);color:#c4b0fb;}
+.hl-neg{background:rgba(239,89,114,0.22);color:#ff90a3;}
+.hl-rar{background:rgba(79,142,247,0.22);color:#8fb8fb;}
+.hl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-dim);margin-bottom:10px;}
+.hl-legend span{display:flex;align-items:center;gap:5px;}
+.hl-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.audio-link{font-size:11px;color:var(--signal);text-decoration:none;font-weight:500;}
+.audio-link:hover{text-decoration:underline;}
+</style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="sc-login" class="login-wrap">
-  <div class="login-card">
-    <div class="login-title">Fo<span style="color:var(--accent2)">né</span></div>
-    <div class="login-sub">Dashboard de análisis de voz académica</div>
-    <div class="rol-grid">
-      <div class="rol-opt" id="opt-p" onclick="elegirRol('p')"><span class="ri">👨‍🏫</span><div class="rl">Profesor</div></div>
-      <div class="rol-opt" id="opt-e" onclick="elegirRol('e')"><span class="ri">🎓</span><div class="rl">Estudiante</div></div>
+<div id="sc-login" class="login-shell">
+  <div class="login-box">
+    <div class="login-mark">
+      <span class="wave"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="login-title">Fon<span style="color:var(--signal)">é</span></span>
+    </div>
+    <div class="login-desc">Panel de análisis de voz académica.</div>
+    <div class="role-pair">
+      <div class="role-card" id="opt-p" onclick="elegirRol('p')"><span class="ic">🎙️</span><div class="lb">Profesor</div></div>
+      <div class="role-card" id="opt-e" onclick="elegirRol('e')"><span class="ic">🎓</span><div class="lb">Estudiante</div></div>
     </div>
     <div id="cc" style="display:none;">
-      <label class="fl">Cédula</label>
-      <input class="fi" type="number" id="ic" placeholder="0000000000" oninput="vC()" onkeydown="if(event.key==='Enter')entrar()"/>
-      <div class="fm" id="mc"></div>
+      <label class="fld-lb">Cédula</label>
+      <input class="fld" type="number" id="ic" placeholder="0000000000" oninput="vC()" onkeydown="if(event.key==='Enter')entrar()"/>
+      <div class="fld-msg" id="mc"></div>
     </div>
-    <label class="fl">Clave de acceso</label>
-    <input class="fi" type="password" id="ik" placeholder="_ _ _ _ _" oninput="vK()" onkeydown="if(event.key==='Enter')entrar()" style="letter-spacing:3px;font-family:var(--font-m)"/>
-    <div class="fm" id="mk"></div>
-    <button class="btn-p" id="be" onclick="entrar()" disabled>Entrar →</button>
+    <label class="fld-lb">Clave de acceso</label>
+    <input class="fld" type="password" id="ik" placeholder="•••••" oninput="vK()" onkeydown="if(event.key==='Enter')entrar()" style="letter-spacing:3px;font-family:var(--f-m)"/>
+    <div class="fld-msg" id="mk"></div>
+    <button class="btn-go" id="be" onclick="entrar()" disabled>Entrar</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="sc-dash" style="display:none;">
-  <div class="header">
-    <div class="logo">Fo<span>né</span> <span style="font-size:11px;color:var(--muted);font-family:var(--font-b);font-weight:400;margin-left:4px;">Dashboard</span></div>
-    <div class="header-right">
-      <div class="user-badge" id="ub"></div>
-      <button class="btn-sm" onclick="salir()">Salir</button>
+<div id="sc-app" style="display:none;">
+  <div class="shell">
+    <div class="mnav">
+      <button onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <span style="font-family:var(--f-d);font-weight:700;">Fo<span style="color:var(--signal)">né</span></span>
+    </div>
+    <aside class="side" id="sidebar">
+      <div class="side-top">
+        <div class="side-mark"><span class="wave"><i></i><i></i><i></i><i></i></span>Fon<span style="color:var(--signal)">é</span></div>
+        <div class="side-sub">Análisis de voz académica</div>
+      </div>
+      <nav class="side-nav" id="nav"></nav>
+      <div class="side-bottom">
+        <div class="who" id="who"></div>
+        <button class="btn-out" onclick="salir()">Cerrar sesión</button>
+      </div>
+    </aside>
+    <div class="content">
+      <div class="topbar">
+        <div class="tb-title" id="tb-title">—</div>
+        <div class="tb-sub" id="tb-sub"></div>
+      </div>
+      <div class="main" id="main"></div>
     </div>
   </div>
-  <div class="main" id="dm"></div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-// ── Config ──
-const URL_AS = 'https://script.google.com/macros/s/AKfycbw12TxEJDssZ8JYEx7GH7nd0TD5IfELgqki5KmuCbRp7kDlPIdyVO8Aka0zGtQlbIAe0A/exec';
-const KP = {
-  'XAJI0': { grupo:'Santiago Aparicio — Matemáticas I', key:'santiago' },
-  'OHGI1': { grupo:'Omar Palacios — Data Mining',       key:'omar'    },
-};
-const KE = {
-  '1010964822':'Y6DPB','1014482009':'HSAHX','1016946301':'THV3A','1028885900':'3ZMF8',
-  '1029220048':'MDD4V','1033097334':'30T9N','1034779730':'T3W5U','1107842573':'ZBIKC',
-  '1012344638':'IDKWN','1054287150':'NHJ7X','1022354452':'VG0FN','1141715942':'9XUY4',
-  '1034662097':'1IBLJ','1000329597':'H75LX','1147486525':'O6QJI','1025063386':'UJV6O',
-  '1010965081':'H9SDB','1096068485':'DW2PC','1013258532':'N9T84','1033102141':'AZYTJ',
-  '1011323304':'XEPQ8','1014867126':'5JSG6','1024509578':'5KXVF','1014868162':'1T2TA',
-  '1054895361':'LA753','1109549575':'LC58D','1011324854':'RC11E','1031424164':'RTJ5P',
-  '1141517449':'HT0HL','1023164975':'9XPSE','1021634975':'IMVIH','1034519179':'CWI64',
-  '1030220057':'CIYHE','1018434360':'7UR23','1140916332':'GDPPQ','1032877729':'0Y9DO',
-  '1150184438':'M5IGQ','1057570650':'PKI7P','1025531736':'5TB94','1013123384':'874FR',
-  '1012378143':'HOCN9','1032877807':'J2QP8','1029141009':'9UZFK','1014990403':'8UT0C',
-};
-const SS=[
-  {v:'09/06/2026',l:'S1'},{v:'10/06/2026',l:'S2'},{v:'11/06/2026',l:'S3'},{v:'12/06/2026',l:'S4'},
-  {v:'16/06/2026',l:'S5'},{v:'17/06/2026',l:'S6'},{v:'18/06/2026',l:'S7'},{v:'19/06/2026',l:'S8'},
-  {v:'22/06/2026',l:'S9'},{v:'23/06/2026',l:'S10'},{v:'24/06/2026',l:'S11'},{v:'25/06/2026',l:'S12'},
-  {v:'26/06/2026',l:'S13'},{v:'30/06/2026',l:'S14'},{v:'01/07/2026',l:'S15'},{v:'02/07/2026',l:'S16'},
-  {v:'03/07/2026',l:'S17'},{v:'06/07/2026',l:'S18'},{v:'07/07/2026',l:'S19'},{v:'08/07/2026',l:'S20'},
-  {v:'09/07/2026',l:'S21'},{v:'10/07/2026',l:'S22'},
-];
-const CD={plugins:{legend:{labels:{color:'#5a7a9e',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#5a7a9e',font:{size:10},maxRotation:0},grid:{color:'rgba(99,179,237,0.05)'}},y:{ticks:{color:'#5a7a9e',font:{size:10}},grid:{color:'rgba(99,179,237,0.05)'}}}};
+const URL_AS='https://script.google.com/macros/s/AKfycbw12TxEJDssZ8JYEx7GH7nd0TD5IfELgqki5KmuCbRp7kDlPIdyVO8Aka0zGtQlbIAe0A/exec';
+const KP={'XAJI0':{grupo:'Santiago Aparicio — Matemáticas I',key:'santiago'},'OHGI1':{grupo:'Omar Palacios — Data Mining',key:'omar'}};
+const KE={'1010964822':'Y6DPB','1014482009':'HSAHX','1016946301':'THV3A','1028885900':'3ZMF8','1029220048':'MDD4V','1033097334':'30T9N','1034779730':'T3W5U','1107842573':'ZBIKC','1012344638':'IDKWN','1054287150':'NHJ7X','1022354452':'VG0FN','1141715942':'9XUY4','1034662097':'1IBLJ','1000329597':'H75LX','1147486525':'O6QJI','1025063386':'UJV6O','1010965081':'H9SDB','1096068485':'DW2PC','1013258532':'N9T84','1033102141':'AZYTJ','1011323304':'XEPQ8','1014867126':'5JSG6','1024509578':'5KXVF','1014868162':'1T2TA','1054895361':'LA753','1109549575':'LC58D','1011324854':'RC11E','1031424164':'RTJ5P','1141517449':'HT0HL','1023164975':'9XPSE','1021634975':'IMVIH','1034519179':'CWI64','1030220057':'CIYHE','1018434360':'7UR23','1140916332':'GDPPQ','1032877729':'0Y9DO','1150184438':'M5IGQ','1057570650':'PKI7P','1025531736':'5TB94','1013123384':'874FR','1012378143':'HOCN9','1032877807':'J2QP8','1029141009':'9UZFK','1014990403':'8UT0C'};
+const SS=[{v:'09/06/2026',l:'S1'},{v:'10/06/2026',l:'S2'},{v:'11/06/2026',l:'S3'},{v:'12/06/2026',l:'S4'},{v:'16/06/2026',l:'S5'},{v:'17/06/2026',l:'S6'},{v:'18/06/2026',l:'S7'},{v:'19/06/2026',l:'S8'},{v:'22/06/2026',l:'S9'},{v:'23/06/2026',l:'S10'},{v:'24/06/2026',l:'S11'},{v:'25/06/2026',l:'S12'},{v:'26/06/2026',l:'S13'},{v:'30/06/2026',l:'S14'},{v:'01/07/2026',l:'S15'},{v:'02/07/2026',l:'S16'},{v:'03/07/2026',l:'S17'},{v:'06/07/2026',l:'S18'},{v:'07/07/2026',l:'S19'},{v:'08/07/2026',l:'S20'},{v:'09/07/2026',l:'S21'},{v:'10/07/2026',l:'S22'}];
+const CD={plugins:{legend:{labels:{color:'#7d8fac',font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:'#7d8fac',font:{size:10},maxRotation:0},grid:{color:'rgba(120,150,200,0.05)'}},y:{ticks:{color:'#7d8fac',font:{size:10}},grid:{color:'rgba(120,150,200,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
 
-// ── Login ──
 function elegirRol(r){
   ROL=r;
-  document.getElementById('opt-p').classList.toggle('selected',r==='p');
-  document.getElementById('opt-e').classList.toggle('selected',r==='e');
+  document.getElementById('opt-p').classList.toggle('on',r==='p');
+  document.getElementById('opt-e').classList.toggle('on',r==='e');
   document.getElementById('cc').style.display=r==='e'?'':'none';
   document.getElementById('ik').value='';document.getElementById('mk').textContent='';
   document.getElementById('be').disabled=true;
@@ -212,208 +245,194 @@ function vC(){
   const m=document.getElementById('mc');
   if(!c){m.textContent='';return;}
   m.textContent=KE[c]?'✓ Cédula encontrada':'Cédula no registrada';
-  m.className='fm '+(KE[c]?'ok':'err');
+  m.className='fld-msg '+(KE[c]?'ok':'err');
   vK();
 }
 function vK(){
   const k=document.getElementById('ik').value.trim().toUpperCase();
-  const m=document.getElementById('mk');
-  const b=document.getElementById('be');
+  const m=document.getElementById('mk'), b=document.getElementById('be');
   if(!k){m.textContent='';b.disabled=true;return;}
-  if(ROL==='p'){
-    const ok=!!KP[k];
-    m.textContent=ok?'✓ Acceso autorizado':'Clave incorrecta';
-    m.className='fm '+(ok?'ok':'err');
-    b.disabled=!ok;
-  } else {
-    const c=document.getElementById('ic').value.trim();
-    const ok=KE[c]&&k===KE[c];
-    m.textContent=ok?'✓ Acceso autorizado':'Clave incorrecta';
-    m.className='fm '+(ok?'ok':'err');
-    b.disabled=!ok;
-  }
+  if(ROL==='p'){const ok=!!KP[k];m.textContent=ok?'✓ Acceso autorizado':'Clave incorrecta';m.className='fld-msg '+(ok?'ok':'err');b.disabled=!ok;}
+  else{const c=document.getElementById('ic').value.trim();const ok=KE[c]&&k===KE[c];m.textContent=ok?'✓ Acceso autorizado':'Clave incorrecta';m.className='fld-msg '+(ok?'ok':'err');b.disabled=!ok;}
 }
 async function entrar(){
   const k=document.getElementById('ik').value.trim().toUpperCase();
-  if(ROL==='p'){GP=KP[k].grupo;GK=KP[k].key;}
-  else CED=document.getElementById('ic').value.trim();
+  if(ROL==='p'){GP=KP[k].grupo;GK=KP[k].key;} else CED=document.getElementById('ic').value.trim();
   document.getElementById('sc-login').style.display='none';
-  document.getElementById('sc-dash').style.display='';
-  document.getElementById('ub').textContent=ROL==='p'?'👨‍🏫 '+GP.split('—')[0].trim():'🎓 '+CED;
-  document.getElementById('dm').innerHTML='<div class="spinner"></div><div class="loading-msg">Cargando datos...</div>';
+  document.getElementById('sc-app').style.display='';
+  document.getElementById('who').textContent=ROL==='p'?'👨‍🏫 '+GP:'🎓 '+CED;
+  buildNav();
+  document.getElementById('main').innerHTML='<div class="spin"></div><div class="spin-msg">Cargando datos…</div>';
   await cargar();
 }
 function salir(){
   ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';
   Object.values(CH).forEach(c=>{try{c.destroy();}catch(e){}});CH={};
-  document.getElementById('sc-dash').style.display='none';
+  document.getElementById('sc-app').style.display='none';
   document.getElementById('sc-login').style.display='flex';
   document.getElementById('ik').value='';document.getElementById('ic').value='';
   document.getElementById('mk').textContent='';document.getElementById('mc').textContent='';
   document.getElementById('be').disabled=true;
-  document.querySelectorAll('.rol-opt').forEach(o=>o.classList.remove('selected'));
+  document.querySelectorAll('.role-card').forEach(o=>o.classList.remove('on'));
   document.getElementById('cc').style.display='none';
 }
 
-// ── Cargar datos ──
+const NAV_P=[
+  {id:'resumen',ic:'📊',lb:'Resumen'},
+  {id:'estudiantes',ic:'👥',lb:'Estudiantes'},
+  {id:'sesiones',ic:'📅',lb:'Sesiones'},
+  {id:'variables',ic:'🔬',lb:'Variables'},
+  {id:'alertas',ic:'⚠️',lb:'Alertas'},
+  {id:'transcripciones',ic:'📝',lb:'Transcripciones'},
+  {id:'detalle',ic:'🗂️',lb:'Detalle completo'},
+];
+function buildNav(){
+  const nav=document.getElementById('nav');
+  if(ROL==='p'){
+    nav.innerHTML=NAV_P.map((n,i)=>`<button class="nav-item ${i===0?'on':''}" id="nav-${n.id}" onclick="goTab('${n.id}')"><span class="ic">${n.ic}</span>${n.lb}</button>`).join('');
+    document.getElementById('tb-title').textContent=GP;
+    document.getElementById('tb-sub').textContent='Panel del profesor';
+  } else {
+    nav.innerHTML=`<button class="nav-item on"><span class="ic">🎓</span>Mis estadísticas</button>`;
+    document.getElementById('tb-title').textContent='Mis estadísticas';
+    document.getElementById('tb-sub').textContent=CED;
+  }
+}
+function goTab(tab){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('nav-'+tab)?.classList.add('on');
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+tab)?.classList.add('on');
+  document.getElementById('sidebar').classList.remove('open');
+  if(tab==='transcripciones'){setTimeout(filtrarTranscripciones,30);return;}
+  if(tab==='detalle'){setTimeout(filtrarDetalle,30);return;}
+  if(DATA){
+    const d=DATA.filter(r=>r.Grupo===GP);
+    const est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+    const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
+    const pfs=ceds.map(ced=>{
+      const rows=est.filter(r=>String(r.Cedula)===ced);
+      const nr=notaEst(NOTAS[GK]||[],ced), np=calcPromedio(nr);
+      return{ced,rows,np,cl:clasificar(np?.promedio||null),rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),sim:p(rows,'similitud_coseno'),enviadas:rows.length};
+    });
+    setTimeout(()=>renderChartsProf(est,ses,pfs),30);
+  }
+}
+
 async function cargar(){
   try{
     const res=await fetch(`${URL_AS}?action=getDashboard`);
     const d=await res.json();
     if(!d.ok)throw new Error(d.error||'Error');
-    DATA=d.registros;
-    NOTAS=d.notas||{};
+    DATA=d.registros; NOTAS=d.notas||{};
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED);
   }catch(err){
-    document.getElementById('dm').innerHTML=`<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">⚠️</div><div style="font-size:15px;color:var(--text);margin-bottom:8px">Error al cargar datos</div><div style="font-size:13px">${err.message}</div><br/><button onclick="cargar()" style="background:var(--accent);color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer">Reintentar</button></div>`;
+    document.getElementById('main').innerHTML=`<div class="empty"><div class="ic">⚠️</div><div class="tt">No se pudieron cargar los datos</div><div style="font-size:12.5px">${err.message}</div><br/><button class="btn-go" style="width:auto;padding:10px 22px;margin-top:10px;" onclick="cargar()">Reintentar</button></div>`;
   }
 }
 
-// ── Utils ──
 function ns(s){return String(s||'').split(' ')[0].trim();}
 function p(rows,key){const v=rows.map(r=>parseFloat(r[key])).filter(v=>!isNaN(v));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
-function gb(arr,key){return arr.reduce((acc,r)=>{const k=ns(r[key]||r['Sesion']||key);(acc[k]=acc[k]||[]).push(r);return acc;},{});}
-function gbc(arr,key){return arr.reduce((acc,r)=>{(acc[r[key]]=acc[r[key]]||[]).push(r);return acc;},{});}
-function notaEst(notas, cedula){
-  if(!notas||!notas.length)return null;
-  const row=notas.find(r=>String(r['Documento']||r['Cedula']||r['cedula']||'')===String(cedula));
-  if(!row)return null;
-  return row;
-}
-function calcPromedio(notaRow, grupoKey){
+function gb(arr,key){return arr.reduce((acc,r)=>{const k=ns(r[key]);(acc[k]=acc[k]||[]).push(r);return acc;},{});}
+function notaEst(notas,cedula){if(!notas||!notas.length)return null;return notas.find(r=>String(r['Documento']||r['Cedula']||r['cedula']||'')===String(cedula))||null;}
+function calcPromedio(notaRow){
   if(!notaRow)return null;
   const excluir=['Documento','Cedula','cedula','Nombre','correo','Email','email'];
   const cols=Object.keys(notaRow).filter(k=>!excluir.includes(k));
-  const colParcial=cols.find(k=>k.toUpperCase().includes('PARCIAL'));
-  if(!colParcial)return null;
-  const parcial=parseFloat(notaRow[colParcial]||0);
+  const colP=cols.find(k=>k.toUpperCase().includes('PARCIAL'));
+  if(!colP)return null;
+  const parcial=parseFloat(notaRow[colP]||0);
   if(!(parcial>0))return null;
-
-  const colsActividades=cols.filter(k=>k!==colParcial);
-  const valsAct=colsActividades.map(k=>parseFloat(notaRow[k]||0)).filter(v=>v>0);
-  const promActividades=valsAct.length?valsAct.reduce((a,b)=>a+b,0)/valsAct.length:0;
-
-  return{parcial,actividades:promActividades,promedio:(parcial*0.5+promActividades*0.5),notaRow};
+  const others=cols.filter(k=>k!==colP).map(k=>parseFloat(notaRow[k]||0)).filter(v=>v>0);
+  const promA=others.length?others.reduce((a,b)=>a+b,0)/others.length:0;
+  return{parcial,actividades:promA,promedio:(parcial*0.5+promA*0.5)};
 }
 function clasificar(prom){
-  if(prom===null||isNaN(prom))return{cls:'b-blue',label:'Sin nota',emoji:'—'};
-  // Notas sobre 50 → convertir a escala 5
+  if(prom===null||isNaN(prom))return{cls:'p-mute',label:'Sin nota',emoji:'—'};
   const n=prom>10?prom/10:prom;
-  if(n>=4.0)return{cls:'b-green',label:'Alto',emoji:'🟢'};
-  if(n>=3.0)return{cls:'b-yellow',label:'Medio',emoji:'🟡'};
-  return{cls:'b-red',label:'Bajo',emoji:'🔴'};
+  if(n>=4.0)return{cls:'p-good',label:'Alto',emoji:'●'};
+  if(n>=3.0)return{cls:'p-warn',label:'Medio',emoji:'●'};
+  return{cls:'p-bad',label:'Bajo',emoji:'●'};
 }
 function mkChart(id,type,labels,datasets,opts={}){
-  const c=document.getElementById(id);
-  if(!c)return;
+  const c=document.getElementById(id); if(!c)return;
   try{if(CH[id])CH[id].destroy();}catch(e){}
   CH[id]=new Chart(c,{type,data:{labels,datasets},options:{...CD,...opts,responsive:true,maintainAspectRatio:false}});
 }
 
-// ══════════════════════════════════════════════════════
-// DASHBOARD PROFESOR
-// ══════════════════════════════════════════════════════
-function renderProf(reg, notas){
+function renderProf(reg,notas){
   const est=reg.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
   const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
   const cumpl=Math.round((est.length/(ceds.length*sesVistas.length))*100)||0;
 
-  // Calcular promedios y clasificaciones
   const perfiles=ceds.map(ced=>{
     const rows=est.filter(r=>String(r.Cedula)===ced);
-    const nr=notaEst(notas,ced);
-    const np=calcPromedio(nr,GK);
-    const cl=clasificar(np?.promedio||null);
-    return{ced,rows,nr,np,cl,
-      rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),
-      dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),
-      sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),
-      enviadas:rows.length};
+    const nr=notaEst(notas,ced), np=calcPromedio(nr), cl=clasificar(np?.promedio||null);
+    return{ced,rows,nr,np,cl,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),enviadas:rows.length};
   }).sort((a,b)=>(b.np?.promedio||0)-(a.np?.promedio||0));
 
-  const conNota=perfiles.filter(p=>p.np);
-  const sinNota=perfiles.filter(p=>!p.np);
-  const nAlto=conNota.filter(p=>p.cl.label==='Alto').length;
-  const nMedio=conNota.filter(p=>p.cl.label==='Medio').length;
-  const nBajo=conNota.filter(p=>p.cl.label==='Bajo').length;
+  const nAlto=perfiles.filter(x=>x.cl.label==='Alto').length;
+  const nMedio=perfiles.filter(x=>x.cl.label==='Medio').length;
+  const nBajo=perfiles.filter(x=>x.cl.label==='Bajo').length;
+  const nSin=perfiles.filter(x=>x.cl.label==='Sin nota').length;
 
-  document.getElementById('dm').innerHTML=`
-    <div class="page-title">${GP}</div>
-    <div class="page-sub">Análisis de voz académica · Foné</div>
-
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${ceds.length}</div><div class="kpi-sub">${sesVistas.length} sesiones</div></div>
-      <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/ceds.length*10)/10} prom/est</div></div>
-      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${cumpl}%</div><div class="kpi-sub">audios / esperados</div></div>
-      <div class="kpi highlight"><div class="kpi-label">Distribución</div><div class="kpi-value" style="font-size:18px">🟢${nAlto} 🟡${nMedio} 🔴${nBajo}</div><div class="kpi-sub">${sinNota.length} sin nota aún</div></div>
+  document.getElementById('main').innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-lb">Estudiantes</div><div class="kpi-val">${ceds.length}</div><div class="kpi-sb">${sesVistas.length} sesiones registradas</div></div>
+      <div class="kpi"><div class="kpi-lb">Audios recibidos</div><div class="kpi-val">${est.length}</div><div class="kpi-sb">${Math.round(est.length/ceds.length*10)/10||0} por estudiante</div></div>
+      <div class="kpi"><div class="kpi-lb">Cumplimiento</div><div class="kpi-val">${cumpl}%</div><div class="kpi-sb">audios / esperados</div></div>
+      <div class="kpi emph"><div class="kpi-lb">Distribución</div><div class="kpi-val" style="font-size:15px;display:flex;gap:10px;"><span style="color:var(--good)">●${nAlto}</span><span style="color:var(--warn)">●${nMedio}</span><span style="color:var(--bad)">●${nBajo}</span></div><div class="kpi-sb">${nSin} sin nota registrada</div></div>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" onclick="st('resumen',this)">📊 Resumen</button>
-      <button class="tab" onclick="st('estudiantes',this)">👥 Estudiantes</button>
-      <button class="tab" onclick="st('sesiones',this)">📅 Sesiones</button>
-      <button class="tab" onclick="st('variables',this)">🔬 Variables</button>
-      <button class="tab" onclick="st('alertas',this)">⚠️ Alertas</button>
-      <button class="tab" onclick="st('transcripciones',this)">📝 Transcripciones</button>
-      <button class="tab" onclick="st('detalle',this)">🔬 Detalle completo</button>
+    <div class="pane on" id="p-resumen">
+      <div class="grid2">
+        <div class="card"><div class="card-tt">Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-rl"></canvas></div></div>
+        <div class="card"><div class="card-tt">Muletillas y dudas — promedio</div><div class="cw"><canvas id="ch-mts"></canvas></div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-tt">Distribución por desempeño</div><div class="cw"><canvas id="ch-donut"></canvas></div></div>
+        <div class="card"><div class="card-tt">Nota vs. riqueza léxica</div><div class="cw"><canvas id="ch-scatter"></canvas></div></div>
+      </div>
     </div>
 
-    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est)}</div>
-    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
-    <div id="t-sesiones" class="tab-content">${tSesiones()}</div>
-    <div id="t-variables" class="tab-content">${tVariables(est,perfiles)}</div>
-    <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas)}</div>
-    <div id="t-transcripciones" class="tab-content">${tTranscripciones(est,sesVistas,perfiles)}</div>
-    <div id="t-detalle" class="tab-content">${tDetalle(est,sesVistas,perfiles)}</div>
+    <div class="pane" id="p-estudiantes">${tEstudiantes(perfiles,sesVistas)}</div>
+    <div class="pane" id="p-sesiones">
+      <div class="grid2">
+        <div class="card"><div class="card-tt">Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
+        <div class="card"><div class="card-tt">Evolución de riqueza léxica</div><div class="cw"><canvas id="ch-evol"></canvas></div></div>
+      </div>
+      <div class="card"><div class="card-tt">Similitud coseno promedio por sesión</div><div class="cw"><canvas id="ch-sim"></canvas></div></div>
+    </div>
+    <div class="pane" id="p-variables">${tVariables(est)}</div>
+    <div class="pane" id="p-alertas">${tAlertas(perfiles,sesVistas)}</div>
+    <div class="pane" id="p-transcripciones">${tTranscripciones(sesVistas,perfiles)}</div>
+    <div class="pane" id="p-detalle">${tDetalle(sesVistas,perfiles)}</div>
   `;
-  setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
-}
-
-function tResumen(perfiles,sesVistas,est){
-  return `
-    <div class="grid-2">
-      <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-rl"></canvas></div></div>
-      <div class="card"><div class="card-title">💬 Muletillas y dudas promedio</div><div class="cw"><canvas id="ch-mts"></canvas></div></div>
-    </div>
-    <div class="grid-2">
-      <div class="card"><div class="card-title">🎯 Distribución por desempeño</div><div class="cw"><canvas id="ch-donut"></canvas></div></div>
-      <div class="card"><div class="card-title">📊 Nota vs Riqueza léxica</div><div class="cw"><canvas id="ch-scatter"></canvas></div></div>
-    </div>`;
+  setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),80);
 }
 
 function tEstudiantes(perfiles,sesVistas){
   const rows=perfiles.map(pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
-    const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
     return `<tr>
-      <td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td>
-      <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
+      <td style="font-family:var(--f-m);font-size:11px">${pf.ced}</td>
+      <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--ink-faint);font-size:11px">(${pct}%)</span></td>
       <td>${(pf.rl*100).toFixed(1)}%</td>
       <td>${pf.mts.toFixed(1)}</td>
       <td>${pf.dds.toFixed(1)}</td>
       <td>${isNaN(pf.sim)||pf.sim===0?'—':(pf.sim*100).toFixed(0)+'%'}</td>
-      <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
-      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></td>
+      <td style="font-family:var(--f-m);font-weight:600">${pf.np?pf.np.promedio.toFixed(1):'—'}</td>
+      <td><span class="pill ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></td>
     </tr>`;
   }).join('');
-  return `<div class="card"><div class="card-title">Todos los estudiantes — ordenados por nota</div>
-    <div class="tw"><table>
-      <tr><th>Cédula</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Nota prom.</th><th>Nivel</th></tr>
-      ${rows}
-    </table></div></div>`;
+  return `<div class="card"><div class="card-tt">Todos los estudiantes — ordenados por nota</div>
+    <div class="tbl-wrap"><table><tr><th>Cédula</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Nota</th><th>Nivel</th></tr>${rows}</table></div></div>`;
 }
 
-function tSesiones(){
-  return `<div class="grid-2">
-    <div class="card"><div class="card-title">👥 Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
-    <div class="card"><div class="card-title">📈 Evolución riqueza léxica</div><div class="cw"><canvas id="ch-evol"></canvas></div></div>
-  </div>
-  <div class="card"><div class="card-title">🔄 Similitud coseno promedio por sesión</div><div class="cw"><canvas id="ch-sim"></canvas></div></div>`;
-}
-
-function tVariables(est,perfiles){
+function tVariables(est){
   const vars=[
     {k:'riqueza_lexica',l:'Riqueza léxica',f:v=>(v*100).toFixed(1)+'%'},
     {k:'conteo_muletillas',l:'Muletillas',f:v=>v.toFixed(1)},
@@ -424,292 +443,183 @@ function tVariables(est,perfiles){
     {k:'num_palabras',l:'Palabras prom.',f:v=>Math.round(v)+''},
     {k:'duracion_segundos',l:'Duración prom.',f:v=>Math.round(v)+'s'},
   ];
-  return `
-    <div class="grid-2">
-      <div class="card"><div class="card-title">🕸 Radar del grupo</div><div class="cw-tall"><canvas id="ch-radar"></canvas></div></div>
-      <div class="grid-2" style="grid-template-columns:1fr 1fr;align-content:start;">
-        ${vars.map(v=>`<div class="card" style="padding:14px;margin-bottom:0">
-          <div class="card-title" style="font-size:11px;margin-bottom:6px">${v.l}</div>
-          <div style="font-family:var(--font-d);font-size:20px;font-weight:800">${v.f(p(est,v.k))}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">promedio grupo</div>
-        </div>`).join('')}
-      </div>
-    </div>`;
+  return `<div class="grid2">
+    <div class="card"><div class="card-tt">Radar del grupo</div><div class="cw-lg"><canvas id="ch-radar"></canvas></div></div>
+    <div class="grid2" style="align-content:start;">
+      ${vars.map(v=>`<div class="card" style="padding:16px 18px;margin-bottom:0"><div class="card-tt" style="font-size:11px;margin-bottom:7px">${v.l}</div><div style="font-family:var(--f-d);font-size:20px;font-weight:700">${v.f(p(est,v.k))}</div><div style="font-size:10.5px;color:var(--ink-faint);margin-top:3px">promedio del grupo</div></div>`).join('')}
+    </div>
+  </div>`;
 }
 
 function tAlertas(perfiles,sesVistas){
-  const bajo=perfiles.filter(pf=>pf.cl.label==='Bajo');
-  const pocas=perfiles.filter(pf=>pf.enviadas/sesVistas.length<0.6);
-  const muletillas=perfiles.filter(pf=>pf.mts>5).sort((a,b)=>b.mts-a.mts);
-  const dudas=perfiles.filter(pf=>pf.dds>3).sort((a,b)=>b.dds-a.dds);
-
-  const mkAlerta=(title,items,cols,fn)=>items.length===0
-    ?`<div class="card"><div class="card-title">${title}</div><div style="color:var(--green);font-size:13px">✅ Sin alertas en este indicador</div></div>`
-    :`<div class="card"><div class="card-title">${title}</div><div class="tw"><table>
-      <tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>
-      ${items.map(fn).join('')}
-    </table></div></div>`;
-
+  const bajo=perfiles.filter(x=>x.cl.label==='Bajo');
+  const pocas=perfiles.filter(x=>x.enviadas/sesVistas.length<0.6);
+  const mts=perfiles.filter(x=>x.mts>5).sort((a,b)=>b.mts-a.mts);
+  const dds=perfiles.filter(x=>x.dds>3).sort((a,b)=>b.dds-a.dds);
+  const mk=(title,items,cols,fn)=>items.length===0
+    ?`<div class="card"><div class="card-tt">${title}</div><div style="color:var(--good);font-size:13px">Sin alertas en este indicador</div></div>`
+    :`<div class="card"><div class="card-tt">${title}</div><div class="tbl-wrap"><table><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>${items.map(fn).join('')}</table></div></div>`;
   return `
-    ${mkAlerta('🔴 Estudiantes con bajo desempeño',bajo,['Cédula','Nota prom.','Riqueza léx.','Muletillas'],
-      pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.np?.promedio.toFixed(1)||'—'}</td><td>${(pf.rl*100).toFixed(1)}%</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
-    ${mkAlerta('📭 Estudiantes con bajo cumplimiento (&lt;60%)',pocas,['Cédula','Enviadas','%'],
-      pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`)}
-    <div class="grid-2">
-      ${mkAlerta('💬 Muchas muletillas (&gt;5)',muletillas,['Cédula','Promedio'],
-        pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
-      ${mkAlerta('🤔 Muchas expresiones de duda (&gt;3)',dudas,['Cédula','Promedio'],
-        pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.dds.toFixed(1)}</td></tr>`)}
+    ${mk('Bajo desempeño',bajo,['Cédula','Nota','Riqueza léx.','Muletillas'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.np?.promedio.toFixed(1)||'—'}</td><td>${(x.rl*100).toFixed(1)}%</td><td>${x.mts.toFixed(1)}</td></tr>`)}
+    ${mk('Bajo cumplimiento (&lt;60%)',pocas,['Cédula','Enviadas','%'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.enviadas}/${sesVistas.length}</td><td>${Math.round(x.enviadas/sesVistas.length*100)}%</td></tr>`)}
+    <div class="grid2">
+      ${mk('Muchas muletillas (&gt;5)',mts,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.mts.toFixed(1)}</td></tr>`)}
+      ${mk('Muchas dudas (&gt;3)',dds,['Cédula','Prom.'],x=>`<tr><td style="font-family:var(--f-m);font-size:11px">${x.ced}</td><td>${x.dds.toFixed(1)}</td></tr>`)}
     </div>`;
 }
 
-function tTranscripciones(est,sesVistas,perfiles){
-  const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
-  const opcSes=sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('');
-  const opcEst=perfiles.map(pf=>`<option value="${pf.ced}">${pf.ced}</option>`).join('');
+const LST_MUL=['eh','ah','este','mmm','pues','osea','o sea','digamos'];
+const LST_DUD=['no se','nose','no recuerdo','dificil','difisil','complicado','confuso','no entendi','creo','tal vez'];
+const LST_NEG=['no','nunca','jamas'];
 
-  return `
-    <div class="card">
-      <div class="card-title">🔎 Filtros</div>
-      <div class="grid-2">
-        <div>
-          <label class="fl">Filtrar por sesión</label>
-          <select class="fi" id="f-sesion" onchange="filtrarTranscripciones()">
-            <option value="">Todas las sesiones</option>
-            ${opcSes}
-          </select>
-        </div>
-        <div>
-          <label class="fl">Filtrar por estudiante</label>
-          <select class="fi" id="f-estudiante" onchange="filtrarTranscripciones()">
-            <option value="">Todos los estudiantes</option>
-            ${opcEst}
-          </select>
-        </div>
-      </div>
-    </div>
-    <div id="lista-transcripciones"></div>
-  `;
+function quitarTildes(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+
+function highlightText(texto){
+  if(!texto)return '(sin transcripción)';
+  // Calcular palabras raras (frecuencia 1 en el propio texto)
+  const limpio=quitarTildes(texto.toLowerCase()).replace(/[^a-z\s]/g,' ').replace(/\s+/g,' ').trim();
+  const tokens=limpio.split(' ').filter(Boolean);
+  const freq={};
+  tokens.forEach(t=>freq[t]=(freq[t]||0)+1);
+  const raras=new Set(Object.keys(freq).filter(k=>freq[k]===1));
+
+  // Construir regex combinando todas las frases (más largas primero para evitar solapes)
+  const todas=[...LST_MUL.map(w=>({w,cls:'hl-mul'})),...LST_DUD.map(w=>({w,cls:'hl-dud'})),...LST_NEG.map(w=>({w,cls:'hl-neg'}))]
+    .sort((a,b)=>b.w.length-a.w.length);
+
+  // Tokenizar el texto original preservando puntuación, resaltando por palabra
+  const palabrasOriginal=texto.split(/(\s+)/);
+  return palabrasOriginal.map(tok=>{
+    if(/^\s+$/.test(tok)||tok==='')return tok;
+    const limpio1=quitarTildes(tok.toLowerCase()).replace(/[^a-z]/g,'');
+    if(!limpio1)return esc(tok);
+    // Chequear frases de dos palabras las maneja el regex global aparte; aquí solo palabra suelta
+    if(LST_NEG.includes(limpio1))return `<span class="hl hl-neg">${esc(tok)}</span>`;
+    if(LST_MUL.includes(limpio1))return `<span class="hl hl-mul">${esc(tok)}</span>`;
+    if(LST_DUD.includes(limpio1))return `<span class="hl hl-dud">${esc(tok)}</span>`;
+    if(raras.has(limpio1)&&limpio1.length>3)return `<span class="hl hl-rar">${esc(tok)}</span>`;
+    return esc(tok);
+  }).join('')
+  // Resaltar frases de 2+ palabras (no se, o sea, tal vez, etc.) sobre el resultado ya escapado
+  .replace(/\b(no se|o sea|tal vez|no recuerdo|no entendi|no entendí)\b/gi,m=>`<span class="hl hl-dud">${m}</span>`);
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hlLegend(){
+  return `<div class="hl-legend">
+    <span><i style="background:rgba(245,166,35,0.5)"></i>Muletillas</span>
+    <span><i style="background:rgba(167,139,250,0.5)"></i>Dudas</span>
+    <span><i style="background:rgba(239,89,114,0.5)"></i>Negaciones</span>
+    <span><i style="background:rgba(79,142,247,0.5)"></i>Palabras raras (única aparición)</span>
+  </div>`;
 }
 
+function tTranscripciones(sesVistas,perfiles){
+  const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
+  return `<div class="card"><div class="card-tt">Filtros</div><div class="filters">
+    <div><label class="fld-lb">Sesión</label><select class="fld" id="f-sesion" onchange="filtrarTranscripciones()"><option value="">Todas</option>${sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('')}</select></div>
+    <div><label class="fld-lb">Estudiante</label><select class="fld" id="f-estudiante" onchange="filtrarTranscripciones()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${x.ced}">${x.ced}</option>`).join('')}</select></div>
+  </div></div><div id="lista-transcripciones"></div>`;
+}
 function filtrarTranscripciones(){
-  const filtroSes=document.getElementById('f-sesion').value;
-  const filtroEst=document.getElementById('f-estudiante').value;
-  const d=DATA.filter(r=>r.Grupo===GP);
-  let est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-
-  if(filtroSes) est=est.filter(r=>ns(r.Sesion)===filtroSes);
-  if(filtroEst) est=est.filter(r=>String(r.Cedula)===filtroEst);
-
-  est=est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
-
+  const fs=document.getElementById('f-sesion').value, fe=document.getElementById('f-estudiante').value;
+  let est=DATA.filter(r=>r.Grupo===GP&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+  if(fs)est=est.filter(r=>ns(r.Sesion)===fs);
+  if(fe)est=est.filter(r=>String(r.Cedula)===fe);
+  est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
   const cont=document.getElementById('lista-transcripciones');
-  if(est.length===0){
-    cont.innerHTML='<div class="card" style="text-align:center;color:var(--muted);font-size:13px">No hay transcripciones con estos filtros</div>';
-    return;
-  }
-
+  if(!est.length){cont.innerHTML='<div class="empty"><div class="ic">📭</div><div class="tt">Sin resultados</div></div>';return;}
   cont.innerHTML=est.map(r=>{
     const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
-    const texto=r.Transcripcion||'(sin transcripción)';
-    return `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;gap:10px;align-items:center;">
-          <span class="badge b-blue">${lbl}</span>
-          <span style="font-family:var(--font-m);font-size:12px;color:var(--muted)">${r.Cedula}</span>
-          <span style="font-size:11px;color:var(--muted)">${ns(r.Sesion)}</span>
-        </div>
-        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted)">
-          <span>${r.num_palabras||0} palabras</span>
-          <span>${r.duracion_segundos||0}s</span>
-          <span>Riqueza: ${((parseFloat(r.riqueza_lexica)||0)*100).toFixed(1)}%</span>
-        </div>
-      </div>
-      <div style="font-size:13px;line-height:1.6;color:var(--text);background:var(--bg3);border-radius:10px;padding:14px;">${texto}</div>
-    </div>`;
+    return `<div class="detail-item"><div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${r.Cedula}</span><span class="di-fecha">${ns(r.Sesion)}</span></div><div class="di-quick"><span>${r.num_palabras||0} palabras</span><span>${r.duracion_segundos||0}s</span><span>Riqueza ${((parseFloat(r.riqueza_lexica)||0)*100).toFixed(1)}%</span></div></div>${hlLegend()}<div class="transcript-box">${highlightText(r.Transcripcion)}</div></div>`;
   }).join('');
 }
 
-function tDetalle(est,sesVistas,perfiles){
+function tDetalle(sesVistas,perfiles){
   const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
-  const opcSes=sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('');
-  const opcEst=perfiles.map(pf=>`<option value="${pf.ced}">${pf.ced}</option>`).join('');
-
-  return `
-    <div class="card">
-      <div class="card-title">🔎 Filtros</div>
-      <div class="grid-2">
-        <div>
-          <label class="fl">Filtrar por sesión</label>
-          <select class="fi" id="d-sesion" onchange="filtrarDetalle()">
-            <option value="">Todas las sesiones</option>
-            ${opcSes}
-          </select>
-        </div>
-        <div>
-          <label class="fl">Filtrar por estudiante</label>
-          <select class="fi" id="d-estudiante" onchange="filtrarDetalle()">
-            <option value="">Todos los estudiantes</option>
-            ${opcEst}
-          </select>
-        </div>
-      </div>
-    </div>
-    <div id="lista-detalle"></div>
-  `;
+  return `<div class="card"><div class="card-tt">Filtros</div><div class="filters">
+    <div><label class="fld-lb">Sesión</label><select class="fld" id="d-sesion" onchange="filtrarDetalle()"><option value="">Todas</option>${sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('')}</select></div>
+    <div><label class="fld-lb">Estudiante</label><select class="fld" id="d-estudiante" onchange="filtrarDetalle()"><option value="">Todos</option>${perfiles.map(x=>`<option value="${x.ced}">${x.ced}</option>`).join('')}</select></div>
+  </div></div><div id="lista-detalle"></div>`;
 }
-
 function filtrarDetalle(){
-  const filtroSes=document.getElementById('d-sesion').value;
-  const filtroEst=document.getElementById('d-estudiante').value;
-  const d=DATA.filter(r=>r.Grupo===GP);
-  let est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-
-  if(filtroSes) est=est.filter(r=>ns(r.Sesion)===filtroSes);
-  if(filtroEst) est=est.filter(r=>String(r.Cedula)===filtroEst);
-
-  est=est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
-
+  const fs=document.getElementById('d-sesion').value, fe=document.getElementById('d-estudiante').value;
+  let est=DATA.filter(r=>r.Grupo===GP&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+  if(fs)est=est.filter(r=>ns(r.Sesion)===fs);
+  if(fe)est=est.filter(r=>String(r.Cedula)===fe);
+  est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
   const cont=document.getElementById('lista-detalle');
-  if(est.length===0){
-    cont.innerHTML='<div class="card" style="text-align:center;color:var(--muted);font-size:13px">No hay registros con estos filtros</div>';
-    return;
-  }
-
+  if(!est.length){cont.innerHTML='<div class="empty"><div class="ic">📭</div><div class="tt">Sin resultados</div></div>';return;}
   const campos=[
-    {k:'num_palabras',l:'Palabras'},{k:'num_caracteres',l:'Caracteres'},
-    {k:'palabras_unicas',l:'Palabras únicas'},{k:'riqueza_lexica',l:'Riqueza léxica',pct:true},
-    {k:'promedio_longitud_palabra',l:'Long. prom. palabra'},{k:'palabra_mas_repetida',l:'Palabra más repetida'},
-    {k:'frecuencia_palabra_top',l:'Frec. palabra top'},{k:'top_5_palabras',l:'Top 5 palabras'},
-    {k:'conteo_muletillas',l:'Muletillas'},{k:'frecuencia_muletillas',l:'Frec. muletillas',pct:true},
-    {k:'conteo_dudas',l:'Dudas'},{k:'frecuencia_dudas',l:'Frec. dudas',pct:true},
-    {k:'conteo_negaciones',l:'Negaciones'},{k:'frecuencia_negaciones',l:'Frec. negaciones',pct:true},
-    {k:'porcentaje_palabras_raras',l:'% palabras raras',pct:true},{k:'duracion_segundos',l:'Duración (s)'},
-    {k:'similitud_coseno',l:'Similitud coseno',pct:true},
+    {k:'num_palabras',l:'Palabras'},{k:'num_caracteres',l:'Caracteres'},{k:'palabras_unicas',l:'Únicas'},
+    {k:'riqueza_lexica',l:'Riqueza léxica',pct:1},{k:'promedio_longitud_palabra',l:'Long. prom.'},
+    {k:'palabra_mas_repetida',l:'Palabra top'},{k:'frecuencia_palabra_top',l:'Frec. top'},
+    {k:'top_5_palabras',l:'Top 5'},{k:'conteo_muletillas',l:'Muletillas'},
+    {k:'frecuencia_muletillas',l:'Frec. muletillas',pct:1},{k:'conteo_dudas',l:'Dudas'},
+    {k:'frecuencia_dudas',l:'Frec. dudas',pct:1},{k:'conteo_negaciones',l:'Negaciones'},
+    {k:'frecuencia_negaciones',l:'Frec. negaciones',pct:1},{k:'porcentaje_palabras_raras',l:'% raras',pct:1},
+    {k:'duracion_segundos',l:'Duración (s)'},{k:'similitud_coseno',l:'Sim. coseno',pct:1},
   ];
-
   cont.innerHTML=est.map(r=>{
     const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
-    return `<div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;gap:10px;align-items:center;">
-          <span class="badge b-blue">${lbl}</span>
-          <span style="font-family:var(--font-m);font-size:12px;color:var(--muted)">${r.Cedula}</span>
-          <span style="font-size:11px;color:var(--muted)">${r.Fecha||''}</span>
-        </div>
-        ${r['Audio (Drive)']?`<a href="${r['Audio (Drive)']}" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;">🔗 Ver audio</a>`:''}
-      </div>
-      <div class="grid-3" style="margin-bottom:14px;">
-        ${campos.map(c=>{
-          let val=r[c.k];
-          if(val===undefined||val===null||val==='')val='—';
-          else if(c.pct){const n=parseFloat(val);val=isNaN(n)?'—':(n*100).toFixed(2)+'%';}
-          return `<div class="ms"><div class="msl">${c.l}</div><div class="msv" style="font-size:14px;word-break:break-word;">${val}</div></div>`;
-        }).join('')}
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;">TRANSCRIPCIÓN COMPLETA</div>
-      <div style="font-size:13px;line-height:1.6;color:var(--text);background:var(--bg3);border-radius:10px;padding:14px;">${r.Transcripcion||'(sin transcripción)'}</div>
+    return `<div class="detail-item">
+      <div class="di-head"><div class="di-meta"><span class="pill p-signal">${lbl}</span><span class="di-cedula">${r.Cedula}</span><span class="di-fecha">${r.Fecha||''}</span></div>${r['Audio (Drive)']?`<a href="${r['Audio (Drive)']}" target="_blank" class="audio-link">↗ Ver audio</a>`:''}</div>
+      <div class="ms-grid" style="margin-bottom:14px;">${campos.map(c=>{let v=r[c.k];if(v===undefined||v===null||v==='')v='—';else if(c.pct){const n=parseFloat(v);v=isNaN(n)?'—':(n*100).toFixed(2)+'%';}return `<div class="ms"><div class="ms-lb">${c.l}</div><div class="ms-val" style="font-size:13px;word-break:break-word;">${v}</div></div>`;}).join('')}</div>
+      <div style="font-size:10.5px;color:var(--ink-faint);margin-bottom:7px;font-weight:600;letter-spacing:0.5px;">TRANSCRIPCIÓN</div>
+      ${hlLegend()}
+      <div class="transcript-box">${highlightText(r.Transcripcion)}</div>
     </div>`;
   }).join('');
-}
-
-function st(tab,btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('t-'+tab).classList.add('active');
-  if(tab==='transcripciones'){ setTimeout(filtrarTranscripciones,50); return; }
-  if(tab==='detalle'){ setTimeout(filtrarDetalle,50); return; }
-  if(DATA) setTimeout(()=>{
-    const d=DATA.filter(r=>r.Grupo===GP);
-    const est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
-    const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
-    const pfs=ceds.map(ced=>{
-      const rows=est.filter(r=>String(r.Cedula)===ced);
-      const nr=notaEst(NOTAS[GK]||[],ced);
-      const np=calcPromedio(nr,GK);
-      return{ced,rows,np,cl:clasificar(np?.promedio||null),rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),sim:p(rows,'similitud_coseno'),enviadas:rows.length};
-    });
-    renderChartsProf(est,ses,pfs);
-  },100);
 }
 
 function renderChartsProf(est,sesVistas,perfiles){
   const bySes=gb(est,'Sesion');
   const lbl=sesVistas.map(s=>SS.find(x=>x.v===s)?.l||s);
-
   const dataRL=sesVistas.map(s=>{const r=bySes[s]||[];return r.length?(p(r,'riqueza_lexica')*100).toFixed(2):null;});
   const dataMts=sesVistas.map(s=>{const r=bySes[s]||[];return r.length?p(r,'conteo_muletillas').toFixed(2):null;});
   const dataDds=sesVistas.map(s=>{const r=bySes[s]||[];return r.length?p(r,'conteo_dudas').toFixed(2):null;});
   const dataPart=sesVistas.map(s=>(bySes[s]||[]).length);
   const dataSim=sesVistas.map(s=>{const r=bySes[s]||[];const v=p(r,'similitud_coseno');return r.length&&v?(v*100).toFixed(2):null;});
 
-  mkChart('ch-rl','line',lbl,[{label:'Riqueza léxica (%)',data:dataRL,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#60a5fa',pointRadius:4}]);
-  mkChart('ch-mts','bar',lbl,[
-    {label:'Muletillas',data:dataMts,backgroundColor:'rgba(251,191,36,0.7)',borderRadius:4},
-    {label:'Dudas',data:dataDds,backgroundColor:'rgba(248,113,113,0.7)',borderRadius:4}
-  ]);
-  mkChart('ch-part','bar',lbl,[{label:'Estudiantes',data:dataPart,backgroundColor:'rgba(59,130,246,0.7)',borderRadius:4}]);
-  mkChart('ch-evol','line',lbl,[{label:'Riqueza léxica (%)',data:dataRL,borderColor:'#34d399',backgroundColor:'rgba(52,211,153,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#34d399',pointRadius:4}]);
+  mkChart('ch-rl','line',lbl,[{label:'Riqueza léxica (%)',data:dataRL,borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#4f8ef7',pointRadius:4}]);
+  mkChart('ch-mts','bar',lbl,[{label:'Muletillas',data:dataMts,backgroundColor:'rgba(245,166,35,0.7)',borderRadius:4},{label:'Dudas',data:dataDds,backgroundColor:'rgba(239,89,114,0.7)',borderRadius:4}]);
+  mkChart('ch-part','bar',lbl,[{label:'Estudiantes',data:dataPart,backgroundColor:'rgba(79,142,247,0.7)',borderRadius:4}]);
+  mkChart('ch-evol','line',lbl,[{label:'Riqueza léxica (%)',data:dataRL,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#3ecf8e',pointRadius:4}]);
   mkChart('ch-sim','line',lbl,[{label:'Similitud coseno (%)',data:dataSim,borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#a78bfa',pointRadius:4}]);
 
-  // Donut clasificación
-  const nA=perfiles.filter(pf=>pf.cl.label==='Alto').length;
-  const nM=perfiles.filter(pf=>pf.cl.label==='Medio').length;
-  const nB=perfiles.filter(pf=>pf.cl.label==='Bajo').length;
-  const nS=perfiles.filter(pf=>pf.cl.label==='Sin nota').length;
+  const nA=perfiles.filter(x=>x.cl.label==='Alto').length, nM=perfiles.filter(x=>x.cl.label==='Medio').length;
+  const nB=perfiles.filter(x=>x.cl.label==='Bajo').length, nS=perfiles.filter(x=>x.cl.label==='Sin nota').length;
   const cd=document.getElementById('ch-donut');
   if(cd){try{if(CH['ch-donut'])CH['ch-donut'].destroy();}catch(e){}
-    CH['ch-donut']=new Chart(cd,{type:'doughnut',data:{labels:['Alto','Medio','Bajo','Sin nota'],datasets:[{data:[nA,nM,nB,nS],backgroundColor:['rgba(52,211,153,0.8)','rgba(251,191,36,0.8)','rgba(248,113,113,0.8)','rgba(91,122,158,0.5)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5a7a9e',font:{family:'DM Sans',size:11}}}}}});}
+    CH['ch-donut']=new Chart(cd,{type:'doughnut',data:{labels:['Alto','Medio','Bajo','Sin nota'],datasets:[{data:[nA,nM,nB,nS],backgroundColor:['rgba(62,207,142,0.85)','rgba(245,166,35,0.85)','rgba(239,89,114,0.85)','rgba(125,143,172,0.4)'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7d8fac',font:{family:'Inter',size:11}}}}}});}
 
-  // Scatter nota vs riqueza
   const sc=document.getElementById('ch-scatter');
-  if(sc){
-    const conNota=perfiles.filter(pf=>pf.np);
+  if(sc){const conNota=perfiles.filter(x=>x.np);
     try{if(CH['ch-scatter'])CH['ch-scatter'].destroy();}catch(e){}
-    CH['ch-scatter']=new Chart(sc,{type:'scatter',data:{datasets:[{label:'Estudiantes',data:conNota.map(pf=>({x:(pf.rl*100).toFixed(1),y:pf.np.promedio.toFixed(1)})),backgroundColor:'rgba(96,165,250,0.7)',pointRadius:6}]},options:{...CD,responsive:true,maintainAspectRatio:false,scales:{x:{...CD.scales.x,title:{display:true,text:'Riqueza léxica (%)',color:'#5a7a9e',font:{size:11}}},y:{...CD.scales.y,title:{display:true,text:'Nota promedio',color:'#5a7a9e',font:{size:11}}}}}});
-  }
+    CH['ch-scatter']=new Chart(sc,{type:'scatter',data:{datasets:[{label:'Estudiantes',data:conNota.map(x=>({x:(x.rl*100).toFixed(1),y:x.np.promedio.toFixed(1)})),backgroundColor:'rgba(79,142,247,0.7)',pointRadius:6}]},options:{...CD,responsive:true,maintainAspectRatio:false,scales:{x:{...CD.scales.x,title:{display:true,text:'Riqueza léxica (%)',color:'#7d8fac',font:{size:11}}},y:{...CD.scales.y,title:{display:true,text:'Nota promedio',color:'#7d8fac',font:{size:11}}}}}});}
 
-  // Radar
   const cr=document.getElementById('ch-radar');
   if(cr){try{if(CH['ch-radar'])CH['ch-radar'].destroy();}catch(e){}
-    CH['ch-radar']=new Chart(cr,{type:'radar',data:{labels:['Riqueza léxica','Sim. coseno','Sin muletillas','Con dudas','Negaciones','Sin p.raras'],datasets:[{label:'Grupo',data:[p(est,'riqueza_lexica')*100,p(est,'similitud_coseno')*100,Math.max(0,100-p(est,'frecuencia_muletillas')*1000),p(est,'frecuencia_dudas')*1000,p(est,'frecuencia_negaciones')*1000,Math.max(0,100-p(est,'porcentaje_palabras_raras')*100)],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.12)',pointBackgroundColor:'#3b82f6',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5a7a9e'}}},scales:{r:{ticks:{color:'#5a7a9e',backdropColor:'transparent',font:{size:9}},grid:{color:'rgba(99,179,237,0.08)'},pointLabels:{color:'#8aaace',font:{size:10}}}}}});}
+    CH['ch-radar']=new Chart(cr,{type:'radar',data:{labels:['Riqueza léxica','Sim. coseno','Sin muletillas','Con dudas','Negaciones','Sin p.raras'],datasets:[{label:'Grupo',data:[p(est,'riqueza_lexica')*100,p(est,'similitud_coseno')*100,Math.max(0,100-p(est,'frecuencia_muletillas')*1000),p(est,'frecuencia_dudas')*1000,p(est,'frecuencia_negaciones')*1000,Math.max(0,100-p(est,'porcentaje_palabras_raras')*100)],borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,0.12)',pointBackgroundColor:'#4f8ef7',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7d8fac'}}},scales:{r:{ticks:{color:'#7d8fac',backdropColor:'transparent',font:{size:9}},grid:{color:'rgba(120,150,200,0.08)'},pointLabels:{color:'#a8b7cf',font:{size:10}}}}}});}
 }
 
-// ══════════════════════════════════════════════════════
-// DASHBOARD ESTUDIANTE
-// ══════════════════════════════════════════════════════
-function renderEst(reg, allNotas, ced){
-  // Determinar grupo del estudiante
+function renderEst(reg,allNotas,ced){
   const misReg=reg.filter(r=>String(r.Cedula)===ced&&r.Es_Profesor!=='SÍ');
-  if(misReg.length===0){
-    document.getElementById('dm').innerHTML='<div style="text-align:center;padding:60px"><div style="font-size:40px;margin-bottom:12px">🎙️</div><div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:8px">Aún no tienes audios registrados</div><div style="font-size:13px;color:var(--muted)">Cuando envíes tu primer audio verás tus estadísticas aquí.</div></div>';
+  if(!misReg.length){
+    document.getElementById('main').innerHTML='<div class="empty"><div class="ic">🎙️</div><div class="tt">Aún no tienes audios registrados</div><div style="font-size:12.5px">Cuando envíes tu primer audio verás tus estadísticas aquí.</div></div>';
     return;
   }
   const grupoNombre=misReg[0].Grupo||'';
   const grupoKey=grupoNombre.includes('Santiago')?'santiago':'omar';
   const notas=allNotas[grupoKey]||[];
-
-  // Mis sesiones
   const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
   const ord=[...misReg].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
+  const miNota=notaEst(notas,ced), miNP=calcPromedio(miNota), miCl=clasificar(miNP?.promedio||null);
 
-  // Mis notas
-  const miNota=notaEst(notas,ced);
-  const miNP=calcPromedio(miNota,grupoKey);
-  const miCl=clasificar(miNP?.promedio||null);
-
-  // Comparativa grupo — todos los estudiantes del mismo grupo
   const grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const ceds=[...new Set(grupoReg.map(r=>String(r.Cedula)))];
-  const grupoPerfiles=ceds.map(c=>{
-    const rows=grupoReg.filter(r=>String(r.Cedula)===c);
-    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras')};
-  });
-
-  const mejor=grupoPerfiles.reduce((a,b)=>b.rl>a.rl?b:a,grupoPerfiles[0]);
-  const peor=grupoPerfiles.reduce((a,b)=>b.rl<a.rl?b:a,grupoPerfiles[0]);
+  const perfilesGrupo=ceds.map(c=>{const rows=grupoReg.filter(r=>String(r.Cedula)===c);return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras')};});
+  const mejor=perfilesGrupo.reduce((a,b)=>b.rl>a.rl?b:a,perfilesGrupo[0]||{});
+  const peor=perfilesGrupo.reduce((a,b)=>b.rl<a.rl?b:a,perfilesGrupo[0]||{});
   const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras')};
 
   const vars=[
@@ -721,83 +631,54 @@ function renderEst(reg, allNotas, ced){
     {k:'neg',l:'Negaciones',f:v=>v.toFixed(1),max:10},
   ];
 
-  document.getElementById('dm').innerHTML=`
-    <div class="page-title">Mis estadísticas</div>
-    <div class="page-sub"><span style="font-family:var(--font-m);color:var(--accent2)">${ced}</span> · ${grupoNombre}</div>
-
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Sesiones enviadas</div><div class="kpi-value">${sesEnv.length}</div><div class="kpi-sub">de ${SS.length} totales</div></div>
-      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${Math.round(sesEnv.length/SS.length*100)}%</div><div class="kpi-sub">${sesEnv.length>=SS.length*0.8?'✓ Excelente':sesEnv.length>=SS.length*0.5?'Mejorable':'Bajo'}</div></div>
-      <div class="kpi"><div class="kpi-label">Riqueza léxica</div><div class="kpi-value">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sub">promedio personal</div></div>
-      ${miNP?`<div class="kpi highlight"><div class="kpi-label">Tu desempeño</div><div class="kpi-value" style="font-size:22px">${miCl.emoji} ${miNP.promedio.toFixed(1)}</div><div class="kpi-sub"><span class="badge ${miCl.cls}">${miCl.label}</span></div></div>`
-      :`<div class="kpi"><div class="kpi-label">Desempeño</div><div class="kpi-value" style="font-size:18px">—</div><div class="kpi-sub">Sin nota registrada aún</div></div>`}
+  document.getElementById('main').innerHTML=`
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-lb">Sesiones enviadas</div><div class="kpi-val">${sesEnv.length}</div><div class="kpi-sb">de ${SS.length} totales</div></div>
+      <div class="kpi"><div class="kpi-lb">Cumplimiento</div><div class="kpi-val">${Math.round(sesEnv.length/SS.length*100)}%</div><div class="kpi-sb">${sesEnv.length>=SS.length*0.8?'Excelente':sesEnv.length>=SS.length*0.5?'Mejorable':'Bajo'}</div></div>
+      <div class="kpi"><div class="kpi-lb">Riqueza léxica</div><div class="kpi-val">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sb">promedio personal</div></div>
+      ${miNP?`<div class="kpi emph"><div class="kpi-lb">Tu desempeño</div><div class="kpi-val" style="font-size:20px">${miNP.promedio.toFixed(1)}</div><div class="kpi-sb"><span class="pill ${miCl.cls}">${miCl.emoji} ${miCl.label}</span></div></div>`:`<div class="kpi"><div class="kpi-lb">Desempeño</div><div class="kpi-val" style="font-size:16px;color:var(--ink-faint)">—</div><div class="kpi-sb">Sin nota registrada aún</div></div>`}
     </div>
 
-    ${miNP?`
-    <div class="card">
-      <div class="card-title">📝 Tus notas</div>
-      <div class="nota-grid">
-        <div class="nota-card"><div class="nota-card-label">Parcial</div><div class="nota-card-value" style="color:var(--accent2)">${miNP.parcial.toFixed(1)}</div></div>
-        <div class="nota-card"><div class="nota-card-label">Actividades prom.</div><div class="nota-card-value">${miNP.actividades.toFixed(1)}</div></div>
-        <div class="nota-card"><div class="nota-card-label">Nota final</div><div class="nota-card-value" style="color:${miCl.cls==='b-green'?'var(--green)':miCl.cls==='b-yellow'?'var(--yellow)':'var(--red)'}">${miNP.promedio.toFixed(1)}</div></div>
-      </div>
-    </div>`:''}
+    ${miNP?`<div class="card"><div class="card-tt">Tus notas</div><div class="note-grid">
+      <div class="note-card"><div class="note-lb">Parcial</div><div class="note-val" style="color:var(--signal)">${miNP.parcial.toFixed(1)}</div></div>
+      <div class="note-card"><div class="note-lb">Actividades prom.</div><div class="note-val">${miNP.actividades.toFixed(1)}</div></div>
+      <div class="note-card"><div class="note-lb">Nota final</div><div class="note-val" style="color:${miCl.cls==='p-good'?'var(--good)':miCl.cls==='p-warn'?'var(--warn)':'var(--bad)'}">${miNP.promedio.toFixed(1)}</div></div>
+    </div></div>`:''}
 
-    <div class="card">
-      <div class="card-title">📅 Sesiones grabadas</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.8;">
-        Has enviado <strong style="color:var(--text);font-size:18px;font-family:var(--font-d)">${sesEnv.length}</strong> audios de un total de <strong style="color:var(--text)">${SS.length}</strong> sesiones del curso.
-        ${misReg.length>0?`<br/>Última sesión grabada: <span style="color:var(--accent2);font-family:var(--font-m)">${ns(ord[ord.length-1]?.Sesion||'')}</span>`:''}
-      </div>
+    <div class="card"><div class="card-tt">Sesiones grabadas</div><div style="font-size:13px;color:var(--ink-dim);line-height:1.7;">
+      Has enviado <strong style="color:var(--ink);font-family:var(--f-d);font-size:16px;">${sesEnv.length}</strong> audios de <strong style="color:var(--ink)">${SS.length}</strong> sesiones del curso.
+      ${ord.length?`<br/>Última sesión grabada: <span style="color:var(--signal);font-family:var(--f-m)">${ns(ord[ord.length-1].Sesion)}</span>`:''}
+    </div></div>
+
+    <div class="grid2">
+      <div class="card"><div class="card-tt">Tu riqueza léxica por sesión</div><div class="cw"><canvas id="ch-e-rl"></canvas></div></div>
+      <div class="card"><div class="card-tt">Muletillas y dudas por sesión</div><div class="cw"><canvas id="ch-e-mts"></canvas></div></div>
     </div>
 
-    <div class="grid-2">
-      <div class="card"><div class="card-title">📈 Tu riqueza léxica por sesión</div><div class="cw"><canvas id="ch-e-rl"></canvas></div></div>
-      <div class="card"><div class="card-title">💬 Muletillas y dudas por sesión</div><div class="cw"><canvas id="ch-e-mts"></canvas></div></div>
+    <div class="card"><div class="card-tt">Tú vs. el grupo</div>
+      <div class="cmp-legend"><span><span class="dot" style="background:#4f8ef7"></span>Tú</span><span><span class="dot" style="background:#3ecf8e"></span>Mejor del grupo</span><span><span class="dot" style="background:#ef5972"></span>Peor del grupo</span></div>
+      ${vars.map(v=>{const vYo=yo[v.k]||0,vM=mejor[v.k]||0,vP=peor[v.k]||0,mx=Math.max(vYo,vM,vP,v.max)*1.1||1;
+        return `<div class="cmp-block"><div class="cmp-name">${v.l}</div>
+          <div class="cmp-line"><div class="cmp-tag">Tú</div><div class="cmp-track"><div class="cmp-fill" style="width:${Math.min(100,vYo/mx*100)}%;background:#4f8ef7"></div></div><div class="cmp-num">${v.f(vYo)}</div></div>
+          <div class="cmp-line"><div class="cmp-tag">Mejor</div><div class="cmp-track"><div class="cmp-fill" style="width:${Math.min(100,vM/mx*100)}%;background:#3ecf8e"></div></div><div class="cmp-num">${v.f(vM)}</div></div>
+          <div class="cmp-line"><div class="cmp-tag">Peor</div><div class="cmp-track"><div class="cmp-fill" style="width:${Math.min(100,vP/mx*100)}%;background:#ef5972"></div></div><div class="cmp-num">${v.f(vP)}</div></div>
+        </div>`;}).join('')}
     </div>
 
-    <div class="card">
-      <div class="card-title">🔍 Tú vs el grupo — comparativa</div>
-      <div class="cmp-legend">
-        <span><span class="cmp-dot" style="background:#60a5fa"></span>Tú</span>
-        <span><span class="cmp-dot" style="background:#34d399"></span>Mejor del grupo</span>
-        <span><span class="cmp-dot" style="background:#f87171"></span>Peor del grupo</span>
-      </div>
-      <div class="cmp-row">
-        ${vars.map(v=>{
-          const vYo=yo[v.k]||0, vMejor=mejor[v.k]||0, vPeor=peor[v.k]||0;
-          const mx=Math.max(vYo,vMejor,vPeor,v.max)*1.1||1;
-          return `<div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">${v.l}</div>
-            <div class="cmp-item"><div class="cmp-label">Tú</div><div class="cmp-bar"><div class="cmp-fill me" style="width:${Math.min(100,vYo/mx*100)}%"></div></div><div class="cmp-val">${v.f(vYo)}</div></div>
-            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Mejor grupo</div><div class="cmp-bar"><div class="cmp-fill best" style="width:${Math.min(100,vMejor/mx*100)}%"></div></div><div class="cmp-val">${v.f(vMejor)}</div></div>
-            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Peor grupo</div><div class="cmp-bar"><div class="cmp-fill worst" style="width:${Math.min(100,vPeor/mx*100)}%"></div></div><div class="cmp-val">${v.f(vPeor)}</div></div>
-          </div>`;
-        }).join('<div style="height:1px;background:var(--border);margin:8px 0"></div>')}
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📊 Tus promedios generales</div>
-      <div class="mr">
-        <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(yo.rl*100).toFixed(1)}%</div></div>
-        <div class="ms"><div class="msl">Muletillas</div><div class="msv">${yo.mts.toFixed(1)}</div><div class="mss">por audio</div></div>
-        <div class="ms"><div class="msl">Dudas</div><div class="msv">${yo.dds.toFixed(1)}</div><div class="mss">por audio</div></div>
-        <div class="ms"><div class="msl">Negaciones</div><div class="msv">${yo.neg.toFixed(1)}</div><div class="mss">por audio</div></div>
-        <div class="ms"><div class="msl">Sim. coseno</div><div class="msv">${isNaN(yo.sim)||yo.sim===0?'—':(yo.sim*100).toFixed(0)+'%'}</div></div>
-        <div class="ms"><div class="msl">Palabras prom.</div><div class="msv">${Math.round(yo.pal)}</div></div>
-      </div>
-    </div>
+    <div class="card"><div class="card-tt">Tus promedios generales</div><div class="ms-grid">
+      <div class="ms"><div class="ms-lb">Riqueza léxica</div><div class="ms-val">${(yo.rl*100).toFixed(1)}%</div></div>
+      <div class="ms"><div class="ms-lb">Muletillas</div><div class="ms-val">${yo.mts.toFixed(1)}</div></div>
+      <div class="ms"><div class="ms-lb">Dudas</div><div class="ms-val">${yo.dds.toFixed(1)}</div></div>
+      <div class="ms"><div class="ms-lb">Negaciones</div><div class="ms-val">${yo.neg.toFixed(1)}</div></div>
+      <div class="ms"><div class="ms-lb">Sim. coseno</div><div class="ms-val">${isNaN(yo.sim)||yo.sim===0?'—':(yo.sim*100).toFixed(0)+'%'}</div></div>
+      <div class="ms"><div class="ms-lb">Palabras prom.</div><div class="ms-val">${Math.round(yo.pal)}</div></div>
+    </div></div>
   `;
-
   setTimeout(()=>{
     const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
-    mkChart('ch-e-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#60a5fa',pointRadius:4}]);
-    mkChart('ch-e-mts','bar',lb,[
-      {label:'Muletillas',data:ord.map(r=>r.conteo_muletillas||0),backgroundColor:'rgba(251,191,36,0.7)',borderRadius:4},
-      {label:'Dudas',data:ord.map(r=>r.conteo_dudas||0),backgroundColor:'rgba(248,113,113,0.7)',borderRadius:4}
-    ]);
-  },100);
+    mkChart('ch-e-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#4f8ef7',pointRadius:4}]);
+    mkChart('ch-e-mts','bar',lb,[{label:'Muletillas',data:ord.map(r=>r.conteo_muletillas||0),backgroundColor:'rgba(245,166,35,0.7)',borderRadius:4},{label:'Dudas',data:ord.map(r=>r.conteo_dudas||0),backgroundColor:'rgba(239,89,114,0.7)',borderRadius:4}]);
+  },80);
 }
 </script>
 </body>
