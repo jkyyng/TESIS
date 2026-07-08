@@ -243,7 +243,8 @@ const NOMBRES={
   '1034662097':'Juan Jiménez','1000329597':'Damián Ortiz','654321':'Prueba John',
 };
 function nombreDe(ced){return NOMBRES[String(ced)]||String(ced);}
-function fechaKey(s){const[d,m,y]=ns(s).split('/');return `${y}${m}${d}`;}
+function sesIndex(s){const v=ns(s);const i=SS.findIndex(x=>x.v===v);return i>=0?i:9999;}
+function fechaKey(s){return String(sesIndex(s)).padStart(4,'0');}
 const CD={plugins:{legend:{labels:{color:'#7d8fac',font:{family:'Inter',size:11}}}},scales:{x:{ticks:{color:'#7d8fac',font:{size:10},maxRotation:0},grid:{color:'rgba(120,150,200,0.05)'}},y:{ticks:{color:'#7d8fac',font:{size:10}},grid:{color:'rgba(120,150,200,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
