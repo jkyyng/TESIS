@@ -83,19 +83,6 @@
     .b-yellow{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.2);}
     .b-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
     .b-blue{background:rgba(59,130,246,0.12);color:var(--accent2);border:1px solid rgba(59,130,246,0.2);}
-    /* Riesgo / outliers */
-    tr.row-risk td{background:rgba(248,113,113,0.09);}
-    tr.row-risk td:first-child{box-shadow:inset 3px 0 0 var(--red);}
-    .b-risk{background:rgba(248,113,113,0.18);color:#fecaca;border:1px solid rgba(248,113,113,0.4);animation:pulseRisk 2s infinite;}
-    @keyframes pulseRisk{0%,100%{opacity:1}50%{opacity:0.65}}
-    /* Interpretación */
-    .interp{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
-    .interp:last-child{border-bottom:none;}
-    .interp .ii{font-size:20px;line-height:1;}
-    .interp .it{font-size:13px;color:var(--text);line-height:1.5;}
-    .interp .it b{color:var(--accent2);}
-    .sel-est{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);font-family:var(--font-b);}
-    .sel-est:focus{outline:none;border-color:var(--accent);}
     /* Sesiones */
     .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
     .sc{padding:10px 8px;border-radius:10px;text-align:center;border:1px solid var(--border);transition:all 0.2s;}
@@ -115,7 +102,6 @@
     .cmp-fill.me{background:var(--accent2);}
     .cmp-fill.best{background:var(--green);}
     .cmp-fill.worst{background:var(--red);}
-    .cmp-fill.prom{background:var(--purple);}
     .cmp-val{font-family:var(--font-m);font-size:11px;color:var(--text);}
     .cmp-legend{display:flex;gap:16px;margin-bottom:14px;font-size:11px;}
     .cmp-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
@@ -200,25 +186,6 @@ const KE = {
   '1150184438':'M5IGQ','1057570650':'PKI7P','1025531736':'5TB94','1013123384':'874FR',
   '1012378143':'HOCN9','1032877807':'J2QP8','1029141009':'9UZFK','1014990403':'8UT0C',
 };
-const NOMBRES = {
-  '1147486525':'GUZMAN_SAHRA','1025063386':'LOBO_DAVID','1010965081':'MATEUS_ANDRES','1096068485':'NUNEZ_GABRIELA',
-  '1013258532':'OBANDO_SIMON','1033102141':'OSTOS_JUANITA','1011323304':'OTALORA_ALEJANDRO','1014867126':'MESA_PEDRO',
-  '1024509578':'QUINTERO_CRISTHIAN','1014868162':'QUIROGA_MARIANA','1054895361':'RAMIREZ_LEONELA','1109549575':'REYES_LEIDY',
-  '1011324854':'RODRIGUEZ_GABRIELA','1031424164':'SALAMANCA_SANTIAGO','1141517449':'SANABRIA_NICOLAS','1023164975':'SANDOVAL_DAVID',
-  '1021634975':'SARMIENTO_SEBASTIAN','1034519179':'TARQUINO_JUAN','1030220057':'URIBE_MARIA','1018434360':'VALDIVIESO_GUSTAVO',
-  '1140916332':'VARGAS_LAURA','1032877729':'VILLABONA_JUAN','1150184438':'POVEDA_ANA','1057570650':'BARRERA_JUAN',
-  '1025531736':'CARDENAS_NATALIA','1013123384':'ARTUNDUAGA_ESTHEFANIA','1012378143':'CONDE_LUNA','1032877807':'MORA_PABLO',
-  '1029141009':'NARVAEZ_HENRY','1014990403':'GUTIERREZ_GABRIELA',
-  '1010964822':'PINEDA_DIEGO','1014482009':'ARGUELLO_SOFIA','1016946301':'PALACIOS_SANTIAGO','1028885900':'HERNANDEZ_DAVID',
-  '1029220048':'QUINTERO_SANTIAGO','1033097334':'CALDERON_ISABELLA','1034779730':'ZAPATA_JUAN','1107842573':'JURADO_JUAN',
-  '1012344638':'PACHECO_DANIEL','1054287150':'RODRIGUEZ_PAULA','1022354452':'SIERRA_JUAN','1141715942':'GUERRA_JULIANA',
-  '1034662097':'JIMENEZ_JUAN','1000329597':'ORTIZ_DAMIAN',
-};
-function nombreDe(ced){
-  const n=NOMBRES[String(ced)];
-  if(!n)return String(ced);
-  return n.split('_').map(w=>w.charAt(0)+w.slice(1).toLowerCase()).join(' ');
-}
 const SS=[
   {v:'09/06/2026',l:'S1'},{v:'10/06/2026',l:'S2'},{v:'11/06/2026',l:'S3'},{v:'12/06/2026',l:'S4'},
   {v:'16/06/2026',l:'S5'},{v:'17/06/2026',l:'S6'},{v:'18/06/2026',l:'S7'},{v:'19/06/2026',l:'S8'},
@@ -227,16 +194,9 @@ const SS=[
   {v:'03/07/2026',l:'S17'},{v:'06/07/2026',l:'S18'},{v:'07/07/2026',l:'S19'},{v:'08/07/2026',l:'S20'},
   {v:'09/07/2026',l:'S21'},{v:'10/07/2026',l:'S22'},
 ];
-// Las fechas de Sesion vienen como texto 'dd/MM/yyyy', así que ordenarlas con .sort() o
-// .localeCompare() las trata como texto y las desordena (ej: '01/07/2026' queda antes que
-// '09/06/2026' porque empieza por '0','1'). Este índice da el orden cronológico real.
-const SS_ORDEN=Object.fromEntries(SS.map((s,i)=>[s.v,i]));
-function ordenSesion(v){ const o=SS_ORDEN[v]; return o===undefined?Infinity:o; }
 const CD={plugins:{legend:{labels:{color:'#5a7a9e',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#5a7a9e',font:{size:10},maxRotation:0},grid:{color:'rgba(99,179,237,0.05)'}},y:{ticks:{color:'#5a7a9e',font:{size:10}},grid:{color:'rgba(99,179,237,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
-let FILTRO_SESION='',FILTRO_ESTUDIANTE='',TAB_ACTIVA='resumen';
-let FILTRO_SESION_EST='';
 
 // ── Login ──
 function elegirRol(r){
@@ -285,7 +245,6 @@ async function entrar(){
 }
 function salir(){
   ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';
-  FILTRO_SESION='';FILTRO_ESTUDIANTE='';FILTRO_SESION_EST='';TAB_ACTIVA='resumen';
   Object.values(CH).forEach(c=>{try{c.destroy();}catch(e){}});CH={};
   document.getElementById('sc-dash').style.display='none';
   document.getElementById('sc-login').style.display='flex';
@@ -302,7 +261,7 @@ async function cargar(){
     const res=await fetch(`${URL_AS}?action=getDashboard`);
     const d=await res.json();
     if(!d.ok)throw new Error(d.error||'Error');
-    DATA=dedupUltimaPorSesion(d.registros);
+    DATA=d.registros;
     NOTAS=d.notas||{};
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED);
@@ -313,14 +272,6 @@ async function cargar(){
 
 // ── Utils ──
 function ns(s){return String(s||'').split(' ')[0].trim();}
-// Si un estudiante (o profesor) mandó más de un audio para la misma sesión, se queda solo con el
-// más reciente. Las filas llegan del backend en orden cronológico (siempre se agregan al final),
-// así que la última que pisa cada clave Cedula+Sesion es la correcta.
-function dedupUltimaPorSesion(rows){
-  const m={};
-  rows.forEach(r=>{ m[String(r.Cedula)+'|'+ns(r.Sesion)]=r; });
-  return Object.values(m);
-}
 function p(rows,key){const v=rows.map(r=>parseFloat(r[key])).filter(v=>!isNaN(v));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
 function gb(arr,key){return arr.reduce((acc,r)=>{const k=ns(r[key]||r['Sesion']||key);(acc[k]=acc[k]||[]).push(r);return acc;},{});}
 function gbc(arr,key){return arr.reduce((acc,r)=>{(acc[r[key]]=acc[r[key]]||[]).push(r);return acc;},{});}
@@ -332,20 +283,18 @@ function notaEst(notas, cedula){
 }
 function calcPromedio(notaRow, grupoKey){
   if(!notaRow)return null;
-  let parciales=[], actividades=[];
-  if(grupoKey==='santiago'){
-    // PARCIAL 1 = 50%, promedio quices = 50%
-    const p1=parseFloat(notaRow['PARCIAL 1']||notaRow['Parcial 1']||0);
-    const quices=['Quiz Desigualdades','Quiz Transfor','Quiz rectas','Quiz funciones'].map(k=>parseFloat(notaRow[k]||0)).filter(v=>v>0);
-    const promQ=quices.length?quices.reduce((a,b)=>a+b,0)/quices.length:0;
-    if(p1>0)return{parcial:p1,actividades:promQ,promedio:(p1*0.5+promQ*0.5),notaRow};
-  } else {
-    const p1=parseFloat(notaRow['EP C1']||0);
-    const acts=['Quiz CRISP-DM','Frizo Correl','Quiz 2 Crisp DM','Tarea 1','Qscaler','Proy 1E'].map(k=>parseFloat(notaRow[k]||0)).filter(v=>v>0);
-    const promA=acts.length?acts.reduce((a,b)=>a+b,0)/acts.length:0;
-    if(p1>0)return{parcial:p1,actividades:promA,promedio:(p1*0.5+promA*0.5),notaRow};
-  }
-  return null;
+  const excluir=['Documento','Cedula','cedula','Nombre','correo','Email','email'];
+  const cols=Object.keys(notaRow).filter(k=>!excluir.includes(k));
+  const colParcial=cols.find(k=>k.toUpperCase().includes('PARCIAL'));
+  if(!colParcial)return null;
+  const parcial=parseFloat(notaRow[colParcial]||0);
+  if(!(parcial>0))return null;
+
+  const colsActividades=cols.filter(k=>k!==colParcial);
+  const valsAct=colsActividades.map(k=>parseFloat(notaRow[k]||0)).filter(v=>v>0);
+  const promActividades=valsAct.length?valsAct.reduce((a,b)=>a+b,0)/valsAct.length:0;
+
+  return{parcial,actividades:promActividades,promedio:(parcial*0.5+promActividades*0.5),notaRow};
 }
 function clasificar(prom){
   if(prom===null||isNaN(prom))return{cls:'b-blue',label:'Sin nota',emoji:'—'};
@@ -354,106 +303,6 @@ function clasificar(prom){
   if(n>=4.0)return{cls:'b-green',label:'Alto',emoji:'🟢'};
   if(n>=3.0)return{cls:'b-yellow',label:'Medio',emoji:'🟡'};
   return{cls:'b-red',label:'Bajo',emoji:'🔴'};
-}
-// Promedio del grupo por variable — se usa como referencia de comparación en vez de
-// "mejor/peor" (comparar contra un extremo es comparar contra un caso posiblemente atípico,
-// inestable con grupos de 14-30 personas; el promedio es una referencia más robusta).
-// Es promedio de promedios: primero se promedia cada estudiante, luego se promedian esos
-// promedios — así un estudiante que mandó más audios no pesa más que otro en la comparación.
-function calcularPromedioGrupo(perfiles){
-  const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
-  const conNota=perfiles.filter(pf=>pf.np);
-  const conSim=perfiles.filter(pf=>pf.sim>0);
-  const conPpm=perfiles.filter(pf=>pf.ppm>0);
-  return{
-    rl:avg(perfiles.map(pf=>pf.rl)), mts:avg(perfiles.map(pf=>pf.mts)),
-    dds:avg(perfiles.map(pf=>pf.dds)), neg:avg(perfiles.map(pf=>pf.neg)),
-    sim:conSim.length?avg(conSim.map(pf=>pf.sim)):0,
-    pal:avg(perfiles.map(pf=>pf.pal)),
-    ppm:conPpm.length?avg(conPpm.map(pf=>pf.ppm)):0,
-    rep:avg(perfiles.map(pf=>pf.rep||0)), dif:avg(perfiles.map(pf=>pf.dif||0)),
-    nota:conNota.length?avg(conNota.map(pf=>pf.np.promedio)):null,
-  };
-}
-// Si hay al menos 3 estudiantes con nota, la comparación usa nota (la variable de resultado
-// real); si no (típico antes del Parcial 1), cae de vuelta a riqueza léxica como proxy temporal.
-function criterioComparacion(perfiles){
-  return perfiles.filter(pf=>pf.np).length>=3?'nota':'riqueza_lexica';
-}
-
-// Riesgo: puntaje compuesto (z-score combinado de nota, riqueza léxica y similitud coseno,
-// cuando existan) en vez de un solo indicador. Umbral estadístico fijo (z < -1, "notablemente
-// por debajo del grupo") en vez de forzar siempre el 10% con peor desempeño — con un umbral fijo,
-// si nadie está realmente mal, nadie se marca (antes SIEMPRE marcaba a alguien, incluso en un
-// grupo donde todos van bien, solo por ser el último de la fila).
-// Requiere al menos 5 estudiantes para tener una base estadística mínima razonable.
-function calcularRiesgo(perfiles){
-  if(perfiles.length<5){ perfiles.forEach(pf=>{pf.riesgo=false;pf.zscore=0;}); return; }
-  const zscores=(vals)=>{
-    const validos=vals.map((v,i)=>({v,i})).filter(x=>x.v!=null&&!isNaN(x.v));
-    if(validos.length<3) return vals.map(()=>null);
-    const media=validos.reduce((a,b)=>a+b.v,0)/validos.length;
-    const desv=Math.sqrt(validos.reduce((s,x)=>s+(x.v-media)**2,0)/validos.length)||1;
-    const out=vals.map(()=>null);
-    validos.forEach(x=>{out[x.i]=(x.v-media)/desv;});
-    return out;
-  };
-  const zNota=zscores(perfiles.map(pf=>pf.np?pf.np.promedio:null));
-  const zRl=zscores(perfiles.map(pf=>pf.rl));
-  const zSim=zscores(perfiles.map(pf=>pf.sim>0?pf.sim:null));
-  perfiles.forEach((pf,i)=>{
-    // Combina las señales disponibles para ese estudiante (no todas siempre existen:
-    // sim. coseno puede faltar si el profesor no ha subido audio de esa sesión aún).
-    const señales=[
-      zNota[i]!=null?{z:zNota[i],w:2}:null,   // nota pesa más — es el resultado real
-      zRl[i]!=null?{z:zRl[i],w:1}:null,
-      zSim[i]!=null?{z:zSim[i],w:1}:null,
-    ].filter(Boolean);
-    if(señales.length===0){ pf.riesgo=false; pf.zscore=0; return; }
-    const wTotal=señales.reduce((a,s)=>a+s.w,0);
-    const zCompuesto=señales.reduce((a,s)=>a+s.z*s.w,0)/wTotal;
-    pf.zscore=zCompuesto;
-    pf.riesgo=zCompuesto<-1; // más de 1 desviación estándar por debajo del grupo
-  });
-}
-// Traduce las métricas crudas a lectura en lenguaje sencillo.
-function interpretar(yo,promedio,criterio){
-  const out=[];
-  // Riqueza léxica
-  if(yo.rl>=0.65) out.push({icon:'🟢',text:`<b>Vocabulario variado.</b> Usa palabras distintas con frecuencia, lo que suele reflejar buen dominio del tema.`});
-  else if(yo.rl>=0.45) out.push({icon:'🟡',text:`<b>Vocabulario adecuado.</b> Está en un rango normal, aunque repetir menos palabras podría mejorar la claridad.`});
-  else out.push({icon:'🔴',text:`<b>Vocabulario limitado.</b> Repite bastantes palabras; ampliar el vocabulario usado en las respuestas podría ayudar.`});
-  // Muletillas
-  if(yo.mts<=2) out.push({icon:'🟢',text:`<b>Discurso fluido.</b> Casi no usa muletillas ("o sea", "eh", etc.).`});
-  else if(yo.mts<=5) out.push({icon:'🟡',text:`<b>Algunas muletillas.</b> Es un nivel normal, no representa una alerta por sí solo.`});
-  else out.push({icon:'🔴',text:`<b>Muchas muletillas.</b> Puede indicar nerviosismo o que la respuesta no fue preparada con anticipación.`});
-  // Dudas
-  if(yo.dds<=1) out.push({icon:'🟢',text:`<b>Habla con seguridad.</b> Pocas expresiones de duda en sus respuestas.`});
-  else if(yo.dds<=3) out.push({icon:'🟡',text:`<b>Duda ocasional.</b> Normal en explicaciones más complejas.`});
-  else out.push({icon:'🔴',text:`<b>Duda frecuente.</b> Repasar el tema antes de grabar podría ayudar a responder con más confianza.`});
-  // Velocidad de habla (solo si hay dato — puede venir en 0 por audios sin duración registrada)
-  if(yo.ppm>0){
-    if(yo.ppm>220) out.push({icon:'🏃',text:`<b>Habla muy rápido.</b> Puede ser apuro o ansiedad al grabar; tomarse un momento antes de empezar podría ayudar.`});
-    else if(yo.ppm<80) out.push({icon:'🐢',text:`<b>Habla muy despacio.</b> Puede reflejar duda o que la respuesta se está construyendo sobre la marcha.`});
-  }
-  // Repeticiones de contenido (distinto de muletillas — repetir palabras reales, no relleno)
-  if(yo.rep>3) out.push({icon:'🔁',text:`<b>Repite bastante contenido.</b> Frases como "la, la derivada" pueden indicar que se está pensando la respuesta en tiempo real.`});
-  // Percepción de dificultad del tema (distinto de "dudas" — esto es sobre el tema, no la seguridad propia)
-  if(yo.dif>2) out.push({icon:'😕',text:`<b>Menciona que el tema le pareció difícil.</b> Vale la pena repasarlo o consultar dudas puntuales sobre esta sesión.`});
-  // Comparativa vs el PROMEDIO del grupo (no contra el mejor/peor — comparar contra un extremo
-  // es comparar contra un posible caso atípico; el promedio es una referencia más estable).
-  if(promedio){
-    if(criterio==='nota' && yo.nota!=null && promedio.nota!=null && promedio.nota>0){
-      const diff=yo.nota-promedio.nota;
-      if(diff>=0.3) out.push({icon:'⭐',text:`Su nota está <b>por encima del promedio del grupo</b> (${yo.nota.toFixed(1)} vs. ${promedio.nota.toFixed(1)}).`});
-      else if(diff<=-0.3) out.push({icon:'⚠️',text:`Su nota está <b>por debajo del promedio del grupo</b> (${yo.nota.toFixed(1)} vs. ${promedio.nota.toFixed(1)}) — vale la pena revisar qué está pasando.`});
-    } else if(promedio.rl>0){
-      const diff=yo.rl-promedio.rl;
-      if(diff>=0.1) out.push({icon:'⭐',text:`Su riqueza léxica está <b>por encima del promedio del grupo</b>.`});
-      else if(diff<=-0.1) out.push({icon:'⚠️',text:`Su riqueza léxica está <b>por debajo del promedio del grupo</b> — vale la pena reforzar este punto.`});
-    }
-  }
-  return out;
 }
 function mkChart(id,type,labels,datasets,opts={}){
   const c=document.getElementById(id);
@@ -465,84 +314,24 @@ function mkChart(id,type,labels,datasets,opts={}){
 // ══════════════════════════════════════════════════════
 // DASHBOARD PROFESOR
 // ══════════════════════════════════════════════════════
-// Deriva {est, sesVistas, perfiles} aplicando los filtros globales activos.
-// Se usa tanto en renderProf() como en st() (al cambiar de pestaña hay que
-// volver a dibujar las gráficas porque los canvas estaban ocultos y sin tamaño).
-function datosFiltradosProf(){
-  const d=DATA.filter(r=>r.Grupo===GP);
-  const estTodos=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-  const sesionesDisponibles=[...new Set(estTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
+function renderProf(reg, notas){
+  const est=reg.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+  const sesVistas=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+  const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
+  const cumpl=Math.round((est.length/(ceds.length*sesVistas.length))*100)||0;
 
-  const construirPerfil=(ced,rows)=>{
-    const nr=notaEst(NOTAS[GK]||[],ced);
+  // Calcular promedios y clasificaciones
+  const perfiles=ceds.map(ced=>{
+    const rows=est.filter(r=>String(r.Cedula)===ced);
+    const nr=notaEst(notas,ced);
     const np=calcPromedio(nr,GK);
-    return{ced,rows,nr,np,cl:clasificar(np?.promedio||null),
+    const cl=clasificar(np?.promedio||null);
+    return{ced,rows,nr,np,cl,
       rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),
       dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),
       sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),
-      ppm:p(rows,'palabras_por_minuto'),rep:p(rows,'conteo_repeticiones'),
-      pausas:p(rows,'num_pausas'),pausaProm:p(rows,'pausa_promedio'),
-      dif:p(rows,'conteo_percepcion_dificultad'),
       enviadas:rows.length};
-  };
-
-  // perfilesGrupo: solo respeta el filtro de SESIÓN (nunca el de estudiante) — es la base
-  // correcta para calcular "mejor/peor del grupo", incluso cuando se está viendo a 1 solo estudiante.
-  let estGrupo=estTodos;
-  if(FILTRO_SESION) estGrupo=estGrupo.filter(r=>ns(r.Sesion)===FILTRO_SESION);
-  const cedsGrupo=[...new Set(estGrupo.map(r=>String(r.Cedula)))];
-  const perfilesGrupo=cedsGrupo.map(ced=>construirPerfil(ced,estGrupo.filter(r=>String(r.Cedula)===ced)))
-    .sort((a,b)=>(b.np?.promedio||0)-(a.np?.promedio||0));
-  calcularRiesgo(perfilesGrupo);
-
-  // est/perfiles: respeta AMBOS filtros — es lo que efectivamente se muestra en tablas/gráficas.
-  let est=estGrupo;
-  if(FILTRO_ESTUDIANTE) est=est.filter(r=>String(r.Cedula)===FILTRO_ESTUDIANTE);
-  const sesVistas=FILTRO_SESION?[FILTRO_SESION]:sesionesDisponibles;
-  const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
-  const perfiles=FILTRO_ESTUDIANTE?perfilesGrupo.filter(pf=>ceds.includes(pf.ced)):perfilesGrupo;
-
-  return{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles};
-}
-
-function renderProf(reg, notas){
-  const{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles}=datosFiltradosProf();
-  const estudiantesDisponibles=[...new Set(estTodos.map(r=>String(r.Cedula)))];
-  const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
-  const cumpl=Math.round((est.length/(Math.max(1,ceds.length)*sesVistas.length))*100)||0;
-
-  const filtrosActivos=FILTRO_SESION||FILTRO_ESTUDIANTE;
-
-  const barraFiltros=`
-    <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
-        <select class="sel-est" id="filtro-sesion" onchange="aplicarFiltrosProf()">
-          <option value="">Todas</option>
-          ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION?'selected':''}>${SS.find(x=>x.v===s)?.l||s}</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:var(--muted)">🎓 Estudiante:</span>
-        <select class="sel-est" id="filtro-estudiante" onchange="aplicarFiltrosProf()">
-          <option value="">Todos</option>
-          ${estudiantesDisponibles.map(c=>`<option value="${c}" ${c===FILTRO_ESTUDIANTE?'selected':''}>${nombreDe(c)}</option>`).join('')}
-        </select>
-      </div>
-      ${filtrosActivos?`<button class="btn-sm" onclick="limpiarFiltrosProf()">✕ Limpiar filtros</button>`:''}
-    </div>`;
-
-  if(ceds.length===0){
-    document.getElementById('dm').innerHTML=`
-      <div class="page-title">${GP}</div>
-      <div class="page-sub">Análisis de voz académica · Foné</div>
-      ${barraFiltros}
-      <div class="card" style="text-align:center;padding:50px;color:var(--muted)">
-        <div style="font-size:32px;margin-bottom:10px">🔍</div>
-        Sin registros para esta combinación de filtros.
-      </div>`;
-    return;
-  }
+  }).sort((a,b)=>(b.np?.promedio||0)-(a.np?.promedio||0));
 
   const conNota=perfiles.filter(p=>p.np);
   const sinNota=perfiles.filter(p=>!p.np);
@@ -552,51 +341,38 @@ function renderProf(reg, notas){
 
   document.getElementById('dm').innerHTML=`
     <div class="page-title">${GP}</div>
-    <div class="page-sub">Análisis de voz académica · Foné ${filtrosActivos?`<span style="color:var(--accent2)">· Filtrado</span>`:''}</div>
-
-    ${barraFiltros}
+    <div class="page-sub">Análisis de voz académica · Foné</div>
 
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${ceds.length}</div><div class="kpi-sub">${sesVistas.length} sesion${sesVistas.length===1?'':'es'}</div></div>
+      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${ceds.length}</div><div class="kpi-sub">${sesVistas.length} sesiones</div></div>
       <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/ceds.length*10)/10} prom/est</div></div>
       <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${cumpl}%</div><div class="kpi-sub">audios / esperados</div></div>
       <div class="kpi highlight"><div class="kpi-label">Distribución</div><div class="kpi-value" style="font-size:18px">🟢${nAlto} 🟡${nMedio} 🔴${nBajo}</div><div class="kpi-sub">${sinNota.length} sin nota aún</div></div>
-      <div class="kpi" style="border-color:rgba(248,113,113,0.35);background:rgba(248,113,113,0.05)"><div class="kpi-label">En riesgo</div><div class="kpi-value" style="color:var(--red)">🚨 ${perfiles.filter(pf=>pf.riesgo).length}</div><div class="kpi-sub">&gt;1 desv. estándar bajo el grupo</div></div>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="resumen" onclick="st('resumen')">📊 Resumen</button>
-      <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
-      <button class="tab" data-tab="sesiones" onclick="st('sesiones')">📅 Sesiones</button>
-      <button class="tab" data-tab="variables" onclick="st('variables')">🔬 Variables</button>
-      <button class="tab" data-tab="alertas" onclick="st('alertas')">⚠️ Alertas</button>
+      <button class="tab active" onclick="st('resumen',this)">📊 Resumen</button>
+      <button class="tab" onclick="st('estudiantes',this)">👥 Estudiantes</button>
+      <button class="tab" onclick="st('sesiones',this)">📅 Sesiones</button>
+      <button class="tab" onclick="st('variables',this)">🔬 Variables</button>
+      <button class="tab" onclick="st('alertas',this)">⚠️ Alertas</button>
+      <button class="tab" onclick="st('transcripciones',this)">📝 Transcripciones</button>
+      <button class="tab" onclick="st('detalle',this)">🔬 Detalle completo</button>
     </div>
 
-    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo)}</div>
+    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est)}</div>
     <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
     <div id="t-sesiones" class="tab-content">${tSesiones()}</div>
     <div id="t-variables" class="tab-content">${tVariables(est,perfiles)}</div>
     <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas)}</div>
+    <div id="t-transcripciones" class="tab-content">${tTranscripciones(est,sesVistas,perfiles)}</div>
+    <div id="t-detalle" class="tab-content">${tDetalle(est,sesVistas,perfiles)}</div>
   `;
   setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
-  // Reactivar la pestaña que estaba abierta antes de aplicar el filtro
-  const btnActivo=document.querySelector(`.tab[data-tab="${TAB_ACTIVA}"]`);
-  if(btnActivo && TAB_ACTIVA!=='resumen') st(TAB_ACTIVA);
 }
 
-function aplicarFiltrosProf(){
-  FILTRO_SESION=document.getElementById('filtro-sesion').value;
-  FILTRO_ESTUDIANTE=document.getElementById('filtro-estudiante').value;
-  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
-}
-function limpiarFiltrosProf(){
-  FILTRO_SESION='';FILTRO_ESTUDIANTE='';
-  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
-}
-
-function tResumen(perfiles,sesVistas,est,perfilesGrupo){
+function tResumen(perfiles,sesVistas,est){
   return `
-    ${fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo)}
     <div class="grid-2">
       <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-rl"></canvas></div></div>
       <div class="card"><div class="card-title">💬 Muletillas y dudas promedio</div><div class="cw"><canvas id="ch-mts"></canvas></div></div>
@@ -608,72 +384,25 @@ function tResumen(perfiles,sesVistas,est,perfilesGrupo){
 }
 
 function tEstudiantes(perfiles,sesVistas){
-  const nRiesgo=perfiles.filter(pf=>pf.riesgo).length;
   const rows=perfiles.map(pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
-    return `<tr class="${pf.riesgo?'row-risk':''}">
-      <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
+    return `<tr>
+      <td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
       <td>${(pf.rl*100).toFixed(1)}%</td>
       <td>${pf.mts.toFixed(1)}</td>
       <td>${pf.dds.toFixed(1)}</td>
       <td>${isNaN(pf.sim)||pf.sim===0?'—':(pf.sim*100).toFixed(0)+'%'}</td>
-      <td>${Math.round(pf.ppm||0)}</td>
-      <td>${(pf.rep||0).toFixed(1)}</td>
-      <td>${(pf.dif||0).toFixed(1)}</td>
       <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
-      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?' <span class="badge b-risk">🚨 En riesgo</span>':''}</td>
+      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></td>
     </tr>`;
   }).join('');
-  return `
-    <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas.</div>
-      ${nRiesgo>0?`<span class="badge b-risk">🚨 ${nRiesgo} estudiante${nRiesgo>1?'s':''} en riesgo (&gt;1 desv. estándar bajo el promedio del grupo)</span>`:`<span class="badge b-green">✅ Sin outliers marcados</span>`}
-    </div>
-    <div class="card"><div class="card-title">Estudiantes — ordenados por nota</div>
-      <div class="tw"><table>
-        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th></tr>
-        ${rows}
-      </table></div>
-    </div>`;
-}
-
-// Ficha de detalle — aparece en el Resumen cuando el filtro global deja exactamente un estudiante.
-function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
-  if(perfiles.length!==1) return '';
-  const pf=perfiles[0];
-  const promedio=calcularPromedioGrupo(perfilesGrupo);
-  const criterio=criterioComparacion(perfilesGrupo);
-  const ord=[...pf.rows].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
-  const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
-  setTimeout(()=>{
-    mkChart('ch-det-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#60a5fa',pointRadius:4}]);
-  },150);
-  return `
-    <div class="card">
-      <div class="card-title">${nombreDe(pf.ced)} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${pf.ced}</span>
-        ${pf.riesgo?'<span class="badge b-risk">🚨 En riesgo</span>':''}
-        <span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>
-      </div>
-      <div class="mr">
-        <div class="ms"><div class="msl">Sesiones</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
-        <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(pf.rl*100).toFixed(1)}%</div></div>
-        <div class="ms"><div class="msl">Muletillas</div><div class="msv">${pf.mts.toFixed(1)}</div></div>
-        <div class="ms"><div class="msl">Dudas</div><div class="msv">${pf.dds.toFixed(1)}</div></div>
-        <div class="ms"><div class="msl">Sim. coseno</div><div class="msv">${isNaN(pf.sim)||pf.sim===0?'—':(pf.sim*100).toFixed(0)+'%'}</div></div>
-        <div class="ms"><div class="msl">Vel. habla</div><div class="msv">${Math.round(pf.ppm||0)} ppm</div></div>
-        <div class="ms"><div class="msl">Repeticiones</div><div class="msv">${(pf.rep||0).toFixed(1)}</div></div>
-        <div class="ms"><div class="msl">Pausas</div><div class="msv">${(pf.pausas||0).toFixed(1)}</div></div>
-        <div class="ms"><div class="msl">Perc. dificultad</div><div class="msv">${(pf.dif||0).toFixed(1)}</div></div>
-        <div class="ms"><div class="msl">Nota prom.</div><div class="msv">${pf.np?pf.np.promedio.toFixed(1):'—'}</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">🧭 Lectura rápida</div>
-      ${interpretar({rl:pf.rl,mts:pf.mts,dds:pf.dds,ppm:pf.ppm,rep:pf.rep,dif:pf.dif,nota:pf.np?.promedio},promedio,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
-    </div>
-    <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-det-rl"></canvas></div></div>`;
+  return `<div class="card"><div class="card-title">Todos los estudiantes — ordenados por nota</div>
+    <div class="tw"><table>
+      <tr><th>Cédula</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Nota prom.</th><th>Nivel</th></tr>
+      ${rows}
+    </table></div></div>`;
 }
 
 function tSesiones(){
@@ -690,15 +419,10 @@ function tVariables(est,perfiles){
     {k:'conteo_muletillas',l:'Muletillas',f:v=>v.toFixed(1)},
     {k:'conteo_dudas',l:'Dudas',f:v=>v.toFixed(1)},
     {k:'conteo_negaciones',l:'Negaciones',f:v=>v.toFixed(1)},
-    {k:'porcentaje_palabras_raras',l:'Palabras raras (hapax)',f:v=>(v*100).toFixed(1)+'%'},
+    {k:'porcentaje_palabras_raras',l:'Palabras raras',f:v=>(v*100).toFixed(1)+'%'},
     {k:'similitud_coseno',l:'Sim. coseno',f:v=>isNaN(v)||v===0?'—':(v*100).toFixed(0)+'%'},
     {k:'num_palabras',l:'Palabras prom.',f:v=>Math.round(v)+''},
     {k:'duracion_segundos',l:'Duración prom.',f:v=>Math.round(v)+'s'},
-    {k:'palabras_por_minuto',l:'Velocidad de habla',f:v=>Math.round(v)+' ppm'},
-    {k:'conteo_repeticiones',l:'Repeticiones',f:v=>v.toFixed(1)},
-    {k:'num_pausas',l:'Nº de pausas',f:v=>v.toFixed(1)},
-    {k:'pausa_promedio',l:'Duración pausa prom.',f:v=>v.toFixed(2)+'s'},
-    {k:'conteo_percepcion_dificultad',l:'Percepción dificultad',f:v=>v.toFixed(1)},
   ];
   return `
     <div class="grid-2">
@@ -718,13 +442,6 @@ function tAlertas(perfiles,sesVistas){
   const pocas=perfiles.filter(pf=>pf.enviadas/sesVistas.length<0.6);
   const muletillas=perfiles.filter(pf=>pf.mts>5).sort((a,b)=>b.mts-a.mts);
   const dudas=perfiles.filter(pf=>pf.dds>3).sort((a,b)=>b.dds-a.dds);
-  // Velocidad de habla atípica: muy rápido puede indicar apuro/ansiedad, muy lento puede indicar
-  // duda o falta de fluidez. Umbrales aproximados (conversación normal en español ~120-180 ppm);
-  // se ignoran los que quedaron en 0 por falta de duración registrada.
-  const veloz=perfiles.filter(pf=>pf.ppm>220).sort((a,b)=>b.ppm-a.ppm);
-  const lento=perfiles.filter(pf=>pf.ppm>0&&pf.ppm<80).sort((a,b)=>a.ppm-b.ppm);
-  const repite=perfiles.filter(pf=>pf.rep>3).sort((a,b)=>b.rep-a.rep);
-  const dificultad=perfiles.filter(pf=>pf.dif>2).sort((a,b)=>b.dif-a.dif);
 
   const mkAlerta=(title,items,cols,fn)=>items.length===0
     ?`<div class="card"><div class="card-title">${title}</div><div style="color:var(--green);font-size:13px">✅ Sin alertas en este indicador</div></div>`
@@ -732,48 +449,189 @@ function tAlertas(perfiles,sesVistas){
       <tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>
       ${items.map(fn).join('')}
     </table></div></div>`;
-  const cedCol=pf=>`<td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>`;
 
   return `
-    ${mkAlerta('🔴 Estudiantes con bajo desempeño',bajo,['Estudiante','Nota prom.','Riqueza léx.','Muletillas'],
-      pf=>`<tr>${cedCol(pf)}<td>${pf.np?.promedio.toFixed(1)||'—'}</td><td>${(pf.rl*100).toFixed(1)}%</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
-    ${mkAlerta('📭 Estudiantes con bajo cumplimiento (&lt;60%)',pocas,['Estudiante','Enviadas','%'],
-      pf=>`<tr>${cedCol(pf)}<td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`)}
+    ${mkAlerta('🔴 Estudiantes con bajo desempeño',bajo,['Cédula','Nota prom.','Riqueza léx.','Muletillas'],
+      pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.np?.promedio.toFixed(1)||'—'}</td><td>${(pf.rl*100).toFixed(1)}%</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
+    ${mkAlerta('📭 Estudiantes con bajo cumplimiento (&lt;60%)',pocas,['Cédula','Enviadas','%'],
+      pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`)}
     <div class="grid-2">
-      ${mkAlerta('💬 Muchas muletillas (&gt;5)',muletillas,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.mts.toFixed(1)}</td></tr>`)}
-      ${mkAlerta('🤔 Muchas expresiones de duda (&gt;3)',dudas,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.dds.toFixed(1)}</td></tr>`)}
-    </div>
-    <div class="grid-2">
-      ${mkAlerta('🏃 Velocidad de habla muy alta (&gt;220 ppm)',veloz,['Estudiante','Palabras/min'],
-        pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
-      ${mkAlerta('🐢 Velocidad de habla muy baja (&lt;80 ppm)',lento,['Estudiante','Palabras/min'],
-        pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
-    </div>
-    <div class="grid-2">
-      ${mkAlerta('🔁 Muchas repeticiones de contenido (&gt;3)',repite,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.rep.toFixed(1)}</td></tr>`)}
-      ${mkAlerta('😕 Percepción de dificultad alta (&gt;2)',dificultad,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.dif.toFixed(1)}</td></tr>`)}
-    </div>
-    <div class="card" style="font-size:11px;color:var(--muted)">
-      💡 Los umbrales de velocidad de habla, repeticiones y percepción de dificultad son aproximaciones iniciales,
-      no vienen de literatura validada para tu contexto específico — trátalos como puntos de partida a calibrar
-      con más datos, no como criterios definitivos.
+      ${mkAlerta('💬 Muchas muletillas (&gt;5)',muletillas,['Cédula','Promedio'],
+        pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
+      ${mkAlerta('🤔 Muchas expresiones de duda (&gt;3)',dudas,['Cédula','Promedio'],
+        pf=>`<tr><td style="font-family:var(--font-m);font-size:11px">${pf.ced}</td><td>${pf.dds.toFixed(1)}</td></tr>`)}
     </div>`;
 }
 
-function st(tab){
-  TAB_ACTIVA=tab;
+function tTranscripciones(est,sesVistas,perfiles){
+  const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
+  const opcSes=sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('');
+  const opcEst=perfiles.map(pf=>`<option value="${pf.ced}">${pf.ced}</option>`).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">🔎 Filtros</div>
+      <div class="grid-2">
+        <div>
+          <label class="fl">Filtrar por sesión</label>
+          <select class="fi" id="f-sesion" onchange="filtrarTranscripciones()">
+            <option value="">Todas las sesiones</option>
+            ${opcSes}
+          </select>
+        </div>
+        <div>
+          <label class="fl">Filtrar por estudiante</label>
+          <select class="fi" id="f-estudiante" onchange="filtrarTranscripciones()">
+            <option value="">Todos los estudiantes</option>
+            ${opcEst}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="lista-transcripciones"></div>
+  `;
+}
+
+function filtrarTranscripciones(){
+  const filtroSes=document.getElementById('f-sesion').value;
+  const filtroEst=document.getElementById('f-estudiante').value;
+  const d=DATA.filter(r=>r.Grupo===GP);
+  let est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+
+  if(filtroSes) est=est.filter(r=>ns(r.Sesion)===filtroSes);
+  if(filtroEst) est=est.filter(r=>String(r.Cedula)===filtroEst);
+
+  est=est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
+
+  const cont=document.getElementById('lista-transcripciones');
+  if(est.length===0){
+    cont.innerHTML='<div class="card" style="text-align:center;color:var(--muted);font-size:13px">No hay transcripciones con estos filtros</div>';
+    return;
+  }
+
+  cont.innerHTML=est.map(r=>{
+    const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
+    const texto=r.Transcripcion||'(sin transcripción)';
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span class="badge b-blue">${lbl}</span>
+          <span style="font-family:var(--font-m);font-size:12px;color:var(--muted)">${r.Cedula}</span>
+          <span style="font-size:11px;color:var(--muted)">${ns(r.Sesion)}</span>
+        </div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted)">
+          <span>${r.num_palabras||0} palabras</span>
+          <span>${r.duracion_segundos||0}s</span>
+          <span>Riqueza: ${((parseFloat(r.riqueza_lexica)||0)*100).toFixed(1)}%</span>
+        </div>
+      </div>
+      <div style="font-size:13px;line-height:1.6;color:var(--text);background:var(--bg3);border-radius:10px;padding:14px;">${texto}</div>
+    </div>`;
+  }).join('');
+}
+
+function tDetalle(est,sesVistas,perfiles){
+  const lblSes=s=>SS.find(x=>x.v===s)?.l||s;
+  const opcSes=sesVistas.map(s=>`<option value="${s}">${lblSes(s)} — ${s}</option>`).join('');
+  const opcEst=perfiles.map(pf=>`<option value="${pf.ced}">${pf.ced}</option>`).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">🔎 Filtros</div>
+      <div class="grid-2">
+        <div>
+          <label class="fl">Filtrar por sesión</label>
+          <select class="fi" id="d-sesion" onchange="filtrarDetalle()">
+            <option value="">Todas las sesiones</option>
+            ${opcSes}
+          </select>
+        </div>
+        <div>
+          <label class="fl">Filtrar por estudiante</label>
+          <select class="fi" id="d-estudiante" onchange="filtrarDetalle()">
+            <option value="">Todos los estudiantes</option>
+            ${opcEst}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="lista-detalle"></div>
+  `;
+}
+
+function filtrarDetalle(){
+  const filtroSes=document.getElementById('d-sesion').value;
+  const filtroEst=document.getElementById('d-estudiante').value;
+  const d=DATA.filter(r=>r.Grupo===GP);
+  let est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+
+  if(filtroSes) est=est.filter(r=>ns(r.Sesion)===filtroSes);
+  if(filtroEst) est=est.filter(r=>String(r.Cedula)===filtroEst);
+
+  est=est.sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion))||String(a.Cedula).localeCompare(String(b.Cedula)));
+
+  const cont=document.getElementById('lista-detalle');
+  if(est.length===0){
+    cont.innerHTML='<div class="card" style="text-align:center;color:var(--muted);font-size:13px">No hay registros con estos filtros</div>';
+    return;
+  }
+
+  const campos=[
+    {k:'num_palabras',l:'Palabras'},{k:'num_caracteres',l:'Caracteres'},
+    {k:'palabras_unicas',l:'Palabras únicas'},{k:'riqueza_lexica',l:'Riqueza léxica',pct:true},
+    {k:'promedio_longitud_palabra',l:'Long. prom. palabra'},{k:'palabra_mas_repetida',l:'Palabra más repetida'},
+    {k:'frecuencia_palabra_top',l:'Frec. palabra top'},{k:'top_5_palabras',l:'Top 5 palabras'},
+    {k:'conteo_muletillas',l:'Muletillas'},{k:'frecuencia_muletillas',l:'Frec. muletillas',pct:true},
+    {k:'conteo_dudas',l:'Dudas'},{k:'frecuencia_dudas',l:'Frec. dudas',pct:true},
+    {k:'conteo_negaciones',l:'Negaciones'},{k:'frecuencia_negaciones',l:'Frec. negaciones',pct:true},
+    {k:'porcentaje_palabras_raras',l:'% palabras raras',pct:true},{k:'duracion_segundos',l:'Duración (s)'},
+    {k:'similitud_coseno',l:'Similitud coseno',pct:true},
+  ];
+
+  cont.innerHTML=est.map(r=>{
+    const lbl=SS.find(x=>x.v===ns(r.Sesion))?.l||ns(r.Sesion);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span class="badge b-blue">${lbl}</span>
+          <span style="font-family:var(--font-m);font-size:12px;color:var(--muted)">${r.Cedula}</span>
+          <span style="font-size:11px;color:var(--muted)">${r.Fecha||''}</span>
+        </div>
+        ${r['Audio (Drive)']?`<a href="${r['Audio (Drive)']}" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;">🔗 Ver audio</a>`:''}
+      </div>
+      <div class="grid-3" style="margin-bottom:14px;">
+        ${campos.map(c=>{
+          let val=r[c.k];
+          if(val===undefined||val===null||val==='')val='—';
+          else if(c.pct){const n=parseFloat(val);val=isNaN(n)?'—':(n*100).toFixed(2)+'%';}
+          return `<div class="ms"><div class="msl">${c.l}</div><div class="msv" style="font-size:14px;word-break:break-word;">${val}</div></div>`;
+        }).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;">TRANSCRIPCIÓN COMPLETA</div>
+      <div style="font-size:13px;line-height:1.6;color:var(--text);background:var(--bg3);border-radius:10px;padding:14px;">${r.Transcripcion||'(sin transcripción)'}</div>
+    </div>`;
+  }).join('');
+}
+
+function st(tab,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const btn=document.querySelector(`.tab[data-tab="${tab}"]`);
-  if(btn)btn.classList.add('active');
+  btn.classList.add('active');
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('t-'+tab).classList.add('active');
+  if(tab==='transcripciones'){ setTimeout(filtrarTranscripciones,50); return; }
+  if(tab==='detalle'){ setTimeout(filtrarDetalle,50); return; }
   if(DATA) setTimeout(()=>{
-    const{est,sesVistas,perfiles}=datosFiltradosProf();
-    renderChartsProf(est,sesVistas,perfiles);
+    const d=DATA.filter(r=>r.Grupo===GP);
+    const est=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+    const ses=[...new Set(est.map(r=>ns(r.Sesion)))].sort();
+    const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
+    const pfs=ceds.map(ced=>{
+      const rows=est.filter(r=>String(r.Cedula)===ced);
+      const nr=notaEst(NOTAS[GK]||[],ced);
+      const np=calcPromedio(nr,GK);
+      return{ced,rows,np,cl:clasificar(np?.promedio||null),rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),sim:p(rows,'similitud_coseno'),enviadas:rows.length};
+    });
+    renderChartsProf(est,ses,pfs);
   },100);
 }
 
@@ -824,45 +682,35 @@ function renderChartsProf(est,sesVistas,perfiles){
 // ══════════════════════════════════════════════════════
 function renderEst(reg, allNotas, ced){
   // Determinar grupo del estudiante
-  const misRegTodos=reg.filter(r=>String(r.Cedula)===ced&&r.Es_Profesor!=='SÍ');
-  if(misRegTodos.length===0){
+  const misReg=reg.filter(r=>String(r.Cedula)===ced&&r.Es_Profesor!=='SÍ');
+  if(misReg.length===0){
     document.getElementById('dm').innerHTML='<div style="text-align:center;padding:60px"><div style="font-size:40px;margin-bottom:12px">🎙️</div><div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:8px">Aún no tienes audios registrados</div><div style="font-size:13px;color:var(--muted)">Cuando envíes tu primer audio verás tus estadísticas aquí.</div></div>';
     return;
   }
-  const grupoNombre=misRegTodos[0].Grupo||'';
+  const grupoNombre=misReg[0].Grupo||'';
   const grupoKey=grupoNombre.includes('Santiago')?'santiago':'omar';
   const notas=allNotas[grupoKey]||[];
 
-  // Mis sesiones (todas, para el selector — el filtro se aplica después)
-  const sesionesDisponibles=[...new Set(misRegTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
-  const misReg=FILTRO_SESION_EST?misRegTodos.filter(r=>ns(r.Sesion)===FILTRO_SESION_EST):misRegTodos;
+  // Mis sesiones
   const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
-  const ord=[...misReg].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
+  const ord=[...misReg].sort((a,b)=>ns(a.Sesion).localeCompare(ns(b.Sesion)));
 
-  // Mis notas (no cambian con el filtro de sesión — la nota no es por audio individual)
+  // Mis notas
   const miNota=notaEst(notas,ced);
   const miNP=calcPromedio(miNota,grupoKey);
   const miCl=clasificar(miNP?.promedio||null);
 
-  // Comparativa grupo — todos los estudiantes del mismo grupo, respetando el mismo filtro de sesión
-  let grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-  if(FILTRO_SESION_EST) grupoReg=grupoReg.filter(r=>ns(r.Sesion)===FILTRO_SESION_EST);
+  // Comparativa grupo — todos los estudiantes del mismo grupo
+  const grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const ceds=[...new Set(grupoReg.map(r=>String(r.Cedula)))];
   const grupoPerfiles=ceds.map(c=>{
     const rows=grupoReg.filter(r=>String(r.Cedula)===c);
-    const np=calcPromedio(notaEst(notas,c),grupoKey);
-    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),
-      neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),
-      ppm:p(rows,'palabras_por_minuto'),rep:p(rows,'conteo_repeticiones'),dif:p(rows,'conteo_percepcion_dificultad'),np};
+    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras')};
   });
 
-  const promedio=calcularPromedioGrupo(grupoPerfiles);
-  const criterio=criterioComparacion(grupoPerfiles);
-  const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),
-    neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras'),
-    ppm:p(misReg,'palabras_por_minuto'),rep:p(misReg,'conteo_repeticiones'),
-    pausas:p(misReg,'num_pausas'),dif:p(misReg,'conteo_percepcion_dificultad'),
-    nota:miNP?.promedio};
+  const mejor=grupoPerfiles.reduce((a,b)=>b.rl>a.rl?b:a,grupoPerfiles[0]);
+  const peor=grupoPerfiles.reduce((a,b)=>b.rl<a.rl?b:a,grupoPerfiles[0]);
+  const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras')};
 
   const vars=[
     {k:'rl',l:'Riqueza léxica',f:v=>(v*100).toFixed(1)+'%',max:1},
@@ -871,46 +719,18 @@ function renderEst(reg, allNotas, ced){
     {k:'mts',l:'Muletillas',f:v=>v.toFixed(1),max:20},
     {k:'dds',l:'Dudas',f:v=>v.toFixed(1),max:10},
     {k:'neg',l:'Negaciones',f:v=>v.toFixed(1),max:10},
-    {k:'ppm',l:'Vel. habla',f:v=>Math.round(v)+' ppm',max:250},
-    {k:'rep',l:'Repeticiones',f:v=>v.toFixed(1),max:10},
   ];
-
-  const selectorSesion=`
-    <div class="card" style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
-      <select class="sel-est" id="filtro-sesion-est" onchange="aplicarFiltroSesionEst()">
-        <option value="">Todas (promedio general)</option>
-        ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION_EST?'selected':''}>${SS.find(x=>x.v===s)?.l||s}</option>`).join('')}
-      </select>
-      ${FILTRO_SESION_EST?`<button class="btn-sm" onclick="limpiarFiltroSesionEst()">✕ Limpiar</button>`:''}
-    </div>`;
-
-  if(misReg.length===0){
-    document.getElementById('dm').innerHTML=`
-      <div class="page-title">Mis estadísticas</div>
-      <div class="page-sub"><span style="font-family:var(--font-m);color:var(--accent2)">${ced}</span> · ${grupoNombre}</div>
-      ${selectorSesion}
-      <div class="card" style="text-align:center;padding:40px;color:var(--muted)">No enviaste audio en esa sesión.</div>`;
-    return;
-  }
 
   document.getElementById('dm').innerHTML=`
     <div class="page-title">Mis estadísticas</div>
     <div class="page-sub"><span style="font-family:var(--font-m);color:var(--accent2)">${ced}</span> · ${grupoNombre}</div>
 
-    ${selectorSesion}
-
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Sesiones enviadas</div><div class="kpi-value">${sesEnv.length}</div><div class="kpi-sub">de ${sesionesDisponibles.length} totales</div></div>
-      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${Math.round(sesionesDisponibles.length?sesEnv.length/sesionesDisponibles.length*100:0)}%</div><div class="kpi-sub">${sesEnv.length>=sesionesDisponibles.length*0.8?'✓ Excelente':sesEnv.length>=sesionesDisponibles.length*0.5?'Mejorable':'Bajo'}</div></div>
-      <div class="kpi"><div class="kpi-label">Riqueza léxica</div><div class="kpi-value">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sub">${FILTRO_SESION_EST?'esta sesión':'promedio personal'}</div></div>
+      <div class="kpi"><div class="kpi-label">Sesiones enviadas</div><div class="kpi-value">${sesEnv.length}</div><div class="kpi-sub">de ${SS.length} totales</div></div>
+      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${Math.round(sesEnv.length/SS.length*100)}%</div><div class="kpi-sub">${sesEnv.length>=SS.length*0.8?'✓ Excelente':sesEnv.length>=SS.length*0.5?'Mejorable':'Bajo'}</div></div>
+      <div class="kpi"><div class="kpi-label">Riqueza léxica</div><div class="kpi-value">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sub">promedio personal</div></div>
       ${miNP?`<div class="kpi highlight"><div class="kpi-label">Tu desempeño</div><div class="kpi-value" style="font-size:22px">${miCl.emoji} ${miNP.promedio.toFixed(1)}</div><div class="kpi-sub"><span class="badge ${miCl.cls}">${miCl.label}</span></div></div>`
       :`<div class="kpi"><div class="kpi-label">Desempeño</div><div class="kpi-value" style="font-size:18px">—</div><div class="kpi-sub">Sin nota registrada aún</div></div>`}
-    </div>
-
-    <div class="card">
-      <div class="card-title">🧭 Qué significa esto</div>
-      ${interpretar(yo,promedio,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
     </div>
 
     ${miNP?`
@@ -926,7 +746,7 @@ function renderEst(reg, allNotas, ced){
     <div class="card">
       <div class="card-title">📅 Sesiones grabadas</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.8;">
-        Has enviado <strong style="color:var(--text);font-size:18px;font-family:var(--font-d)">${sesEnv.length}</strong> audios de un total de <strong style="color:var(--text)">${sesionesDisponibles.length}</strong> sesiones del curso.
+        Has enviado <strong style="color:var(--text);font-size:18px;font-family:var(--font-d)">${sesEnv.length}</strong> audios de un total de <strong style="color:var(--text)">${SS.length}</strong> sesiones del curso.
         ${misReg.length>0?`<br/>Última sesión grabada: <span style="color:var(--accent2);font-family:var(--font-m)">${ns(ord[ord.length-1]?.Sesion||'')}</span>`:''}
       </div>
     </div>
@@ -937,27 +757,28 @@ function renderEst(reg, allNotas, ced){
     </div>
 
     <div class="card">
-      <div class="card-title">🔍 Tú vs el promedio del grupo</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Comparado contra ${criterio==='nota'?'la nota promedio':'la riqueza léxica promedio (aún sin suficientes notas registradas)'} del grupo${FILTRO_SESION_EST?' · solo esta sesión':''}</div>
+      <div class="card-title">🔍 Tú vs el grupo — comparativa</div>
       <div class="cmp-legend">
         <span><span class="cmp-dot" style="background:#60a5fa"></span>Tú</span>
-        <span><span class="cmp-dot" style="background:#a78bfa"></span>Promedio del grupo</span>
+        <span><span class="cmp-dot" style="background:#34d399"></span>Mejor del grupo</span>
+        <span><span class="cmp-dot" style="background:#f87171"></span>Peor del grupo</span>
       </div>
       <div class="cmp-row">
         ${vars.map(v=>{
-          const vYo=yo[v.k]||0, vProm=promedio[v.k]||0;
-          const mx=Math.max(vYo,vProm,v.max)*1.1||1;
+          const vYo=yo[v.k]||0, vMejor=mejor[v.k]||0, vPeor=peor[v.k]||0;
+          const mx=Math.max(vYo,vMejor,vPeor,v.max)*1.1||1;
           return `<div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">${v.l}</div>
             <div class="cmp-item"><div class="cmp-label">Tú</div><div class="cmp-bar"><div class="cmp-fill me" style="width:${Math.min(100,vYo/mx*100)}%"></div></div><div class="cmp-val">${v.f(vYo)}</div></div>
-            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Promedio</div><div class="cmp-bar"><div class="cmp-fill prom" style="width:${Math.min(100,vProm/mx*100)}%"></div></div><div class="cmp-val">${v.f(vProm)}</div></div>
+            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Mejor grupo</div><div class="cmp-bar"><div class="cmp-fill best" style="width:${Math.min(100,vMejor/mx*100)}%"></div></div><div class="cmp-val">${v.f(vMejor)}</div></div>
+            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Peor grupo</div><div class="cmp-bar"><div class="cmp-fill worst" style="width:${Math.min(100,vPeor/mx*100)}%"></div></div><div class="cmp-val">${v.f(vPeor)}</div></div>
           </div>`;
         }).join('<div style="height:1px;background:var(--border);margin:8px 0"></div>')}
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">📊 Tus promedios ${FILTRO_SESION_EST?'de esta sesión':'generales'}</div>
+      <div class="card-title">📊 Tus promedios generales</div>
       <div class="mr">
         <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(yo.rl*100).toFixed(1)}%</div></div>
         <div class="ms"><div class="msl">Muletillas</div><div class="msv">${yo.mts.toFixed(1)}</div><div class="mss">por audio</div></div>
@@ -965,10 +786,6 @@ function renderEst(reg, allNotas, ced){
         <div class="ms"><div class="msl">Negaciones</div><div class="msv">${yo.neg.toFixed(1)}</div><div class="mss">por audio</div></div>
         <div class="ms"><div class="msl">Sim. coseno</div><div class="msv">${isNaN(yo.sim)||yo.sim===0?'—':(yo.sim*100).toFixed(0)+'%'}</div></div>
         <div class="ms"><div class="msl">Palabras prom.</div><div class="msv">${Math.round(yo.pal)}</div></div>
-        <div class="ms"><div class="msl">Vel. habla</div><div class="msv">${Math.round(yo.ppm)} ppm</div></div>
-        <div class="ms"><div class="msl">Repeticiones</div><div class="msv">${yo.rep.toFixed(1)}</div><div class="mss">por audio</div></div>
-        <div class="ms"><div class="msl">Pausas</div><div class="msv">${yo.pausas.toFixed(1)}</div><div class="mss">por audio</div></div>
-        <div class="ms"><div class="msl">Perc. dificultad</div><div class="msv">${yo.dif.toFixed(1)}</div><div class="mss">por audio</div></div>
       </div>
     </div>
   `;
@@ -981,15 +798,6 @@ function renderEst(reg, allNotas, ced){
       {label:'Dudas',data:ord.map(r=>r.conteo_dudas||0),backgroundColor:'rgba(248,113,113,0.7)',borderRadius:4}
     ]);
   },100);
-}
-
-function aplicarFiltroSesionEst(){
-  FILTRO_SESION_EST=document.getElementById('filtro-sesion-est').value;
-  renderEst(DATA, NOTAS, CED);
-}
-function limpiarFiltroSesionEst(){
-  FILTRO_SESION_EST='';
-  renderEst(DATA, NOTAS, CED);
 }
 </script>
 </body>
