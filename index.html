@@ -532,7 +532,6 @@ const SESIONES = [
   {value:'07/07/2026',label:'Sesión 19 — Martes 07/07/2026'},
   {value:'08/07/2026',label:'Sesión 20 — Miércoles 08/07/2026'},
   {value:'09/07/2026',label:'Sesión 21 — Jueves 09/07/2026'},
-  {value:'10/07/2026',label:'Sesión 22 — Viernes 10/07/2026'},
 ];
 
 const CEDULAS = {
@@ -549,7 +548,23 @@ const GRUPOS = {
 // ── State ──
 let rolActual='', grupoActual='', cedulaActual='', esProfesor=false;
 let mediaRecorder=null, audioChunks=[], isRecording=false;
-let recInterval=null, recSeconds=0, audioBlob=null, waveInterval=null;
+let recInterval=null, recSeconds=0, audioBlob=null, waveInterval=null, duracionReal=null;
+
+// Mide la duración real del blob de audio (independiente del contador visual recSeconds,
+// que puede quedar mal si el navegador pausa el timer en segundo plano mientras
+// MediaRecorder sigue grabando — ej. el celular se bloquea o cambia de pestaña).
+async function obtenerDuracionReal(blob){
+  try{
+    const arrayBuffer = await blob.arrayBuffer();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    ctx.close();
+    return (isFinite(audioBuffer.duration) && audioBuffer.duration>0) ? audioBuffer.duration : null;
+  }catch(e){
+    return null; // si falla, submitAudio cae de vuelta a recSeconds
+  }
+}
 let currentEntry=null;
 
 // ── Views ──
@@ -725,7 +740,7 @@ async function toggleRecording() {
       mediaRecorder = new MediaRecorder(stream,{mimeType});
       audioChunks=[];
       mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
-      mediaRecorder.onstop=()=>{
+      mediaRecorder.onstop=async ()=>{
         audioBlob=new Blob(audioChunks,{type:'audio/webm'});
         document.getElementById('audio-preview').src=URL.createObjectURL(audioBlob);
         document.getElementById('audio-wrap').style.display='';
@@ -735,6 +750,7 @@ async function toggleRecording() {
         document.getElementById('rec-btn').className='rec-btn done';
         document.getElementById('rec-btn').textContent='✓';
         document.getElementById('rec-label').textContent='Grabación lista — puedes volver a grabar si quieres';
+        duracionReal = await obtenerDuracionReal(audioBlob);
       };
       mediaRecorder.start(200);
       isRecording=true; recSeconds=0;
@@ -766,7 +782,7 @@ function stopWave(){
   document.querySelectorAll('.wave-bar').forEach((b,i)=>{b.style.height=(h[i]||8)+'px';b.classList.remove('active');});
 }
 function resetRecorder(){
-  audioBlob=null; isRecording=false;
+  audioBlob=null; isRecording=false; duracionReal=null;
   clearInterval(recInterval); clearInterval(waveInterval);
   document.getElementById('rec-ring').className='rec-ring idle';
   document.getElementById('rec-btn').className='rec-btn';
@@ -803,7 +819,7 @@ async function submitAudio(){
     const payload={
       grupo:GRUPOS[grupoActual], cedula:cedulaActual,
       sesion, es_profesor:esProfesor,
-      duracion_segundos:recSeconds||0,
+      duracion_segundos: Math.round((duracionReal!=null?duracionReal:recSeconds)||0),
       fileBase64, fileName:file.name, fileType:file.type,
     };
 
