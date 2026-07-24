@@ -361,11 +361,17 @@
     <div class="card">
       <button class="btn-ghost" onclick="volverARol()" style="margin-bottom:18px;">← Volver</button>
       <div class="card-title">¿Cuál es tu cédula?</div>
-      <div class="card-desc" style="margin-bottom:16px;">Ingresa tu número de documento para verificar tu registro.</div>
+      <div class="card-desc" style="margin-bottom:16px;">Ingresa tu número de documento y tu clave de acceso.</div>
       <input class="cedula-input" type="number" id="inp-cedula"
         placeholder="0000000000"
         oninput="chequearFormatoCedula()"
-        onkeydown="if(event.key==='Enter') irAGrabar()" />
+        onkeydown="if(event.key==='Enter') document.getElementById('inp-clave').focus()" />
+      <br/>
+      <input class="cedula-input" type="password" id="inp-clave"
+        placeholder="Clave (3 caracteres)" maxlength="3"
+        oninput="chequearFormatoCedula()"
+        onkeydown="if(event.key==='Enter') irAGrabar()"
+        style="margin-top:10px;letter-spacing:6px;text-align:center;text-transform:uppercase;" />
       <div class="field-msg" id="msg-cedula"></div>
       <br/>
       <button class="btn-primary" id="btn-continuar-cedula" onclick="irAGrabar()" disabled>
@@ -546,33 +552,35 @@ function volverARol() {
 function irACedula(esProf) {
   esProfesor = !!esProf;
   document.getElementById('inp-cedula').value = '';
+  document.getElementById('inp-clave').value = '';
   document.getElementById('msg-cedula').textContent = '';
   document.getElementById('btn-continuar-cedula').disabled = true;
   showView('cedula');
 }
 
-// ── Paso 2: Cédula — solo chequeo de formato, la verificación real es al continuar ──
+// ── Paso 2: Cédula + clave — solo chequeo de formato, la verificación real es al continuar ──
 function chequearFormatoCedula() {
   const val = document.getElementById('inp-cedula').value.trim();
+  const clave = document.getElementById('inp-clave').value.trim();
   const msg = document.getElementById('msg-cedula');
   const btn = document.getElementById('btn-continuar-cedula');
-  const inp = document.getElementById('inp-cedula');
-  msg.textContent=''; msg.className='field-msg'; inp.classList.remove('valid');
-  btn.disabled = val.length < 4; // mínimo razonable para no llamar al backend con basura
+  msg.textContent=''; msg.className='field-msg';
+  btn.disabled = val.length < 4 || !/^[A-Za-z0-9]{3}$/.test(clave);
 }
 
 async function irAGrabar() {
   const val = document.getElementById('inp-cedula').value.trim();
-  if (!val) return;
+  const clave = document.getElementById('inp-clave').value.trim().toUpperCase();
+  if (!val || !clave) return;
   const btn = document.getElementById('btn-continuar-cedula');
   const msg = document.getElementById('msg-cedula');
   btn.disabled = true; btn.textContent = 'Verificando...';
   try {
-    const url = `${CONFIG.APPS_SCRIPT_URL}?action=buscarCedula&cedula=${encodeURIComponent(val)}`;
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=loginEstudiante&cedula=${encodeURIComponent(val)}&clave=${encodeURIComponent(clave)}`;
     const res = await fetch(url);
     const data = await res.json();
     if (!data.ok) {
-      msg.textContent = data.error || 'Cédula no encontrada'; msg.className='field-msg error';
+      msg.textContent = data.error || 'Cédula o clave incorrecta'; msg.className='field-msg error';
       btn.disabled = false; btn.textContent = 'Continuar →';
       return;
     }
