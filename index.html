@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Foné</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <title>Universidad Externado de Colombia - Análisis de Voz Académica</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     :root{
-      --bg:#060a12;
-      --bg2:#0b1220;
-      --bg3:#101a2e;
-      --bg4:#162038;
-      --border:rgba(99,179,237,0.1);
-      --border2:rgba(99,179,237,0.22);
-      --text:#e8f0fe;
-      --muted:#5a7a9e;
-      --accent:#3b82f6;
-      --accent-hover:#2563eb;
-      --accent2:#60a5fa;
-      --green:#34d399;
-      --green-dim:rgba(52,211,153,0.12);
-      --red:#f87171;
+      --bg:#08231A;
+      --bg2:#0D3320;
+      --bg3:#123D28;
+      --bg4:#184A31;
+      --border:rgba(200,230,210,0.1);
+      --border2:rgba(200,230,210,0.2);
+      --text:#F0F5F0;
+      --muted:#8FAD9B;
+      --accent:#2BAF7A;
+      --accent-hover:#23935F;
+      --accent-btn:#1F7A50;--accent2:#5EE0A3;
+      --green:#4ADE80;
+      --green-dim:rgba(74,222,128,0.12);
+      --red:#F87171;
       --radius:16px;
-      --font-d:'Syne',sans-serif;
+      --font-d:'Playfair Display',Georgia,serif;
       --font-b:'DM Sans',sans-serif;
     }
 
@@ -33,14 +33,15 @@
     .header{
       display:flex;align-items:center;justify-content:space-between;
       padding:16px 28px;
-      border-bottom:1px solid var(--border);
-      background:rgba(6,10,18,0.9);
+      border-bottom:1px solid rgba(6,63,38,0.15);
+      background:#FFFFFF;
       backdrop-filter:blur(16px);
       position:sticky;top:0;z-index:100;
     }
-    .logo{font-family:var(--font-d);font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--text);}
-    .logo span{color:var(--accent2);}
-    .logo-sub{font-size:11px;color:var(--muted);font-family:var(--font-b);font-weight:400;margin-left:8px;letter-spacing:0;}
+    .logo{font-family:var(--font-d);font-weight:800;font-size:20px;letter-spacing:-0.5px;color:#16261C;display:flex;align-items:center;gap:12px;}
+    .logo img{height:34px;width:auto;display:block;}
+    .logo span{color:#0B5D36;}
+    .logo-sub{font-size:11px;color:#5C6B62;font-family:var(--font-b);font-weight:400;margin-left:8px;letter-spacing:0;}
 
     /* ── Layout ── */
     .main{max-width:600px;margin:0 auto;padding:36px 20px 60px;}
@@ -55,7 +56,7 @@
       font-family:var(--font-d);font-size:12px;font-weight:700;
       color:var(--muted);transition:all 0.25s;flex-shrink:0;
     }
-    .step-num.active{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,0.1);}
+    .step-num.active{border-color:var(--accent);color:var(--accent);background:rgba(43,175,122,0.1);}
     .step-num.done{border-color:var(--green);color:var(--green);background:var(--green-dim);}
     .step-label{font-size:12px;color:var(--muted);transition:color 0.25s;white-space:nowrap;}
     .step-label.active{color:var(--text);font-weight:500;}
@@ -71,7 +72,7 @@
     }
     .card-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent2);margin-bottom:10px;font-weight:500;}
     .card-title{font-family:var(--font-d);font-size:24px;font-weight:800;margin-bottom:10px;line-height:1.2;}
-    .card-desc{font-size:14px;color:#8aaace;line-height:1.8;margin-bottom:24px;}
+    .card-desc{font-size:14px;color:#A9C2B4;line-height:1.8;margin-bottom:24px;}
     .card-desc ul{padding-left:18px;margin-top:8px;}
     .card-desc li{margin-bottom:6px;}
 
@@ -86,8 +87,8 @@
       transition:all 0.2s;color:var(--text);
       font-family:var(--font-d);
     }
-    .rol-btn:hover{border-color:var(--accent);background:rgba(59,130,246,0.06);transform:translateY(-2px);}
-    .rol-btn.selected{border-color:var(--accent);background:rgba(59,130,246,0.1);}
+    .rol-btn:hover{border-color:var(--accent);background:rgba(43,175,122,0.06);transform:translateY(-2px);}
+    .rol-btn.selected{border-color:var(--accent);background:rgba(43,175,122,0.1);}
     .rol-btn .rb-icon{font-size:28px;margin-bottom:8px;display:block;}
     .rol-btn .rb-title{font-size:14px;font-weight:700;}
 
@@ -101,7 +102,7 @@
       cursor:pointer;text-align:left;
       transition:all 0.2s;color:var(--text);
     }
-    .grupo-btn:hover{border-color:var(--accent);background:rgba(59,130,246,0.07);transform:translateX(3px);}
+    .grupo-btn:hover{border-color:var(--accent);background:rgba(43,175,122,0.07);transform:translateX(3px);}
     .grupo-btn .gb-title{font-family:var(--font-d);font-size:14px;font-weight:700;}
     .grupo-btn .gb-sub{font-size:12px;color:var(--muted);margin-top:2px;}
 
@@ -122,13 +123,13 @@
     /* ── Buttons ── */
     .btn-primary{
       width:100%;padding:15px;
-      background:var(--accent);color:white;border:none;
+      background:var(--accent-btn);color:white;border:none;
       border-radius:12px;font-family:var(--font-d);font-weight:700;font-size:15px;
       cursor:pointer;transition:all 0.2s;
       display:flex;align-items:center;justify-content:center;gap:8px;
       letter-spacing:0.3px;
     }
-    .btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,0.3);}
+    .btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 20px rgba(43,175,122,0.3);}
     .btn-primary:active{transform:translateY(0);}
     .btn-primary:disabled{background:var(--bg4);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none;}
 
@@ -168,8 +169,8 @@
     .rec-ring.recording{border-color:var(--accent);animation:ring-pulse 1.5s ease-in-out infinite;}
     .rec-ring.done{border-color:var(--green);}
     @keyframes ring-pulse{
-      0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.35)}
-      50%{box-shadow:0 0 0 14px rgba(59,130,246,0)}
+      0%,100%{box-shadow:0 0 0 0 rgba(43,175,122,0.35)}
+      50%{box-shadow:0 0 0 14px rgba(43,175,122,0)}
     }
     .rec-btn{
       width:68px;height:68px;border-radius:50%;
@@ -178,8 +179,8 @@
       display:flex;align-items:center;justify-content:center;
     }
     .rec-btn:hover{transform:scale(1.07);}
-    .rec-btn.recording{background:#dc2626;}
-    .rec-btn.done{background:#059669;}
+    .rec-btn.recording{background:#f87171;}
+    .rec-btn.done{background:#5EE0A3;}
     .rec-label{font-size:13px;color:var(--muted);margin-bottom:4px;text-align:center;}
     .rec-timer{
       font-family:var(--font-d);font-size:36px;font-weight:700;
@@ -210,7 +211,7 @@
     .proc-steps{display:flex;flex-direction:column;gap:8px;width:100%;max-width:300px;}
     .proc-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:9px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);}
     .proc-step.active{color:var(--text);border-color:var(--accent);}
-    .proc-step.done{color:var(--green);border-color:rgba(52,211,153,0.3);}
+    .proc-step.done{color:var(--green);border-color:rgba(74,222,128,0.3);}
     .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;}
     .proc-step.active .step-dot{background:var(--accent);animation:blink 1s infinite;}
     .proc-step.done .step-dot{background:var(--green);}
@@ -218,30 +219,30 @@
 
     /* ── Dashboard ── */
     .dash-hero{
-      background:linear-gradient(135deg,#060c1a 0%,#0a1628 60%,#0d1f3c 100%);
+      background:linear-gradient(135deg,#0A2A1C 0%,#123D28 60%,#164027 100%);
       border:1px solid var(--border2);border-radius:var(--radius);
       padding:28px;margin-bottom:14px;position:relative;overflow:hidden;
     }
     .dash-hero::before{
       content:'';position:absolute;top:-60px;right:-60px;
       width:220px;height:220px;
-      background:radial-gradient(circle,rgba(59,130,246,0.15) 0%,transparent 70%);
+      background:radial-gradient(circle,rgba(43,175,122,0.15) 0%,transparent 70%);
       pointer-events:none;
     }
     .dash-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent2);margin-bottom:8px;}
     .dash-title{font-family:var(--font-d);font-size:22px;font-weight:800;margin-bottom:14px;}
     .badge-row{display:flex;flex-wrap:wrap;gap:7px;}
     .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;}
-    .badge-blue{background:rgba(59,130,246,0.15);color:var(--accent2);border:1px solid rgba(59,130,246,0.25);}
+    .badge-blue{background:rgba(43,175,122,0.15);color:var(--accent2);border:1px solid rgba(43,175,122,0.25);}
     .badge-gray{background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
-    .badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,0.25);}
+    .badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.25);}
 
     .metrics-title{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:500;margin:22px 0 10px;}
     .metrics-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
     .metrics-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
     @media(max-width:520px){.metrics-grid-4,.metrics-grid-3{grid-template-columns:repeat(2,1fr);}}
     .metric{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;}
-    .metric.good{border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.04);}
+    .metric.good{border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.04);}
     .metric.warn{border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.04);}
     .metric.bad{border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.04);}
     .metric-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
@@ -250,7 +251,7 @@
 
     .transcript-box{
       background:var(--bg3);border-radius:12px;padding:18px;
-      font-size:13px;line-height:1.9;color:#8aaace;
+      font-size:13px;line-height:1.9;color:#A9C2B4;
       max-height:200px;overflow-y:auto;border:1px solid var(--border);
       margin-bottom:14px;
     }
@@ -260,11 +261,11 @@
     .drive-link{
       display:inline-flex;align-items:center;gap:6px;
       padding:9px 16px;
-      background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+      background:rgba(43,175,122,0.08);border:1px solid rgba(43,175,122,0.2);
       border-radius:9px;color:var(--accent2);font-size:13px;text-decoration:none;
       transition:all 0.15s;
     }
-    .drive-link:hover{background:rgba(59,130,246,0.15);}
+    .drive-link:hover{background:rgba(43,175,122,0.15);}
 
     /* ── Success state ── */
     .success-icon{font-size:52px;margin-bottom:14px;display:block;text-align:center;}
@@ -277,7 +278,7 @@
       z-index:999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none;
     }
     .toast.show{opacity:1;transform:translateY(0);}
-    .toast.success{border-color:rgba(52,211,153,0.4);color:var(--green);}
+    .toast.success{border-color:rgba(74,222,128,0.4);color:var(--green);}
     .toast.error{border-color:rgba(248,113,113,0.4);color:var(--red);}
 
     /* ── Divider ── */
@@ -287,7 +288,7 @@
 <body>
 
 <div class="header">
-  <div class="logo">Fo<span>né</span><span class="logo-sub">Análisis de voz académica</span></div>
+  <div class="logo"><img src="data:image/jpeg;base64,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" alt="Universidad Externado de Colombia"><span class="logo-sub">Análisis de Voz Académica</span></div>
 </div>
 
 <div class="main">
@@ -308,11 +309,9 @@
     <!-- Bienvenida estudiante -->
     <div id="panel-estudiante" style="display:none;">
       <div class="steps-bar">
-        <div class="step-item"><div class="step-num active" id="se1">1</div><div class="step-label active">Grupo</div></div>
+        <div class="step-item"><div class="step-num active" id="se1">1</div><div class="step-label active">Cédula</div></div>
         <div class="step-line"></div>
-        <div class="step-item"><div class="step-num" id="se2">2</div><div class="step-label">Cédula</div></div>
-        <div class="step-line"></div>
-        <div class="step-item"><div class="step-num" id="se3">3</div><div class="step-label">Grabar</div></div>
+        <div class="step-item"><div class="step-num" id="se2">2</div><div class="step-label">Grabar</div></div>
       </div>
       <div class="card">
         <div class="card-eyebrow">Estudiante</div>
@@ -324,29 +323,17 @@
             <li>¿Qué se te dificultó?</li>
             <li>¿Cómo va el ritmo del curso?</li>
           </ul>
-          <br/>¿A qué grupo perteneces? 👇
         </div>
-        <div class="grupo-grid">
-          <button class="grupo-btn" onclick="seleccionarGrupo('santiago')">
-            <div class="gb-title">Santiago Aparicio</div>
-            <div class="gb-sub">Matemáticas I</div>
-          </button>
-          <button class="grupo-btn" onclick="seleccionarGrupo('omar')">
-            <div class="gb-title">Omar Palacios</div>
-            <div class="gb-sub">Data Mining</div>
-          </button>
-        </div>
+        <button class="btn-primary" onclick="irACedula(false)">Continuar →</button>
       </div>
     </div>
 
     <!-- Bienvenida profesor -->
     <div id="panel-profesor" style="display:none;">
       <div class="steps-bar">
-        <div class="step-item"><div class="step-num active" id="sp1">1</div><div class="step-label active">Grupo</div></div>
+        <div class="step-item"><div class="step-num active" id="sp1">1</div><div class="step-label active">Cédula</div></div>
         <div class="step-line"></div>
-        <div class="step-item"><div class="step-num" id="sp2">2</div><div class="step-label">Verificación</div></div>
-        <div class="step-line"></div>
-        <div class="step-item"><div class="step-num" id="sp3">3</div><div class="step-label">Grabar</div></div>
+        <div class="step-item"><div class="step-num" id="sp2">2</div><div class="step-label">Grabar</div></div>
       </div>
       <div class="card">
         <div class="card-eyebrow">Docente</div>
@@ -358,39 +345,26 @@
             <li>¿Qué conceptos o palabras clave son esenciales?</li>
             <li>¿Cómo conecta lo de hoy con lo visto anteriormente?</li>
           </ul>
-          <br/>Confirma tu grupo 👇
         </div>
-        <div class="grupo-grid">
-          <button class="grupo-btn" onclick="seleccionarGrupo('prof-santiago')">
-            <div class="gb-title">Santiago Aparicio</div>
-            <div class="gb-sub">Matemáticas I</div>
-          </button>
-          <button class="grupo-btn" onclick="seleccionarGrupo('prof-omar')">
-            <div class="gb-title">Omar Palacios</div>
-            <div class="gb-sub">Data Mining</div>
-          </button>
-        </div>
+        <button class="btn-primary" onclick="irACedula(true)">Continuar →</button>
       </div>
     </div>
   </div>
 
-  <!-- ══ PASO 2: Cédula estudiante ══ -->
+  <!-- ══ PASO 2: Cédula (estudiante y profesor comparten el mismo flujo) ══ -->
   <div id="view-cedula" style="display:none;">
     <div class="steps-bar">
-      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
+      <div class="step-item"><div class="step-num active">1</div><div class="step-label active">Cédula</div></div>
       <div class="step-line"></div>
-      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Cédula</div></div>
-      <div class="step-line"></div>
-      <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-label">Grabar</div></div>
     </div>
     <div class="card">
-      <button class="btn-ghost" onclick="volverARol()" style="margin-bottom:18px;">← Cambiar grupo</button>
-      <div class="card-eyebrow" id="lbl-cedula-grupo"></div>
+      <button class="btn-ghost" onclick="volverARol()" style="margin-bottom:18px;">← Volver</button>
       <div class="card-title">¿Cuál es tu cédula?</div>
       <div class="card-desc" style="margin-bottom:16px;">Ingresa tu número de documento para verificar tu registro.</div>
       <input class="cedula-input" type="number" id="inp-cedula"
         placeholder="0000000000"
-        oninput="validarCedula()"
+        oninput="chequearFormatoCedula()"
         onkeydown="if(event.key==='Enter') irAGrabar()" />
       <div class="field-msg" id="msg-cedula"></div>
       <br/>
@@ -400,40 +374,27 @@
     </div>
   </div>
 
-  <!-- ══ PASO 2: Cédula profesor ══ -->
-  <div id="view-cedula-prof" style="display:none;">
+  <!-- ══ PASO 2b: Elegir curso (solo si la cédula está en más de uno) ══ -->
+  <div id="view-elegir-curso" style="display:none;">
     <div class="steps-bar">
-      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
+      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Cédula</div></div>
       <div class="step-line"></div>
-      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Verificación</div></div>
-      <div class="step-line"></div>
-      <div class="step-item"><div class="step-num">3</div><div class="step-label">Grabar</div></div>
+      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Grabar</div></div>
     </div>
     <div class="card">
-      <button class="btn-ghost" onclick="volverARol()" style="margin-bottom:18px;">← Cambiar grupo</button>
-      <div class="card-eyebrow" id="lbl-cedula-prof-grupo"></div>
-      <div class="card-title">Verificación docente</div>
-      <div class="card-desc" style="margin-bottom:16px;">Ingresa tu número de documento para continuar.</div>
-      <input class="cedula-input" type="number" id="inp-cedula-prof"
-        placeholder="0000000000"
-        oninput="validarCedulaProf()"
-        onkeydown="if(event.key==='Enter') irAGrabarProf()" />
-      <div class="field-msg" id="msg-cedula-prof"></div>
-      <br/>
-      <button class="btn-primary" id="btn-continuar-prof" onclick="irAGrabarProf()" disabled>
-        Continuar →
-      </button>
+      <button class="btn-ghost" onclick="volverARol()" style="margin-bottom:18px;">← Volver</button>
+      <div class="card-title">Estás en más de un curso</div>
+      <div class="card-desc" style="margin-bottom:16px;">¿Para cuál vas a grabar?</div>
+      <div class="grupo-grid" id="grupo-grid-elegir"></div>
     </div>
   </div>
 
   <!-- ══ PASO 3: Grabar ══ -->
   <div id="view-grabar" style="display:none;">
     <div class="steps-bar">
-      <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Grupo</div></div>
-      <div class="step-line"></div>
       <div class="step-item"><div class="step-num done">✓</div><div class="step-label">Cédula</div></div>
       <div class="step-line"></div>
-      <div class="step-item"><div class="step-num active">3</div><div class="step-label active">Grabar</div></div>
+      <div class="step-item"><div class="step-num active">2</div><div class="step-label active">Grabar</div></div>
     </div>
     <div class="card">
       <button class="btn-ghost" id="btn-volver-cedula" onclick="volverACedula()" style="margin-bottom:18px;">← Volver</button>
@@ -511,42 +472,36 @@ const CONFIG = {
 };
 
 const SESIONES = [
-  {value:'09/06/2026',label:'Sesión 1 — Martes 09/06/2026'},
-  {value:'10/06/2026',label:'Sesión 2 — Miércoles 10/06/2026'},
-  {value:'11/06/2026',label:'Sesión 3 — Jueves 11/06/2026'},
-  {value:'12/06/2026',label:'Sesión 4 — Viernes 12/06/2026'},
-  {value:'16/06/2026',label:'Sesión 5 — Martes 16/06/2026'},
-  {value:'17/06/2026',label:'Sesión 6 — Miércoles 17/06/2026'},
-  {value:'18/06/2026',label:'Sesión 7 — Jueves 18/06/2026'},
-  {value:'19/06/2026',label:'Sesión 8 — Viernes 19/06/2026'},
-  {value:'22/06/2026',label:'Sesión 9 — Lunes 22/06/2026'},
-  {value:'23/06/2026',label:'Sesión 10 — Martes 23/06/2026'},
-  {value:'24/06/2026',label:'Sesión 11 — Miércoles 24/06/2026'},
-  {value:'25/06/2026',label:'Sesión 12 — Jueves 25/06/2026'},
-  {value:'26/06/2026',label:'Sesión 13 — Viernes 26/06/2026'},
-  {value:'30/06/2026',label:'Sesión 14 — Martes 30/06/2026'},
-  {value:'01/07/2026',label:'Sesión 15 — Miércoles 01/07/2026'},
-  {value:'02/07/2026',label:'Sesión 16 — Jueves 02/07/2026'},
-  {value:'03/07/2026',label:'Sesión 17 — Viernes 03/07/2026'},
-  {value:'06/07/2026',label:'Sesión 18 — Lunes 06/07/2026'},
-  {value:'07/07/2026',label:'Sesión 19 — Martes 07/07/2026'},
-  {value:'08/07/2026',label:'Sesión 20 — Miércoles 08/07/2026'},
-  {value:'09/07/2026',label:'Sesión 21 — Jueves 09/07/2026'},
+  {value:'24/07/2026',label:'Audio 1 — Viernes 24/07/2026'},
+  {value:'31/07/2026',label:'Audio 2 — Viernes 31/07/2026'},
+  {value:'07/08/2026',label:'Audio 3 — Viernes 07/08/2026'},
+  {value:'14/08/2026',label:'Audio 4 — Viernes 14/08/2026'},
+  {value:'21/08/2026',label:'Audio 5 — Viernes 21/08/2026'},
+  {value:'28/08/2026',label:'Audio 6 — Viernes 28/08/2026'},
+  {value:'04/09/2026',label:'Audio 7 — Viernes 04/09/2026'},
+  {value:'11/09/2026',label:'Audio 8 — Viernes 11/09/2026'},
+  {value:'18/09/2026',label:'Audio 9 — Viernes 18/09/2026'},
+  {value:'25/09/2026',label:'Audio 10 — Viernes 25/09/2026'},
+  {value:'02/10/2026',label:'Audio 11 — Viernes 02/10/2026'},
+  {value:'16/10/2026',label:'Audio 12 — Viernes 16/10/2026'},
+  {value:'23/10/2026',label:'Audio 13 — Viernes 23/10/2026'},
+  {value:'30/10/2026',label:'Audio 14 — Viernes 30/10/2026'},
+  {value:'06/11/2026',label:'Audio 15 — Viernes 06/11/2026'},
 ];
 
-const CEDULAS = {
-  santiago: ['1147486525','1025063386','1010965081','1096068485','1013258532','1033102141','1011323304','1014867126','1024509578','1014868162','1054895361','1109549575','1011324854','1031424164','1141517449','1023164975','1021634975','1034519179','1030220057','1018434360','1140916332','1032877729','1150184438','1057570650','1025531736','654321','1013123384','1012378143','1032877807','1029141009','1014990403'],
-  omar: ['1010964822','1014482009','1016946301','1028885900','1029220048','1033097334','1034779730','1107842573','1012344638','1054287150','1022354452','1141715942','1034662097','654321','1000329597'],
-  profesores: { santiago:'1020793732', omar:'1032394491', test:'654321' }
-};
+// Ni estudiantes ni profesores se validan contra una lista local — ambos se consultan
+// contra el roster maestro en Sheets vía backend (buscarCedula), porque una misma persona
+// puede estar en más de un curso y el roster cambia cada semestre.
 
 const GRUPOS = {
-  santiago: 'Santiago Aparicio — Matemáticas I',
-  omar: 'Omar Palacios — Data Mining'
+  edwin_metodos: 'Edwin Muñoz - Métodos Numéricos',
+  edwin_algebra: 'Edwin Muñoz - Álgebra Líneal',
+  omar_24: 'Omar Palacios - Data Mining (Grupo 2-4)',
+  omar_46: 'Omar Palacios - Data Mining (Grupo 4-6)'
 };
 
 // ── State ──
-let rolActual='', grupoActual='', cedulaActual='', esProfesor=false;
+let rolActual='', grupoActual='', cedulaActual='', esProfesor=false, gruposDeEstaCedula=[], pendientesActuales=[];
 let mediaRecorder=null, audioChunks=[], isRecording=false;
 let recInterval=null, recSeconds=0, audioBlob=null, waveInterval=null, duracionReal=null;
 
@@ -568,7 +523,7 @@ async function obtenerDuracionReal(blob){
 let currentEntry=null;
 
 // ── Views ──
-const VIEWS = ['rol','cedula','cedula-prof','grabar','processing','dashboard'];
+const VIEWS = ['rol','cedula','elegir-curso','grabar','processing','dashboard'];
 function showView(v) {
   VIEWS.forEach(id => document.getElementById('view-'+id).style.display = id===v?'':'none');
 }
@@ -587,80 +542,74 @@ function volverARol() {
   elegirRol(rolActual);
 }
 
-// ── Paso 1: Grupo ──
-function seleccionarGrupo(g) {
-  const esProf = g.startsWith('prof-');
-  grupoActual = esProf ? g.replace('prof-','') : g;
-  esProfesor = esProf;
-
-  if (esProf) {
-    document.getElementById('lbl-cedula-prof-grupo').textContent = GRUPOS[grupoActual];
-    document.getElementById('inp-cedula-prof').value = '';
-    document.getElementById('msg-cedula-prof').textContent = '';
-    document.getElementById('btn-continuar-prof').disabled = true;
-    showView('cedula-prof');
-  } else {
-    document.getElementById('lbl-cedula-grupo').textContent = GRUPOS[grupoActual];
-    document.getElementById('inp-cedula').value = '';
-    document.getElementById('msg-cedula').textContent = '';
-    document.getElementById('btn-continuar-cedula').disabled = true;
-    showView('cedula');
-  }
+// ── Paso 1: directo a cédula, sin elegir grupo — igual para estudiante y profesor ──
+function irACedula(esProf) {
+  esProfesor = !!esProf;
+  document.getElementById('inp-cedula').value = '';
+  document.getElementById('msg-cedula').textContent = '';
+  document.getElementById('btn-continuar-cedula').disabled = true;
+  showView('cedula');
 }
 
-// ── Paso 2: Cédula estudiante ──
-function validarCedula() {
+// ── Paso 2: Cédula — solo chequeo de formato, la verificación real es al continuar ──
+function chequearFormatoCedula() {
   const val = document.getElementById('inp-cedula').value.trim();
   const msg = document.getElementById('msg-cedula');
   const btn = document.getElementById('btn-continuar-cedula');
   const inp = document.getElementById('inp-cedula');
-  if (!val) { msg.textContent=''; msg.className='field-msg'; btn.disabled=true; inp.classList.remove('valid'); return; }
-  if (CEDULAS[grupoActual].map(String).includes(String(val))) {
-    msg.textContent='✓ Cédula verificada'; msg.className='field-msg ok';
-    inp.classList.add('valid'); btn.disabled=false;
-  } else {
-    msg.textContent='Cédula no encontrada en este grupo'; msg.className='field-msg error';
-    inp.classList.remove('valid'); btn.disabled=true;
-  }
+  msg.textContent=''; msg.className='field-msg'; inp.classList.remove('valid');
+  btn.disabled = val.length < 4; // mínimo razonable para no llamar al backend con basura
 }
 
 async function irAGrabar() {
   const val = document.getElementById('inp-cedula').value.trim();
-  if (!CEDULAS[grupoActual].map(String).includes(String(val))) return;
-  cedulaActual = val;
-  showView('grabar');
-  await prepararGrabar();
-}
-
-// ── Paso 2: Cédula profesor ──
-function validarCedulaProf() {
-  const val = document.getElementById('inp-cedula-prof').value.trim();
-  const msg = document.getElementById('msg-cedula-prof');
-  const btn = document.getElementById('btn-continuar-prof');
-  const inp = document.getElementById('inp-cedula-prof');
-  if (!val) { msg.textContent=''; msg.className='field-msg'; btn.disabled=true; inp.classList.remove('valid'); return; }
-  const valida = CEDULAS.profesores[grupoActual]===val || val==='654321';
-  if (valida) {
-    msg.textContent='✓ Cédula verificada'; msg.className='field-msg ok';
-    inp.classList.add('valid'); btn.disabled=false;
-  } else {
-    msg.textContent='Cédula no autorizada para este grupo'; msg.className='field-msg error';
-    inp.classList.remove('valid'); btn.disabled=true;
+  if (!val) return;
+  const btn = document.getElementById('btn-continuar-cedula');
+  const msg = document.getElementById('msg-cedula');
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?action=buscarCedula&cedula=${encodeURIComponent(val)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) {
+      msg.textContent = data.error || 'Cédula no encontrada'; msg.className='field-msg error';
+      btn.disabled = false; btn.textContent = 'Continuar →';
+      return;
+    }
+    cedulaActual = val;
+    gruposDeEstaCedula = data.grupos;
+    btn.textContent = 'Continuar →';
+    if (gruposDeEstaCedula.length === 1) {
+      grupoActual = gruposDeEstaCedula[0];
+      showView('grabar');
+      await prepararGrabar();
+    } else {
+      mostrarElegirCurso();
+    }
+  } catch(e) {
+    msg.textContent = 'Error de conexión, intenta de nuevo'; msg.className='field-msg error';
+    btn.disabled = false; btn.textContent = 'Continuar →';
   }
 }
 
-async function irAGrabarProf() {
-  const val = document.getElementById('inp-cedula-prof').value.trim();
-  const valida = CEDULAS.profesores[grupoActual]===val || val==='654321';
-  if (!valida) return;
-  cedulaActual = val;
+// ── Paso 2b: Elegir curso (cuando la cédula está matriculada en más de uno) ──
+function mostrarElegirCurso() {
+  const cont = document.getElementById('grupo-grid-elegir');
+  cont.innerHTML = gruposDeEstaCedula.map(g => `
+    <button class="grupo-btn" onclick="elegirCursoEstudiante('${g}')">
+      <div class="gb-title">${GRUPOS[g]||g}</div>
+    </button>`).join('');
+  showView('elegir-curso');
+}
+async function elegirCursoEstudiante(g) {
+  grupoActual = g;
   showView('grabar');
   await prepararGrabar();
 }
 
 function volverACedula() {
   resetRecorder();
-  if (esProfesor) showView('cedula-prof');
+  if (gruposDeEstaCedula.length > 1) mostrarElegirCurso();
   else showView('cedula');
 }
 
@@ -687,6 +636,7 @@ async function prepararGrabar() {
   // Cargar sesiones
   const sel = document.getElementById('sel-sesion');
   sel.innerHTML = SESIONES.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
+  sel.disabled = false;
 
   // Hora Bogotá
   const hoyBog = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
@@ -702,6 +652,7 @@ async function prepararGrabar() {
   // Quitar advertencia previa
   const prevWarn = document.getElementById('warn-pendientes');
   if (prevWarn) prevWarn.remove();
+  pendientesActuales = [];
 
   // Verificar pendientes solo para estudiantes
   if (!esProfesor) {
@@ -715,17 +666,19 @@ async function prepararGrabar() {
           return new Date(`${y}-${m}-${d}T00:00:00`) <= hoyBog;
         }).map(s => s.value);
         const pendientes = pasadas.filter(s => !data.enviadas.includes(s));
+        pendientesActuales = pendientes;
         if (pendientes.length > 0) {
           sel.value = pendientes[0];
+          sel.disabled = true; // no puede elegir otra sesión hasta poner al día la más vieja pendiente
           const warn = document.createElement('div');
           warn.id = 'warn-pendientes';
-          warn.style.cssText = 'background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#fbbf24;line-height:1.7;';
+          warn.style.cssText = 'background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#F87171;line-height:1.7;';
           const labels = pendientes.map(v => SESIONES.find(s=>s.value===v)?.label || v);
-          warn.innerHTML = `⚠️ <strong>Tienes ${pendientes.length} sesión${pendientes.length>1?'es':''} pendiente${pendientes.length>1?'s':''}:</strong><br/>${labels.join('<br/>')}`;
+          warn.innerHTML = `📌 <strong>Debes todavía ${pendientes.length} audio${pendientes.length>1?'s':''}:</strong><br/>${labels.join('<br/>')}<br/><br/>Primero manda el de <strong>${labels[0]}</strong> — no puedes elegir otra sesión hasta que lo envíes.`;
           document.getElementById('sel-sesion').insertAdjacentElement('afterend', warn);
         }
       }
-    } catch(e) { /* si falla la consulta, continuar normal */ }
+    } catch(e) { /* si falla la consulta, continuar normal (no bloquea por un error de red) */ }
   }
 
   resetRecorder();
@@ -806,6 +759,10 @@ async function submitAudio(){
   if(!audioBlob){toast('Graba un audio primero','error');return;}
   const sesion=document.getElementById('sel-sesion').value;
   if(!sesion){toast('Selecciona una sesión','error');return;}
+  if(pendientesActuales.length>0 && sesion!==pendientesActuales[0]){
+    toast('Primero debes enviar el audio pendiente más antiguo','error');
+    return;
+  }
 
   showView('processing'); resetSteps();
   advanceStep();
