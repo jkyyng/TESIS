@@ -317,10 +317,10 @@
         <div class="card-eyebrow">Estudiante</div>
         <div class="card-title">🎓 ¡Hola!</div>
         <div class="card-desc">
-          Después de clase graba un audio de 1 minuto contando:
+          Cada viernes graba un audio de 1 minuto contando, sobre <strong>esta semana</strong>:
           <ul>
-            <li>¿Qué aprendiste hoy?</li>
-            <li>¿Qué se te dificultó?</li>
+            <li>¿Qué aprendiste esta semana?</li>
+            <li>¿Qué se te dificultó esta semana?</li>
             <li>¿Cómo va el ritmo del curso?</li>
           </ul>
         </div>
@@ -339,11 +339,10 @@
         <div class="card-eyebrow">Docente</div>
         <div class="card-title">👨‍🏫 ¡Hola, profe!</div>
         <div class="card-desc">
-          Tu audio es la referencia de la sesión. Graba un minuto contando:
+          Tu audio es la referencia de la semana. Cada viernes graba un minuto contando, sobre <strong>esta semana</strong>:
           <ul>
-            <li>¿Qué temas abordaste hoy?</li>
+            <li>¿Qué temas abordaste esta semana?</li>
             <li>¿Qué conceptos o palabras clave son esenciales?</li>
-            <li>¿Cómo conecta lo de hoy con lo visto anteriormente?</li>
           </ul>
         </div>
         <button class="btn-primary" onclick="irACedula(true)">Continuar →</button>
@@ -430,6 +429,9 @@
         </div>
         <div id="audio-wrap" style="width:100%;display:none;">
           <audio id="audio-preview" controls></audio>
+          <button class="btn-ghost" onclick="eliminarAudio()" style="width:100%;margin-top:10px;color:#F87171;border-color:rgba(220,38,38,0.35);">
+            🗑️ Eliminar y grabar de nuevo
+          </button>
         </div>
       </div>
 
@@ -628,15 +630,14 @@ async function prepararGrabar() {
 
   const rec = document.getElementById('grabar-recordatorio');
   if (esProfesor) {
-    rec.innerHTML = `Recuerda contar:<ul>
-      <li>¿Qué temas abordaste hoy?</li>
+    rec.innerHTML = `Recuerda contar sobre <strong>esta semana</strong>:<ul>
+      <li>¿Qué temas abordaste esta semana?</li>
       <li>¿Qué conceptos o palabras clave son esenciales?</li>
-      <li>¿Cómo conecta lo de hoy con lo visto anteriormente?</li>
     </ul>`;
   } else {
-    rec.innerHTML = `Recuerda contar:<ul>
-      <li>¿Qué aprendiste hoy?</li>
-      <li>¿Qué se te dificultó?</li>
+    rec.innerHTML = `Recuerda contar sobre <strong>esta semana</strong>:<ul>
+      <li>¿Qué aprendiste esta semana?</li>
+      <li>¿Qué se te dificultó esta semana?</li>
       <li>¿Cómo va el ritmo del curso?</li>
     </ul>`;
   }
@@ -752,6 +753,15 @@ function resetRecorder(){
   document.getElementById('rec-timer').textContent='';
   document.getElementById('audio-wrap').style.display='none';
   stopWave();
+}
+
+// Botón explícito para descartar el audio ya grabado (después de escucharlo) y volver
+// a empezar, sin tener que darle "enviar" primero por accidente.
+function eliminarAudio(){
+  if(!audioBlob) return;
+  if(!confirm('¿Seguro que quieres eliminar este audio y grabar de nuevo?')) return;
+  resetRecorder();
+  toast('Audio eliminado','success');
 }
 
 // ── Submit ──
