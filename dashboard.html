@@ -160,13 +160,14 @@
       <div class="rol-opt" id="opt-e" onclick="elegirRol('e')"><span class="ri">🎓</span><div class="rl">Estudiante</div></div>
     </div>
     <div id="bloque-credenciales">
+      <div id="hint-rol" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px;">👆 Elige primero si eres profesor o estudiante</div>
       <div id="cc">
         <label class="fl">Cédula</label>
-        <input class="fi" type="number" id="ic" placeholder="0000000000" oninput="vC()" onkeydown="if(event.key==='Enter')entrar()"/>
+        <input class="fi" type="number" id="ic" placeholder="0000000000" oninput="vC()" onkeydown="if(event.key==='Enter')entrar()" disabled/>
         <div class="fm" id="mc"></div>
       </div>
       <label class="fl">Clave de acceso</label>
-      <input class="fi" type="password" id="ik" placeholder="_ _ _" maxlength="3" oninput="vK()" onkeydown="if(event.key==='Enter')entrar()" style="letter-spacing:6px;font-family:var(--font-m);text-align:center;"/>
+      <input class="fi" type="password" id="ik" placeholder="_ _ _" maxlength="3" oninput="vK()" onkeydown="if(event.key==='Enter')entrar()" style="letter-spacing:6px;font-family:var(--font-m);text-align:center;" disabled/>
       <div class="fm" id="mk"></div>
       <button class="btn-p" id="be" onclick="entrar()" disabled>Entrar →</button>
     </div>
@@ -235,6 +236,9 @@ function elegirRol(r){
   document.getElementById('opt-e').classList.toggle('selected',r==='e');
   document.getElementById('ik').value='';document.getElementById('mk').textContent='';
   document.getElementById('ic').value='';document.getElementById('mc').textContent='';
+  document.getElementById('ic').disabled=false;
+  document.getElementById('ik').disabled=false;
+  document.getElementById('hint-rol').style.display='none';
   document.getElementById('be').disabled=true;
 }
 function vC(){
@@ -244,10 +248,15 @@ function vC(){
 function vK(){
   const k=document.getElementById('ik').value.trim();
   const c=document.getElementById('ic').value.trim();
-  document.getElementById('be').disabled = !(c && /^[A-Za-z0-9]{3}$/.test(k));
+  document.getElementById('be').disabled = !(ROL && c && /^[A-Za-z0-9]{3}$/.test(k));
   document.getElementById('mk').textContent='';
 }
 async function entrar(){
+  if(!ROL){
+    document.getElementById('mk').textContent='Elige primero si eres profesor o estudiante';
+    document.getElementById('mk').className='fm err';
+    return;
+  }
   const k=document.getElementById('ik').value.trim().toUpperCase();
   const c=document.getElementById('ic').value.trim();
   const btn=document.getElementById('be');
@@ -315,6 +324,9 @@ function salir(){
   document.getElementById('ik').value='';document.getElementById('ic').value='';
   document.getElementById('mk').textContent='';document.getElementById('mc').textContent='';
   document.getElementById('be').disabled=true;
+  document.getElementById('ic').disabled=true;
+  document.getElementById('ik').disabled=true;
+  document.getElementById('hint-rol').style.display='';
   document.querySelectorAll('.rol-opt').forEach(o=>o.classList.remove('selected'));
 }
 
