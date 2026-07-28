@@ -512,7 +512,20 @@ const GRUPOS = {
 // ── State ──
 let rolActual='', grupoActual='', cedulaActual='', esProfesor=false, gruposDeEstaCedula=[], pendientesActuales=[];
 let mediaRecorder=null, audioChunks=[], isRecording=false;
-let recInterval=null, recSeconds=0, audioBlob=null, waveInterval=null, duracionReal=null;
+let recInterval=null, recSeconds=0, audioBlob=null, waveInterval=null, duracionReal=null, mimeTypeUsado='';
+
+// Elige el primer formato de audio que el navegador realmente soporte para grabar.
+// Chrome/Firefox/Android soportan webm; Safari (iOS y Mac) NUNCA soportó webm — solo
+// mp4/aac. Sin este fallback, en iPhone el grabador tronaba al crearse (mostrando el
+// mensaje engañoso "no se pudo acceder al micrófono", cuando el problema real era el formato).
+function elegirMimeType(){
+  const candidatos = [
+    'audio/webm;codecs=opus','audio/webm',
+    'audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/aac',
+  ];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  return candidatos.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
 
 // Mide la duración real del blob de audio (independiente del contador visual recSeconds,
 // que puede quedar mal si el navegador pausa el timer en segundo plano mientras
@@ -699,12 +712,15 @@ async function toggleRecording() {
   if (!isRecording) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
-      mediaRecorder = new MediaRecorder(stream,{mimeType});
+      const mimeType = elegirMimeType();
+      mediaRecorder = mimeType ? new MediaRecorder(stream,{mimeType}) : new MediaRecorder(stream);
       audioChunks=[];
       mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
       mediaRecorder.onstop=async ()=>{
-        audioBlob=new Blob(audioChunks,{type:'audio/webm'});
+        // mediaRecorder.mimeType es el formato REAL que terminó usando el navegador
+        // (más confiable que lo que le pedimos — algunos navegadores ajustan detalles).
+        mimeTypeUsado = mediaRecorder.mimeType || mimeType || 'audio/webm';
+        audioBlob=new Blob(audioChunks,{type:mimeTypeUsado});
         document.getElementById('audio-preview').src=URL.createObjectURL(audioBlob);
         document.getElementById('audio-wrap').style.display='';
         stream.getTracks().forEach(t=>t.stop());
@@ -745,7 +761,7 @@ function stopWave(){
   document.querySelectorAll('.wave-bar').forEach((b,i)=>{b.style.height=(h[i]||8)+'px';b.classList.remove('active');});
 }
 function resetRecorder(){
-  audioBlob=null; isRecording=false; duracionReal=null;
+  audioBlob=null; isRecording=false; duracionReal=null; mimeTypeUsado='';
   clearInterval(recInterval); clearInterval(waveInterval);
   document.getElementById('rec-ring').className='rec-ring idle';
   document.getElementById('rec-btn').className='rec-btn';
@@ -787,7 +803,13 @@ async function submitAudio(){
   advanceStep();
 
   try {
-    const file=new File([audioBlob],`audio_${Date.now()}.webm`,{type:'audio/webm'});
+    const extPorMime = {
+      'audio/webm':'webm','audio/webm;codecs=opus':'webm',
+      'audio/mp4':'m4a','audio/mp4;codecs=mp4a.40.2':'m4a','audio/aac':'aac',
+    };
+    const tipoReal = audioBlob.type || mimeTypeUsado || 'audio/webm';
+    const ext = extPorMime[tipoReal] || 'webm';
+    const file=new File([audioBlob],`audio_${Date.now()}.${ext}`,{type:tipoReal});
     advanceStep(); advanceStep();
     const fileBase64=await fileToBase64(file);
     advanceStep();
