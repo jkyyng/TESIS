@@ -707,6 +707,30 @@ async function prepararGrabar() {
   resetRecorder();
 }
 
+// Traduce el error real de getUserMedia/MediaRecorder a un mensaje que el
+// estudiante pueda de verdad seguir (antes esto siempre decía "no se pudo
+// acceder al micrófono" sin importar la causa, lo que en Safari/iPhone tapaba
+// el problema real — ej. iOS viejo sin MediaRecorder, o permiso denegado).
+function mensajeErrorGrabacion(e){
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    return 'Esta página necesita abrirse con https:// para poder grabar. Revisa el enlace.';
+  }
+  if (!window.MediaRecorder) {
+    return 'Tu navegador es muy antiguo y no puede grabar audio aquí. En iPhone: Ajustes → General → Actualización de Software, o intenta con Chrome.';
+  }
+  const nombre = e && e.name;
+  if (nombre === 'NotAllowedError' || nombre === 'PermissionDeniedError') {
+    return 'El micrófono está bloqueado para esta página. En iPhone: Ajustes → Safari → Micrófono → Permitir (o el ícono "aA" en la barra de direcciones → Configuración del sitio web).';
+  }
+  if (nombre === 'NotFoundError' || nombre === 'DevicesNotFoundError') {
+    return 'No se encontró un micrófono en este dispositivo.';
+  }
+  if (nombre === 'NotReadableError' || nombre === 'TrackStartError') {
+    return 'El micrófono está siendo usado por otra app. Cierra otras apps que lo estén usando e intenta de nuevo.';
+  }
+  return 'No se pudo acceder al micrófono (' + (nombre||'error desconocido') + '). Intenta de nuevo o usa otro navegador.';
+}
+
 // ── Grabación ──
 async function toggleRecording() {
   if (!isRecording) {
@@ -743,7 +767,7 @@ async function toggleRecording() {
           String(Math.floor(recSeconds/60)).padStart(2,'0')+':'+String(recSeconds%60).padStart(2,'0');
       },1000);
       startWave();
-    } catch(e){toast('No se pudo acceder al micrófono','error');}
+    } catch(e){ toast(mensajeErrorGrabacion(e), 'error'); }
   } else {
     isRecording=false; mediaRecorder.stop(); clearInterval(recInterval);
   }
