@@ -658,19 +658,24 @@ async function prepararGrabar() {
 
   // Cargar sesiones
   const sel = document.getElementById('sel-sesion');
-  sel.innerHTML = SESIONES.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
-  sel.disabled = false;
 
   // Hora Bogotá
   const hoyBog = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
   hoyBog.setHours(0,0,0,0);
-  let closest=SESIONES[0].value, minDiff=Infinity;
-  SESIONES.forEach(s=>{
-    const [d,m,y]=s.value.split('/');
-    const diff=Math.abs(new Date(`${y}-${m}-${d}T00:00:00`)-hoyBog);
-    if(diff<minDiff){minDiff=diff;closest=s.value;}
+
+  // Solo se listan sesiones que ya pasaron (o son hoy) — no tiene sentido grabar un audio
+  // sobre una clase que todavía no se ha dictado. Antes se listaban TODAS las sesiones y se
+  // preseleccionaba la "más cercana en el tiempo" por valor absoluto, lo que en la práctica
+  // podía preseleccionar la sesión de la semana SIGUIENTE (más cercana en días que la sesión
+  // atrasada) justo después de ponerse al día — y el estudiante la enviaba sin darse cuenta,
+  // llevándose además un 5.0 automático para una clase que aún no pasaba.
+  const sesionesDisponibles = SESIONES.filter(s => {
+    const [d,m,y] = s.value.split('/');
+    return new Date(`${y}-${m}-${d}T00:00:00`) <= hoyBog;
   });
-  sel.value=closest;
+  sel.innerHTML = sesionesDisponibles.map(s=>`<option value="${s.value}">${s.label}</option>`).join('');
+  sel.disabled = false;
+  sel.value = sesionesDisponibles.length ? sesionesDisponibles[sesionesDisponibles.length-1].value : SESIONES[0].value;
 
   // Quitar advertencia previa
   const prevWarn = document.getElementById('warn-pendientes');
@@ -831,8 +836,12 @@ async function submitAudio(){
       'audio/webm':'webm','audio/webm;codecs=opus':'webm',
       'audio/mp4':'m4a','audio/mp4;codecs=mp4a.40.2':'m4a','audio/aac':'aac',
     };
-    const tipoReal = audioBlob.type || mimeTypeUsado || 'audio/webm';
-    const ext = extPorMime[tipoReal] || 'webm';
+    // Groq espera un Content-Type "limpio" (ej. 'audio/mp4'). En Safari,
+    // mediaRecorder.mimeType trae el codec pegado (ej. 'audio/mp4;codecs=mp4a.40.2'),
+    // y ese valor completo, mandado tal cual como Content-Type del archivo, hace que
+    // Groq responda "could not process file" aunque el audio en sí esté perfecto.
+    const tipoReal = (audioBlob.type || mimeTypeUsado || 'audio/webm').split(';')[0].trim();
+    const ext = extPorMime[audioBlob.type || mimeTypeUsado] || extPorMime[tipoReal] || 'webm';
     const file=new File([audioBlob],`audio_${Date.now()}.${ext}`,{type:tipoReal});
     advanceStep(); advanceStep();
     const fileBase64=await fileToBase64(file);
