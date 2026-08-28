@@ -292,6 +292,25 @@
   <a href="dashboard.html" class="btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📊 Ver dashboard</a>
 </div>
 
+<!-- Advertencia para navegadores embebidos dentro de otra app en iOS (Google, Gmail,
+     Facebook, Instagram, etc.) — su grabación/reproducción de audio a veces sale dañada
+     porque corren en un sandbox más restringido que Safari o Chrome como apps
+     independientes; eso produce audios que ni siquiera se pueden reescuchar en el propio
+     celular, y que luego Groq rechaza con "could not process file". Se detecta por
+     user-agent y se avisa antes de que el estudiante intente grabar. -->
+<div id="warn-inapp" style="display:none;background:rgba(220,38,38,0.12);border-bottom:1px solid rgba(220,38,38,0.35);color:#F87171;font-size:13px;line-height:1.6;padding:12px 20px;text-align:center;">
+  ⚠️ Parece que abriste este enlace desde otra app (Google, Gmail, Facebook, Instagram, etc.), no desde el navegador directamente. Esas ventanas internas a veces dañan el audio grabado. Para evitar errores al enviar, abre este mismo enlace en <strong>Safari</strong> o <strong>Chrome</strong> (botón de compartir o los tres puntos ⋮ → "Abrir en el navegador").
+</div>
+<script>
+(function(){
+  const ua = navigator.userAgent || '';
+  const esIOS = /iPhone|iPad|iPod/.test(ua);
+  // Firmas conocidas de navegadores embebidos dentro de otra app en iOS.
+  const esInApp = /GSA\/|FBAN|FBAV|Instagram|Line\/|MicroMessenger|LinkedInApp|Twitter/i.test(ua);
+  if (esIOS && esInApp) document.getElementById('warn-inapp').style.display = '';
+})();
+</script>
+
 <div class="main">
 
   <!-- ══ PASO 0: Elegir rol ══ -->
@@ -750,15 +769,25 @@ async function toggleRecording() {
         // (más confiable que lo que le pedimos — algunos navegadores ajustan detalles).
         mimeTypeUsado = mediaRecorder.mimeType || mimeType || 'audio/webm';
         audioBlob=new Blob(audioChunks,{type:mimeTypeUsado});
-        document.getElementById('audio-preview').src=URL.createObjectURL(audioBlob);
-        document.getElementById('audio-wrap').style.display='';
         stream.getTracks().forEach(t=>t.stop());
         stopWave();
+        duracionReal = await obtenerDuracionReal(audioBlob);
+        // Si el propio navegador no pudo decodificar lo que acaba de grabar (o duró casi
+        // nada — típico de un toque accidental de start/stop), Groq tampoco va a poder:
+        // antes esto se ignoraba en silencio y el estudiante se enteraba recién después de
+        // mandar el audio, con el error críptico "could not process file" de Groq. Ahora se
+        // corta acá mismo y se le pide grabar de nuevo, sin llegar a enviar nada corrupto.
+        if (duracionReal===null || duracionReal<0.5) {
+          resetRecorder();
+          toast('La grabación quedó vacía o muy corta. Intenta de nuevo, hablando un poco más.', 'error');
+          return;
+        }
+        document.getElementById('audio-preview').src=URL.createObjectURL(audioBlob);
+        document.getElementById('audio-wrap').style.display='';
         document.getElementById('rec-ring').className='rec-ring done';
         document.getElementById('rec-btn').className='rec-btn done';
         document.getElementById('rec-btn').textContent='✓';
         document.getElementById('rec-label').textContent='Grabación lista — puedes volver a grabar si quieres';
-        duracionReal = await obtenerDuracionReal(audioBlob);
       };
       mediaRecorder.start(200);
       isRecording=true; recSeconds=0;
