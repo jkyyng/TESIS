@@ -109,6 +109,13 @@
     .sc .st{font-size:10px;margin-top:3px;display:block;}
     .sc.ok .st{color:var(--green);}
     .sc.no .st{color:var(--red);}
+    /* Franja de dificultad por sesión (tiraDificultad) */
+    .dif-strip{display:flex;flex-wrap:wrap;gap:4px;}
+    .dif-box{font-size:9px;font-family:var(--font-m);padding:4px 5px;border-radius:5px;border:1px solid var(--border);color:var(--muted);cursor:default;min-width:22px;text-align:center;}
+    .dif-vacio{background:var(--bg3);opacity:0.5;}
+    .dif-no{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.3);color:var(--green);}
+    .dif-si{background:rgba(248,113,113,0.15);border-color:var(--red);color:var(--red);font-weight:700;}
+    .dif-strip.grande .dif-box{font-size:11px;padding:8px 10px;min-width:34px;}
     /* Progress bar comparativa */
     .cmp-row{display:flex;flex-direction:column;gap:12px;}
     .cmp-item{display:grid;grid-template-columns:140px 1fr 50px;align-items:center;gap:10px;font-size:12px;}
@@ -615,15 +622,11 @@ function renderProf(reg, notas){
     <div class="tabs">
       <button class="tab active" data-tab="resumen" onclick="st('resumen')">📊 Resumen</button>
       <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
-      <button class="tab" data-tab="sesiones" onclick="st('sesiones')">📅 Sesiones</button>
-      <button class="tab" data-tab="variables" onclick="st('variables')">🔬 Variables</button>
       <button class="tab" data-tab="alertas" onclick="st('alertas')">⚠️ Alertas</button>
     </div>
 
     <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo)}</div>
     <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
-    <div id="t-sesiones" class="tab-content">${tSesiones()}</div>
-    <div id="t-variables" class="tab-content">${tVariables(est,perfiles)}</div>
     <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas)}</div>
   `;
   setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
@@ -652,7 +655,42 @@ function tResumen(perfiles,sesVistas,est,perfilesGrupo){
     <div class="grid-2">
       <div class="card"><div class="card-title">🎯 Distribución por desempeño</div><div class="cw"><canvas id="ch-donut"></canvas></div></div>
       <div class="card"><div class="card-title">📊 Nota vs Riqueza léxica</div><div class="cw"><canvas id="ch-scatter"></canvas></div></div>
-    </div>`;
+    </div>
+    <div class="grid-2">
+      <div class="card"><div class="card-title">👥 Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
+      <div class="card"><div class="card-title">📈 Evolución riqueza léxica</div><div class="cw"><canvas id="ch-evol"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">🔄 Similitud coseno promedio por sesión</div><div class="cw"><canvas id="ch-sim"></canvas></div></div>`;
+}
+
+// Franja visual de sesiones ordenadas cronológicamente, marcando en qué sesión el
+// estudiante mandó audio (verde/gris) y en cuál reportó dificultad (rojo) — con el recorte
+// real de la transcripción en el tooltip, para que el profesor vea de un vistazo CUÁNDO y
+// pueda pasar el mouse para ver POR QUÉ, sin tener que abrir cada grabación por separado.
+function tiraDificultad(rows,sesionesRef,grande){
+  const porSesion={};
+  rows.forEach(r=>{porSesion[ns(r.Sesion)]=r;});
+  const cajas=sesionesRef.map(sv=>{
+    const r=porSesion[sv];
+    const lbl=SS.find(s=>s.v===sv)?.l||sv;
+    if(!r) return `<span class="dif-box dif-vacio" title="${lbl} (${sv}): sin audio enviado">${lbl}</span>`;
+    const dif=parseFloat(r.conteo_percepcion_dificultad||0)>0;
+    if(!dif) return `<span class="dif-box dif-no" title="${lbl} (${sv}): audio enviado, sin dificultad reportada">${lbl}</span>`;
+    const cita=String(r.Transcripcion||'').replace(/\s+/g,' ').trim().slice(0,240);
+    return `<span class="dif-box dif-si" title="${lbl} (${sv}) — dificultad reportada: “${cita}${cita.length>=240?'…':''}”">${lbl} ⚠️</span>`;
+  }).join('');
+  return `<div class="dif-strip${grande?' grande':''}">${cajas}</div>`;
+}
+
+// Badge con la predicción del modelo de riesgo de dos niveles (ver ALERTAS_MODELO, sección
+// 3.47 de documentacion.md) — solo aparece si el curso/estudiante ya tiene un resultado
+// subido a la carpeta de Drive; si no, no se muestra nada (no bloquea el resto del dash).
+function badgeModelo(cedula){
+  const entry=(ALERTAS_MODELO[GP]?.estudiantes||[]).find(e=>String(e.cedula_full)===String(cedula));
+  if(!entry) return '';
+  const map={alto:{cls:'b-red',label:'🔴 Modelo: prioridad máxima'},medio:{cls:'b-yellow',label:'🟡 Modelo: alerta general'},bajo:{cls:'b-green',label:'🟢 Modelo: sin alerta'}};
+  const m=map[entry.status]||map.bajo;
+  return `<span class="badge ${m.cls}" title="Probabilidad severo: ${Math.round(entry.proba_severo*100)}% · Probabilidad alto: ${Math.round(entry.proba_alto*100)}%">${m.label}</span>`;
 }
 
 function tEstudiantes(perfiles,sesVistas){
@@ -660,6 +698,7 @@ function tEstudiantes(perfiles,sesVistas){
   const rows=perfiles.map(pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
+    const bm=badgeModelo(pf.ced);
     return `<tr class="${pf.riesgo?'row-risk':''}">
       <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
@@ -672,16 +711,18 @@ function tEstudiantes(perfiles,sesVistas){
       <td>${(pf.dif||0).toFixed(1)}</td>
       <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
       <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?' <span class="badge b-risk">🚨 En riesgo</span>':''}</td>
+      <td>${bm||'<span style="color:var(--muted);font-size:11px">—</span>'}</td>
+      <td>${tiraDificultad(pf.rows,sesVistas)}</td>
     </tr>`;
   }).join('');
   return `
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas.</div>
+      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas. Pasa el mouse sobre las cajas de "Dificultad" para ver la sesión y la frase real.</div>
       ${nRiesgo>0?`<span class="badge b-risk">🚨 ${nRiesgo} estudiante${nRiesgo>1?'s':''} en riesgo (&gt;1 desv. estándar bajo el promedio del grupo)</span>`:`<span class="badge b-green">✅ Sin outliers marcados</span>`}
     </div>
     <div class="card"><div class="card-title">Estudiantes — ordenados por nota</div>
       <div class="tw"><table>
-        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th></tr>
+        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th><th>Modelo</th><th>Dificultad por sesión</th></tr>
         ${rows}
       </table></div>
     </div>`;
@@ -698,11 +739,13 @@ function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
   setTimeout(()=>{
     mkChart('ch-det-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#5EE0A3',backgroundColor:'rgba(94,224,163,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#5EE0A3',pointRadius:4}]);
   },150);
+  const bm=badgeModelo(pf.ced);
   return `
     <div class="card">
       <div class="card-title">${nombreDe(pf.ced)} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${pf.ced}</span>
         ${pf.riesgo?'<span class="badge b-risk">🚨 En riesgo</span>':''}
         <span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>
+        ${bm}
       </div>
       <div class="mr">
         <div class="ms"><div class="msl">Sesiones</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
@@ -718,47 +761,15 @@ function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
       </div>
     </div>
     <div class="card">
+      <div class="card-title">🎯 Por qué está en riesgo — momento exacto de la dificultad</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Pasa el mouse sobre una sesión marcada en rojo para ver la frase real que dijo el estudiante.</div>
+      ${tiraDificultad(pf.rows,sesVistas,true)}
+    </div>
+    <div class="card">
       <div class="card-title">🧭 Lectura rápida</div>
       ${interpretar({rl:pf.rl,mts:pf.mts,dds:pf.dds,ppm:pf.ppm,rep:pf.rep,dif:pf.dif,nota:pf.np?.promedio},promedio,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
     </div>
     <div class="card"><div class="card-title">📈 Riqueza léxica por sesión</div><div class="cw"><canvas id="ch-det-rl"></canvas></div></div>`;
-}
-
-function tSesiones(){
-  return `<div class="grid-2">
-    <div class="card"><div class="card-title">👥 Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
-    <div class="card"><div class="card-title">📈 Evolución riqueza léxica</div><div class="cw"><canvas id="ch-evol"></canvas></div></div>
-  </div>
-  <div class="card"><div class="card-title">🔄 Similitud coseno promedio por sesión</div><div class="cw"><canvas id="ch-sim"></canvas></div></div>`;
-}
-
-function tVariables(est,perfiles){
-  const vars=[
-    {k:'riqueza_lexica',l:'Riqueza léxica',f:v=>(v*100).toFixed(1)+'%'},
-    {k:'conteo_muletillas',l:'Muletillas',f:v=>v.toFixed(1)},
-    {k:'conteo_dudas',l:'Dudas',f:v=>v.toFixed(1)},
-    {k:'conteo_negaciones',l:'Negaciones',f:v=>v.toFixed(1)},
-    {k:'porcentaje_palabras_raras',l:'Palabras raras (hapax)',f:v=>(v*100).toFixed(1)+'%'},
-    {k:'similitud_coseno',l:'Sim. coseno',f:v=>isNaN(v)||v===0?'—':(v*100).toFixed(0)+'%'},
-    {k:'num_palabras',l:'Palabras prom.',f:v=>Math.round(v)+''},
-    {k:'duracion_segundos',l:'Duración prom.',f:v=>Math.round(v)+'s'},
-    {k:'palabras_por_minuto',l:'Velocidad de habla',f:v=>Math.round(v)+' ppm'},
-    {k:'conteo_repeticiones',l:'Repeticiones',f:v=>v.toFixed(1)},
-    {k:'num_pausas',l:'Nº de pausas',f:v=>v.toFixed(1)},
-    {k:'pausa_promedio',l:'Duración pausa prom.',f:v=>v.toFixed(2)+'s'},
-    {k:'conteo_percepcion_dificultad',l:'Percepción dificultad',f:v=>v.toFixed(1)},
-  ];
-  return `
-    <div class="grid-2">
-      <div class="card"><div class="card-title">🕸 Radar del grupo</div><div class="cw-tall"><canvas id="ch-radar"></canvas></div></div>
-      <div class="grid-2" style="grid-template-columns:1fr 1fr;align-content:start;">
-        ${vars.map(v=>`<div class="card" style="padding:14px;margin-bottom:0">
-          <div class="card-title" style="font-size:11px;margin-bottom:6px">${v.l}</div>
-          <div style="font-family:var(--font-d);font-size:20px;font-weight:800">${v.f(p(est,v.k))}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">promedio grupo</div>
-        </div>`).join('')}
-      </div>
-    </div>`;
 }
 
 // Tarjeta de alertas del modelo (piloto local, "mientras tanto" — ver ALERTAS_MODELO).
@@ -818,29 +829,33 @@ function tAlertas(perfiles,sesVistas){
       pf=>`<tr>${cedCol(pf)}<td>${pf.np?.promedio.toFixed(1)||'—'}</td><td>${(pf.rl*100).toFixed(1)}%</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
     ${mkAlerta('📭 Estudiantes con bajo cumplimiento (&lt;60%)',pocas,['Estudiante','Enviadas','%'],
       pf=>`<tr>${cedCol(pf)}<td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`)}
-    <div class="grid-2">
-      ${mkAlerta('💬 Muchas muletillas (&gt;5)',muletillas,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.mts.toFixed(1)}</td></tr>`)}
-      ${mkAlerta('🤔 Muchas expresiones de duda (&gt;3)',dudas,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.dds.toFixed(1)}</td></tr>`)}
-    </div>
-    <div class="grid-2">
-      ${mkAlerta('🏃 Velocidad de habla muy alta (&gt;220 ppm)',veloz,['Estudiante','Palabras/min'],
-        pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
-      ${mkAlerta('🐢 Velocidad de habla muy baja (&lt;80 ppm)',lento,['Estudiante','Palabras/min'],
-        pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
-    </div>
-    <div class="grid-2">
-      ${mkAlerta('🔁 Muchas repeticiones de contenido (&gt;3)',repite,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.rep.toFixed(1)}</td></tr>`)}
-      ${mkAlerta('😕 Percepción de dificultad alta (&gt;2)',dificultad,['Estudiante','Promedio'],
-        pf=>`<tr>${cedCol(pf)}<td>${pf.dif.toFixed(1)}</td></tr>`)}
-    </div>
-    <div class="card" style="font-size:11px;color:var(--muted)">
-      💡 Los umbrales de velocidad de habla, repeticiones y percepción de dificultad son aproximaciones iniciales,
-      no vienen de literatura validada para tu contexto específico — trátalos como puntos de partida a calibrar
-      con más datos, no como criterios definitivos.
-    </div>`;
+    <details class="card">
+      <summary style="cursor:pointer;font-family:var(--font-d);font-weight:700;font-size:13px;">🔍 Otros indicadores automáticos (umbrales sin validar)</summary>
+      <div style="margin-top:14px">
+        <div class="grid-2">
+          ${mkAlerta('💬 Muchas muletillas (&gt;5)',muletillas,['Estudiante','Promedio'],
+            pf=>`<tr>${cedCol(pf)}<td>${pf.mts.toFixed(1)}</td></tr>`)}
+          ${mkAlerta('🤔 Muchas expresiones de duda (&gt;3)',dudas,['Estudiante','Promedio'],
+            pf=>`<tr>${cedCol(pf)}<td>${pf.dds.toFixed(1)}</td></tr>`)}
+        </div>
+        <div class="grid-2">
+          ${mkAlerta('🏃 Velocidad de habla muy alta (&gt;220 ppm)',veloz,['Estudiante','Palabras/min'],
+            pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
+          ${mkAlerta('🐢 Velocidad de habla muy baja (&lt;80 ppm)',lento,['Estudiante','Palabras/min'],
+            pf=>`<tr>${cedCol(pf)}<td>${Math.round(pf.ppm)}</td></tr>`)}
+        </div>
+        <div class="grid-2">
+          ${mkAlerta('🔁 Muchas repeticiones de contenido (&gt;3)',repite,['Estudiante','Promedio'],
+            pf=>`<tr>${cedCol(pf)}<td>${pf.rep.toFixed(1)}</td></tr>`)}
+          ${mkAlerta('😕 Percepción de dificultad alta (&gt;2)',dificultad,['Estudiante','Promedio'],
+            pf=>`<tr>${cedCol(pf)}<td>${pf.dif.toFixed(1)}</td></tr>`)}
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          💡 Estos umbrales son aproximaciones iniciales, no vienen de literatura validada para tu contexto
+          específico — trátalos como puntos de partida a calibrar con más datos, no como criterios definitivos.
+        </div>
+      </div>
+    </details>`;
 }
 
 function st(tab){
@@ -891,11 +906,6 @@ function renderChartsProf(est,sesVistas,perfiles){
     try{if(CH['ch-scatter'])CH['ch-scatter'].destroy();}catch(e){}
     CH['ch-scatter']=new Chart(sc,{type:'scatter',data:{datasets:[{label:'Estudiantes',data:conNota.map(pf=>({x:(pf.rl*100).toFixed(1),y:pf.np.promedio.toFixed(1)})),backgroundColor:'rgba(94,224,163,0.7)',pointRadius:6}]},options:{...CD,responsive:true,maintainAspectRatio:false,scales:{x:{...CD.scales.x,title:{display:true,text:'Riqueza léxica (%)',color:'#8FAD9B',font:{size:11}}},y:{...CD.scales.y,title:{display:true,text:'Nota promedio',color:'#8FAD9B',font:{size:11}}}}}});
   }
-
-  // Radar
-  const cr=document.getElementById('ch-radar');
-  if(cr){try{if(CH['ch-radar'])CH['ch-radar'].destroy();}catch(e){}
-    CH['ch-radar']=new Chart(cr,{type:'radar',data:{labels:['Riqueza léxica','Sim. coseno','Sin muletillas','Con dudas','Negaciones','Sin p.raras'],datasets:[{label:'Grupo',data:[p(est,'riqueza_lexica')*100,p(est,'similitud_coseno')*100,Math.max(0,100-p(est,'frecuencia_muletillas')*1000),p(est,'frecuencia_dudas')*1000,p(est,'frecuencia_negaciones')*1000,Math.max(0,100-p(est,'porcentaje_palabras_raras')*100)],borderColor:'#2BAF7A',backgroundColor:'rgba(43,175,122,0.12)',pointBackgroundColor:'#2BAF7A',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8FAD9B'}}},scales:{r:{ticks:{color:'#8FAD9B',backdropColor:'transparent',font:{size:9}},grid:{color:'rgba(200,230,210,0.08)'},pointLabels:{color:'#A9C2B4',font:{size:10}}}}}});}
 }
 
 // ══════════════════════════════════════════════════════
