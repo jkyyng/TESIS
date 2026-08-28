@@ -116,6 +116,16 @@
     .dif-no{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.3);color:var(--green);}
     .dif-si{background:rgba(248,113,113,0.15);border-color:var(--red);color:var(--red);font-weight:700;}
     .dif-strip.grande .dif-box{font-size:11px;padding:8px 10px;min-width:34px;}
+    .dif-box.clicable{cursor:pointer;}
+    .dif-box.clicable:hover{filter:brightness(1.25);transform:translateY(-1px);}
+    /* Modal de detalle de un audio (transcripción completa + todas las variables contadas) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:22px;max-width:680px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+    .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;}
+    .modal-close:hover{color:var(--text);}
+    .modal-vars{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+    .modal-transcript{background:var(--bg3);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap;}
     /* Progress bar comparativa */
     .cmp-row{display:flex;flex-direction:column;gap:12px;}
     .cmp-item{display:grid;grid-template-columns:140px 1fr 50px;align-items:center;gap:10px;font-size:12px;}
@@ -198,6 +208,16 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Detalle de un audio puntual: transcripción completa + todas las variables contadas
+     para esa grabación (ver verDetalleAudio()). Se abre al hacer clic en una sesión de la
+     franja de dificultad, en vez de un tooltip truncado. -->
+<div class="modal-overlay" id="modal-detalle" onclick="if(event.target===this)cerrarModalDetalle()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="cerrarModalDetalle()">✕</button>
+    <div id="modal-detalle-body"></div>
+  </div>
+</div>
 
 <script>
 // ── Config ──
@@ -664,10 +684,10 @@ function tResumen(perfiles,sesVistas,est,perfilesGrupo){
 }
 
 // Franja visual de sesiones ordenadas cronológicamente, marcando en qué sesión el
-// estudiante mandó audio (verde/gris) y en cuál reportó dificultad (rojo) — con el recorte
-// real de la transcripción en el tooltip, para que el profesor vea de un vistazo CUÁNDO y
-// pueda pasar el mouse para ver POR QUÉ, sin tener que abrir cada grabación por separado.
-function tiraDificultad(rows,sesionesRef,grande){
+// estudiante mandó audio (verde/gris) y en cuál reportó dificultad (rojo). Cada caja con
+// audio es clicable y abre verDetalleAudio() con la transcripción completa (sin truncar)
+// y todas las variables contadas de ESA grabación puntual — nada de tooltips truncados.
+function tiraDificultad(rows,sesionesRef,cedula,grande){
   const porSesion={};
   rows.forEach(r=>{porSesion[ns(r.Sesion)]=r;});
   const cajas=sesionesRef.map(sv=>{
@@ -675,11 +695,59 @@ function tiraDificultad(rows,sesionesRef,grande){
     const lbl=SS.find(s=>s.v===sv)?.l||sv;
     if(!r) return `<span class="dif-box dif-vacio" title="${lbl} (${sv}): sin audio enviado">${lbl}</span>`;
     const dif=parseFloat(r.conteo_percepcion_dificultad||0)>0;
-    if(!dif) return `<span class="dif-box dif-no" title="${lbl} (${sv}): audio enviado, sin dificultad reportada">${lbl}</span>`;
-    const cita=String(r.Transcripcion||'').replace(/\s+/g,' ').trim().slice(0,240);
-    return `<span class="dif-box dif-si" title="${lbl} (${sv}) — dificultad reportada: “${cita}${cita.length>=240?'…':''}”">${lbl} ⚠️</span>`;
+    const cls=dif?'dif-si':'dif-no';
+    return `<span class="dif-box ${cls} clicable" title="Clic para ver el audio completo de ${lbl} (${sv})" onclick="verDetalleAudio('${cedula}','${sv}')">${lbl}${dif?' ⚠️':''}</span>`;
   }).join('');
   return `<div class="dif-strip${grande?' grande':''}">${cajas}</div>`;
+}
+
+// Escape mínimo antes de meter texto libre (transcripción real, puede venir con lo que
+// sea) dentro de innerHTML — evita que algo como "<" en el audio rompa el modal.
+function escapeHtml(s){
+  const d=document.createElement('div');
+  d.textContent=String(s==null?'':s);
+  return d.innerHTML;
+}
+
+// Detalle de UNA grabación puntual: transcripción completa + todas las variables que
+// calcula el pipeline para ese audio, coloreadas con los mismos umbrales que ya usa
+// tAlertas() (para que "rojo" signifique lo mismo en toda la app, no un criterio nuevo).
+function verDetalleAudio(cedula,sesionValue){
+  const r=DATA.find(x=>x.Grupo===GP&&String(x.Cedula)===String(cedula)&&ns(x.Sesion)===sesionValue);
+  if(!r){toast('No se encontró ese audio','error');return;}
+  const lbl=SS.find(s=>s.v===sesionValue)?.l||sesionValue;
+  const num=k=>parseFloat(r[k]||0);
+  const ppm=num('palabras_por_minuto');
+  const vars=[
+    {l:'Muletillas',v:num('conteo_muletillas').toFixed(0),alerta:num('conteo_muletillas')>5},
+    {l:'Dudas',v:num('conteo_dudas').toFixed(0),alerta:num('conteo_dudas')>3},
+    {l:'Percepción dificultad',v:num('conteo_percepcion_dificultad').toFixed(0),alerta:num('conteo_percepcion_dificultad')>2},
+    {l:'Repeticiones',v:num('conteo_repeticiones').toFixed(0),alerta:num('conteo_repeticiones')>3},
+    {l:'Riqueza léxica',v:(num('riqueza_lexica')*100).toFixed(1)+'%',alerta:num('riqueza_lexica')>0&&num('riqueza_lexica')<0.45},
+    {l:'Sim. coseno',v:num('similitud_coseno')?Math.round(num('similitud_coseno')*100)+'%':'—',alerta:false},
+    {l:'Velocidad de habla',v:ppm?Math.round(ppm)+' ppm':'—',alerta:ppm>220||(ppm>0&&ppm<80)},
+    {l:'Nº pausas',v:num('num_pausas').toFixed(0),alerta:false},
+  ];
+  document.getElementById('modal-detalle-body').innerHTML=`
+    <div class="card-title">${escapeHtml(nombreDe(cedula))} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${escapeHtml(cedula)}</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">${lbl} · ${escapeHtml(ns(r.Sesion))}</div>
+    <div class="modal-vars">${vars.map(x=>`<span class="badge ${x.alerta?'b-red':'b-green'}">${x.l}: ${x.v}</span>`).join('')}</div>
+    <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa</div>
+    <div class="modal-transcript">${escapeHtml(r.Transcripcion)||'(sin transcripción)'}</div>
+  `;
+  document.getElementById('modal-detalle').classList.add('show');
+}
+function cerrarModalDetalle(){
+  document.getElementById('modal-detalle').classList.remove('show');
+}
+
+// Atajo desde la tabla de Estudiantes: filtra a un solo estudiante y lo manda a la pestaña
+// Resumen, donde vive la ficha de detalle con la franja grande — para no repetir la franja
+// completa dentro de cada fila de la tabla (eso era lo que desbordaba la tabla).
+function filtrarPorEstudiante(ced){
+  FILTRO_ESTUDIANTE=ced;
+  TAB_ACTIVA='resumen';
+  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
 }
 
 // Badge con la predicción del modelo de riesgo de dos niveles (ver ALERTAS_MODELO, sección
@@ -699,6 +767,10 @@ function tEstudiantes(perfiles,sesVistas){
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
     const bm=badgeModelo(pf.ced);
+    const nDif=pf.rows.filter(r=>parseFloat(r.conteo_percepcion_dificultad||0)>0).length;
+    const badgeDif=nDif>0
+      ?`<span class="badge b-red" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle — filtra a este estudiante en Resumen">⚠️ ${nDif} sesi${nDif>1?'ones':'ón'}</span>`
+      :`<span class="badge b-green" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle">✅</span>`;
     return `<tr class="${pf.riesgo?'row-risk':''}">
       <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
@@ -712,17 +784,17 @@ function tEstudiantes(perfiles,sesVistas){
       <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
       <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?' <span class="badge b-risk">🚨 En riesgo</span>':''}</td>
       <td>${bm||'<span style="color:var(--muted);font-size:11px">—</span>'}</td>
-      <td>${tiraDificultad(pf.rows,sesVistas)}</td>
+      <td>${badgeDif}</td>
     </tr>`;
   }).join('');
   return `
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas. Pasa el mouse sobre las cajas de "Dificultad" para ver la sesión y la frase real.</div>
+      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas. Clic en "Dificultad" te lleva al detalle completo de ese estudiante.</div>
       ${nRiesgo>0?`<span class="badge b-risk">🚨 ${nRiesgo} estudiante${nRiesgo>1?'s':''} en riesgo (&gt;1 desv. estándar bajo el promedio del grupo)</span>`:`<span class="badge b-green">✅ Sin outliers marcados</span>`}
     </div>
     <div class="card"><div class="card-title">Estudiantes — ordenados por nota</div>
       <div class="tw"><table>
-        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th><th>Modelo</th><th>Dificultad por sesión</th></tr>
+        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th><th>Modelo</th><th>Dificultad</th></tr>
         ${rows}
       </table></div>
     </div>`;
@@ -763,7 +835,7 @@ function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
     <div class="card">
       <div class="card-title">🎯 Por qué está en riesgo — momento exacto de la dificultad</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Pasa el mouse sobre una sesión marcada en rojo para ver la frase real que dijo el estudiante.</div>
-      ${tiraDificultad(pf.rows,sesVistas,true)}
+      ${tiraDificultad(pf.rows,sesVistas,pf.ced,true)}
     </div>
     <div class="card">
       <div class="card-title">🧭 Lectura rápida</div>
