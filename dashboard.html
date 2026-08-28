@@ -224,6 +224,11 @@ function ordenSesion(v){ const o=SS_ORDEN[v]; return o===undefined?Infinity:o; }
 const CD={plugins:{legend:{labels:{color:'#8FAD9B',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#8FAD9B',font:{size:10},maxRotation:0},grid:{color:'rgba(200,230,210,0.05)'}},y:{ticks:{color:'#8FAD9B',font:{size:10}},grid:{color:'rgba(200,230,210,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
+// Alertas del modelo (piloto local, "mientras tanto") — JSON subido a mano a Drive por
+// el usuario tras correr el pipeline localmente; leído por Apps Script (leerAlertasModelo())
+// y expuesto en action=getDashboard como alertasModelo[NombreGrupo].estudiantes. Puede llegar
+// vacío ({}) si todavía no se ha subido nada, o si el curso actual no está en el modelo.
+let ALERTAS_MODELO={};
 let FILTRO_SESION='',FILTRO_ESTUDIANTE='',TAB_ACTIVA='resumen';
 let FILTRO_SESION_EST='';
 
@@ -313,7 +318,7 @@ function mostrarDashboard(){
   cargar();
 }
 function salir(){
-  ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';gruposDeEstaCedula=[];
+  ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';gruposDeEstaCedula=[];ALERTAS_MODELO={};
   FILTRO_SESION='';FILTRO_ESTUDIANTE='';FILTRO_SESION_EST='';TAB_ACTIVA='resumen';
   Object.values(CH).forEach(c=>{try{c.destroy();}catch(e){}});CH={};
   document.getElementById('sc-dash').style.display='none';
@@ -339,6 +344,7 @@ async function cargar(){
     DATA=dedupUltimaPorSesion(d.registros);
     NOTAS=d.notas||{};
     NOMBRES=d.nombres||{};
+    ALERTAS_MODELO=d.alertasModelo||{};
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED, GK);
   }catch(err){
@@ -755,6 +761,36 @@ function tVariables(est,perfiles){
     </div>`;
 }
 
+// Tarjeta de alertas del modelo (piloto local, "mientras tanto" — ver ALERTAS_MODELO).
+// modeloGrupo viene de ALERTAS_MODELO[GP], con la misma forma que arma exportar_datos_dashboard.py:
+// {n, n_alto, n_medio, n_bajo, estudiantes:[{cedula_full, status, proba_severo, proba_alto, cita, ...}]}.
+function renderAlertaModelo(modeloGrupo){
+  if(!modeloGrupo||!modeloGrupo.estudiantes||!modeloGrupo.estudiantes.length){
+    return `<div class="card"><div class="card-title">🔮 Alerta del modelo (piloto)</div>
+      <div style="color:var(--muted);font-size:13px">Todavía no se ha subido un resultado del modelo para este curso a la carpeta de Drive.</div></div>`;
+  }
+  const est=modeloGrupo.estudiantes;
+  const rojos=est.filter(e=>e.status==='alto');
+  const amarillos=est.filter(e=>e.status==='medio');
+  const fila=e=>`<tr>
+      <td>${nombreDe(e.cedula_full)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${e.cedula_full}</div></td>
+      <td>${Math.round(e.proba_severo*100)}%</td>
+      <td>${Math.round(e.proba_alto*100)}%</td>
+      <td style="font-size:12px;color:var(--muted)">${e.cita||''}</td>
+    </tr>`;
+  const tabla=(titulo,filas)=>filas.length?`<div class="card-title" style="margin-top:10px">${titulo}</div><div class="tw"><table>
+      <tr><th>Estudiante</th><th>Prob. severo</th><th>Prob. alto</th><th>Última sesión con dificultad</th></tr>
+      ${filas.map(fila).join('')}
+    </table></div>`:'';
+  return `<div class="card">
+    <div class="card-title">🔮 Alerta del modelo (piloto local, sin validar aún con nota real de este semestre)</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Predicción de un modelo entrenado sobre semestres anteriores, aplicada a este curso. No es un reporte de aciertos — se podrá validar cuando existan las notas reales de este parcial.</div>
+    ${tabla('🔴 Prioridad máxima',rojos)}
+    ${tabla('🟡 Alerta general',amarillos)}
+    ${!rojos.length&&!amarillos.length?'<div style="color:var(--green);font-size:13px">✅ Sin alertas del modelo en este curso</div>':''}
+  </div>`;
+}
+
 function tAlertas(perfiles,sesVistas){
   const bajo=perfiles.filter(pf=>pf.cl.label==='Bajo');
   const pocas=perfiles.filter(pf=>pf.enviadas/sesVistas.length<0.6);
@@ -777,6 +813,7 @@ function tAlertas(perfiles,sesVistas){
   const cedCol=pf=>`<td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>`;
 
   return `
+    ${renderAlertaModelo(ALERTAS_MODELO[GP])}
     ${mkAlerta('🔴 Estudiantes con bajo desempeño',bajo,['Estudiante','Nota prom.','Riqueza léx.','Muletillas'],
       pf=>`<tr>${cedCol(pf)}<td>${pf.np?.promedio.toFixed(1)||'—'}</td><td>${(pf.rl*100).toFixed(1)}%</td><td>${pf.mts.toFixed(1)}</td></tr>`)}
     ${mkAlerta('📭 Estudiantes con bajo cumplimiento (&lt;60%)',pocas,['Estudiante','Enviadas','%'],
