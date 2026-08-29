@@ -772,12 +772,15 @@ async function toggleRecording() {
         stream.getTracks().forEach(t=>t.stop());
         stopWave();
         duracionReal = await obtenerDuracionReal(audioBlob);
-        // Si el propio navegador no pudo decodificar lo que acaba de grabar (o duró casi
-        // nada — típico de un toque accidental de start/stop), Groq tampoco va a poder:
-        // antes esto se ignoraba en silencio y el estudiante se enteraba recién después de
-        // mandar el audio, con el error críptico "could not process file" de Groq. Ahora se
-        // corta acá mismo y se le pide grabar de nuevo, sin llegar a enviar nada corrupto.
-        if (duracionReal===null || duracionReal<0.5) {
+        // OJO: no cortar el envío solo porque duracionReal salió null. decodeAudioData()
+        // puede fallar en varios navegadores/celulares con audio perfectamente válido (es
+        // una limitación conocida al decodificar blobs de MediaRecorder, no prueba de que
+        // esté corrupto) -- una versión anterior de este chequeo usaba eso como corte y
+        // borraba grabaciones reales de ~1 minuto (reportado por estudiantes de Álgebra
+        // Lineal, 2026-08-29). La señal confiable de "vacío/corrupto" es el tamaño en bytes
+        // del archivo, no si AudioContext pudo decodificarlo -- mismo umbral que ya usa el
+        // backend en transcribirConGroq (appscript.txt).
+        if (audioBlob.size < 2000) {
           resetRecorder();
           toast('La grabación quedó vacía o muy corta. Intenta de nuevo, hablando un poco más.', 'error');
           return;
