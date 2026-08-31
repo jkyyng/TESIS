@@ -91,6 +91,11 @@
     tr.row-risk td:first-child{box-shadow:inset 3px 0 0 var(--red);}
     .b-risk{background:rgba(248,113,113,0.12);color:#FECACA;border:1px solid rgba(248,113,113,0.35);animation:pulseRisk 2s infinite;}
     @keyframes pulseRisk{0%,100%{opacity:1}50%{opacity:0.65}}
+    /* Tarjetas de "necesita atención" (tab Estudiantes) */
+    .atencion-card{cursor:pointer;box-shadow:inset 3px 0 0 var(--red);transition:background 0.15s;}
+    .atencion-card:hover{background:rgba(248,113,113,0.06);}
+    .atencion-cita{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;line-height:1.5;}
+    .atencion-meta{font-size:11px;color:var(--muted);margin-top:8px;}
     /* Interpretación */
     .interp{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
     .interp:last-child{border-bottom:none;}
@@ -237,17 +242,31 @@ function nombreDe(ced){
   if(!n)return String(ced);
   return n;
 }
-const SS=[
-  {v:'24/07/2026',l:'A1'},{v:'31/07/2026',l:'A2'},{v:'07/08/2026',l:'A3'},{v:'14/08/2026',l:'A4'},
-  {v:'21/08/2026',l:'A5'},{v:'28/08/2026',l:'A6'},{v:'04/09/2026',l:'A7'},{v:'11/09/2026',l:'A8'},
-  {v:'18/09/2026',l:'A9'},{v:'25/09/2026',l:'A10'},{v:'02/10/2026',l:'A11'},{v:'16/10/2026',l:'A12'},
-  {v:'23/10/2026',l:'A13'},{v:'30/10/2026',l:'A14'},{v:'06/11/2026',l:'A15'},
-];
-// Las fechas de Sesion vienen como texto 'dd/MM/yyyy', así que ordenarlas con .sort() o
-// .localeCompare() las trata como texto y las desordena (ej: '01/07/2026' queda antes que
-// '09/06/2026' porque empieza por '0','1'). Este índice da el orden cronológico real.
-const SS_ORDEN=Object.fromEntries(SS.map((s,i)=>[s.v,i]));
-function ordenSesion(v){ const o=SS_ORDEN[v]; return o===undefined?Infinity:o; }
+// Etiquetas de sesión (A1, A2, ...) calculadas dinámicamente POR GRUPO a partir de
+// las fechas reales que aparecen en los datos de ESE curso. Antes había una tabla
+// fija (24/07/2026→A1, 31/07/2026→A2, ...) hardcodeada para un solo curso específico
+// — cualquier otro curso con fechas de sesión distintas nunca encontraba coincidencia
+// y mostraba la fecha cruda en vez de "A#". Las fechas de Sesion vienen como texto
+// 'dd/MM/yyyy', así que ordenarlas con .sort()/.localeCompare() las trata como texto
+// y las desordena (ej. '01/07/2026' queda antes que '09/06/2026' porque empieza por
+// '0','1') — por eso se parsean a fecha real antes de ordenar.
+const SESIONES_POR_GRUPO={};
+function getSesionesGrupo(grupoNombre){
+  if(SESIONES_POR_GRUPO[grupoNombre]) return SESIONES_POR_GRUPO[grupoNombre];
+  const fechas=[...new Set(DATA.filter(r=>r.Grupo===grupoNombre).map(r=>ns(r.Sesion)))];
+  fechas.sort((a,b)=>{
+    const[da,ma,ya]=a.split('/').map(Number),[db,mb,yb]=b.split('/').map(Number);
+    return new Date(ya,ma-1,da)-new Date(yb,mb-1,db);
+  });
+  const arr=fechas.map((v,i)=>({v,l:'A'+(i+1)}));
+  SESIONES_POR_GRUPO[grupoNombre]=arr;
+  return arr;
+}
+function labelSesion(v,grupoNombre){ return getSesionesGrupo(grupoNombre).find(s=>s.v===v)?.l||v; }
+function ordenSesion(v,grupoNombre){
+  const idx=getSesionesGrupo(grupoNombre).findIndex(s=>s.v===v);
+  return idx===-1?Infinity:idx;
+}
 const CD={plugins:{legend:{labels:{color:'#8FAD9B',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#8FAD9B',font:{size:10},maxRotation:0},grid:{color:'rgba(200,230,210,0.05)'}},y:{ticks:{color:'#8FAD9B',font:{size:10}},grid:{color:'rgba(200,230,210,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
@@ -546,7 +565,7 @@ function mkChart(id,type,labels,datasets,opts={}){
 function datosFiltradosProf(){
   const d=DATA.filter(r=>r.Grupo===GP);
   const estTodos=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
-  const sesionesDisponibles=[...new Set(estTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
+  const sesionesDisponibles=[...new Set(estTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a,GP)-ordenSesion(b,GP));
 
   const construirPerfil=(ced,rows)=>{
     const nr=notaEst(NOTAS[GK]||[],ced);
@@ -594,7 +613,7 @@ function renderProf(reg, notas){
         <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
         <select class="sel-est" id="filtro-sesion" onchange="aplicarFiltrosProf()">
           <option value="">Todas</option>
-          ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION?'selected':''}>${SS.find(x=>x.v===s)?.l||s}</option>`).join('')}
+          ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION?'selected':''}>${labelSesion(s,GP)}</option>`).join('')}
         </select>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
@@ -641,13 +660,13 @@ function renderProf(reg, notas){
 
     <div class="tabs">
       <button class="tab active" data-tab="resumen" onclick="st('resumen')">📊 Resumen</button>
-      <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
       <button class="tab" data-tab="alertas" onclick="st('alertas')">⚠️ Alertas</button>
+      <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
     </div>
 
     <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo)}</div>
-    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
     <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas)}</div>
+    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
   `;
   setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
   // Reactivar la pestaña que estaba abierta antes de aplicar el filtro
@@ -692,7 +711,7 @@ function tiraDificultad(rows,sesionesRef,cedula,grande){
   rows.forEach(r=>{porSesion[ns(r.Sesion)]=r;});
   const cajas=sesionesRef.map(sv=>{
     const r=porSesion[sv];
-    const lbl=SS.find(s=>s.v===sv)?.l||sv;
+    const lbl=labelSesion(sv,GP);
     if(!r) return `<span class="dif-box dif-vacio" title="${lbl} (${sv}): sin audio enviado">${lbl}</span>`;
     const dif=parseFloat(r.conteo_percepcion_dificultad||0)>0;
     const cls=dif?'dif-si':'dif-no';
@@ -715,7 +734,7 @@ function escapeHtml(s){
 function verDetalleAudio(cedula,sesionValue){
   const r=DATA.find(x=>x.Grupo===GP&&String(x.Cedula)===String(cedula)&&ns(x.Sesion)===sesionValue);
   if(!r){toast('No se encontró ese audio','error');return;}
-  const lbl=SS.find(s=>s.v===sesionValue)?.l||sesionValue;
+  const lbl=labelSesion(sesionValue,GP);
   const num=k=>parseFloat(r[k]||0);
   const ppm=num('palabras_por_minuto');
   const vars=[
@@ -761,9 +780,43 @@ function badgeModelo(cedula){
   return `<span class="badge ${m.cls}" title="Probabilidad severo: ${Math.round(entry.proba_severo*100)}% · Probabilidad alto: ${Math.round(entry.proba_alto*100)}%">${m.label}</span>`;
 }
 
+// Busca, entre los audios de un estudiante, el más reciente donde marcó
+// dificultad explícita — para mostrar la frase real, no solo el número.
+function citaMasReciente(pf){
+  const conDificultad=pf.rows.filter(r=>parseFloat(r.conteo_percepcion_dificultad||0)>0);
+  if(!conDificultad.length) return null;
+  const ord=[...conDificultad].sort((a,b)=>ordenSesion(ns(b.Sesion),GP)-ordenSesion(ns(a.Sesion),GP));
+  const r=ord[0];
+  const texto=String(r.Transcripcion||'').trim();
+  const corta=texto.length>200?texto.slice(0,200)+'…':texto;
+  return{sesion:ns(r.Sesion),texto:corta};
+}
+
+// Tarjeta compacta para un estudiante que necesita atención — nombre, estado,
+// y la frase real (no solo el conteo) de su sesión más reciente con dificultad.
+// Clic en la tarjeta lleva al detalle completo (Resumen filtrado a ese estudiante,
+// con la franja de sesiones y el modal de cada audio).
+function tarjetaAtencion(pf,sesVistas){
+  const cita=citaMasReciente(pf);
+  const npStr=pf.np?pf.np.promedio.toFixed(1):'—';
+  return `<div class="card atencion-card" onclick="filtrarPorEstudiante('${pf.ced}')">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>${nombreDe(pf.ced)}<span style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-left:6px">${pf.ced}</span></div>
+      <div>${pf.riesgo?'<span class="badge b-risk">🚨 En riesgo</span> ':''}<span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></div>
+    </div>
+    ${cita?`<div class="atencion-cita">💬 "${escapeHtml(cita.texto)}" <span style="opacity:0.7;font-style:normal">— ${labelSesion(cita.sesion,GP)}</span></div>`
+         :`<div class="atencion-cita" style="font-style:normal">Sin frases de dificultad detectadas — el bajo desempeño no viene acompañado de dificultad expresada explícita.</div>`}
+    <div class="atencion-meta">Nota prom.: <b style="color:var(--text)">${npStr}</b> · Sesiones enviadas: ${pf.enviadas}/${sesVistas.length} · Clic para ver el detalle completo →</div>
+  </div>`;
+}
+
 function tEstudiantes(perfiles,sesVistas){
   const nRiesgo=perfiles.filter(pf=>pf.riesgo).length;
-  const rows=perfiles.map(pf=>{
+  // Mismo criterio que ya usa la pestaña Alertas para "bajo desempeño"/"dificultad alta"
+  // (pf.riesgo, cl.label==='Bajo', dif>2) -- se reusa aquí para no inventar un umbral nuevo.
+  const necesitanAtencion=perfiles.filter(pf=>pf.riesgo||pf.cl.label==='Bajo'||(pf.dif||0)>2)
+    .sort((a,b)=>(b.riesgo?1:0)-(a.riesgo?1:0)||(a.np?.promedio??99)-(b.np?.promedio??99));
+  const filaTabla=pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
     const npStr=pf.np?`${pf.np.promedio.toFixed(1)}`:'—';
     const bm=badgeModelo(pf.ced);
@@ -786,18 +839,29 @@ function tEstudiantes(perfiles,sesVistas){
       <td>${bm||'<span style="color:var(--muted);font-size:11px">—</span>'}</td>
       <td>${badgeDif}</td>
     </tr>`;
-  }).join('');
+  };
+
   return `
     <div class="card" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta tabla — aplica a todas las pestañas. Clic en "Dificultad" te lleva al detalle completo de ese estudiante.</div>
+      <div style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para acotar esta vista — aplica a todas las pestañas.</div>
       ${nRiesgo>0?`<span class="badge b-risk">🚨 ${nRiesgo} estudiante${nRiesgo>1?'s':''} en riesgo (&gt;1 desv. estándar bajo el promedio del grupo)</span>`:`<span class="badge b-green">✅ Sin outliers marcados</span>`}
     </div>
-    <div class="card"><div class="card-title">Estudiantes — ordenados por nota</div>
-      <div class="tw"><table>
-        <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th><th>Modelo</th><th>Dificultad</th></tr>
-        ${rows}
-      </table></div>
-    </div>`;
+
+    <div class="card-title" style="margin-top:4px">🔎 Necesitan atención (${necesitanAtencion.length})</div>
+    ${necesitanAtencion.length
+      ?necesitanAtencion.map(pf=>tarjetaAtencion(pf,sesVistas)).join('')
+      :`<div class="card"><div style="color:var(--green);font-size:13px">✅ Nadie cumple los criterios de atención (en riesgo, bajo desempeño, o dificultad promedio alta) ahora mismo.</div></div>`}
+
+    <details class="card" style="margin-top:16px">
+      <summary style="cursor:pointer;font-family:var(--font-d);font-weight:700;font-size:13px;">📋 Ver todos los estudiantes — tabla completa (${perfiles.length})</summary>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Clic en "Dificultad" te lleva al detalle completo de ese estudiante.</div>
+        <div class="tw"><table>
+          <tr><th>Estudiante</th><th>Sesiones</th><th>Riqueza léx.</th><th>Muletillas</th><th>Dudas</th><th>Sim. coseno</th><th>Vel. habla</th><th>Repeticiones</th><th>Perc. dificultad</th><th>Nota prom.</th><th>Nivel</th><th>Modelo</th><th>Dificultad</th></tr>
+          ${perfiles.map(filaTabla).join('')}
+        </table></div>
+      </div>
+    </details>`;
 }
 
 // Ficha de detalle — aparece en el Resumen cuando el filtro global deja exactamente un estudiante.
@@ -806,8 +870,8 @@ function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
   const pf=perfiles[0];
   const promedio=calcularPromedioGrupo(perfilesGrupo);
   const criterio=criterioComparacion(perfilesGrupo);
-  const ord=[...pf.rows].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
-  const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
+  const ord=[...pf.rows].sort((a,b)=>ordenSesion(ns(a.Sesion),GP)-ordenSesion(ns(b.Sesion),GP));
+  const lb=ord.map(r=>labelSesion(ns(r.Sesion),GP));
   setTimeout(()=>{
     mkChart('ch-det-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#5EE0A3',backgroundColor:'rgba(94,224,163,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#5EE0A3',pointRadius:4}]);
   },150);
@@ -945,7 +1009,7 @@ function st(tab){
 
 function renderChartsProf(est,sesVistas,perfiles){
   const bySes=gb(est,'Sesion');
-  const lbl=sesVistas.map(s=>SS.find(x=>x.v===s)?.l||s);
+  const lbl=sesVistas.map(s=>labelSesion(s,GP));
 
   const dataRL=sesVistas.map(s=>{const r=bySes[s]||[];return r.length?(p(r,'riqueza_lexica')*100).toFixed(2):null;});
   const dataMts=sesVistas.map(s=>{const r=bySes[s]||[];return r.length?p(r,'conteo_muletillas').toFixed(2):null;});
@@ -998,10 +1062,10 @@ function renderEst(reg, allNotas, ced, grupoKeyElegido){
   const notas=allNotas[grupoKey]||[];
 
   // Mis sesiones (todas, para el selector — el filtro se aplica después)
-  const sesionesDisponibles=[...new Set(misRegTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a)-ordenSesion(b));
+  const sesionesDisponibles=[...new Set(misRegTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a,grupoNombre)-ordenSesion(b,grupoNombre));
   const misReg=FILTRO_SESION_EST?misRegTodos.filter(r=>ns(r.Sesion)===FILTRO_SESION_EST):misRegTodos;
   const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
-  const ord=[...misReg].sort((a,b)=>ordenSesion(ns(a.Sesion))-ordenSesion(ns(b.Sesion)));
+  const ord=[...misReg].sort((a,b)=>ordenSesion(ns(a.Sesion),grupoNombre)-ordenSesion(ns(b.Sesion),grupoNombre));
 
   // Mis notas (no cambian con el filtro de sesión — la nota no es por audio individual)
   const miNota=notaEst(notas,ced);
@@ -1044,7 +1108,7 @@ function renderEst(reg, allNotas, ced, grupoKeyElegido){
       <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
       <select class="sel-est" id="filtro-sesion-est" onchange="aplicarFiltroSesionEst()">
         <option value="">Todas (promedio general)</option>
-        ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION_EST?'selected':''}>${SS.find(x=>x.v===s)?.l||s}</option>`).join('')}
+        ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION_EST?'selected':''}>${labelSesion(s,grupoNombre)}</option>`).join('')}
       </select>
       ${FILTRO_SESION_EST?`<button class="btn-sm" onclick="limpiarFiltroSesionEst()">✕ Limpiar</button>`:''}
     </div>`;
@@ -1138,7 +1202,7 @@ function renderEst(reg, allNotas, ced, grupoKeyElegido){
   `;
 
   setTimeout(()=>{
-    const lb=ord.map(r=>SS.find(s=>s.v===ns(r.Sesion))?.l||ns(r.Sesion));
+    const lb=ord.map(r=>labelSesion(ns(r.Sesion),grupoNombre));
     mkChart('ch-e-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#5EE0A3',backgroundColor:'rgba(94,224,163,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#5EE0A3',pointRadius:4}]);
     mkChart('ch-e-mts','bar',lb,[
       {label:'Muletillas',data:ord.map(r=>r.conteo_muletillas||0),backgroundColor:'rgba(251,191,36,0.7)',borderRadius:4},
