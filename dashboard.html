@@ -131,6 +131,12 @@
     .modal-close:hover{color:var(--text);}
     .modal-vars{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
     .modal-transcript{background:var(--bg3);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap;}
+    /* Resaltado de palabras clave dentro de la transcripción (ver resaltarTranscripcion) */
+    mark.hl-mul{background:rgba(251,191,36,0.35);color:inherit;border-radius:3px;padding:0 2px;}
+    mark.hl-dud{background:rgba(167,139,250,0.4);color:inherit;border-radius:3px;padding:0 2px;}
+    mark.hl-dif{background:rgba(248,113,113,0.4);color:inherit;border-radius:3px;padding:0 2px;font-weight:700;}
+    .hl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:8px;}
+    .hl-legend span mark{padding:1px 5px;}
     /* Progress bar comparativa */
     .cmp-row{display:flex;flex-direction:column;gap:12px;}
     .cmp-item{display:grid;grid-template-columns:140px 1fr 50px;align-items:center;gap:10px;font-size:12px;}
@@ -498,17 +504,36 @@ function calcularRiesgo(perfiles){
   perfiles.forEach((pf,i)=>{
     // Combina las señales disponibles para ese estudiante (no todas siempre existen:
     // sim. coseno puede faltar si el profesor no ha subido audio de esa sesión aún).
+    // Se guarda cada señal con nombre y valor (no solo el z-score compuesto) para poder
+    // JUSTIFICAR el badge "En riesgo" en vez de mostrarlo como una caja negra — ver
+    // explicarRiesgo().
     const señales=[
-      zNota[i]!=null?{z:zNota[i],w:2}:null,   // nota pesa más — es el resultado real
-      zRl[i]!=null?{z:zRl[i],w:1}:null,
-      zSim[i]!=null?{z:zSim[i],w:1}:null,
+      zNota[i]!=null?{nombre:'Nota',z:zNota[i],w:2,valor:pf.np.promedio}:null,   // nota pesa más — es el resultado real
+      zRl[i]!=null?{nombre:'Riqueza léxica',z:zRl[i],w:1,valor:pf.rl*100,unidad:'%'}:null,
+      zSim[i]!=null?{nombre:'Similitud coseno',z:zSim[i],w:1,valor:pf.sim*100,unidad:'%'}:null,
     ].filter(Boolean);
-    if(señales.length===0){ pf.riesgo=false; pf.zscore=0; return; }
+    if(señales.length===0){ pf.riesgo=false; pf.zscore=0; pf.riesgoSenales=[]; return; }
     const wTotal=señales.reduce((a,s)=>a+s.w,0);
     const zCompuesto=señales.reduce((a,s)=>a+s.z*s.w,0)/wTotal;
     pf.zscore=zCompuesto;
     pf.riesgo=zCompuesto<-1; // más de 1 desviación estándar por debajo del grupo
+    pf.riesgoSenales=señales;
   });
+}
+
+// Texto legible explicando POR QUÉ un estudiante quedó marcado "en riesgo" — qué
+// señal(es) concreta(s) están más por debajo del grupo, no solo el z-score compuesto.
+// Se usa en todos los lugares donde aparece el badge "🚨 En riesgo" (tarjeta de atención,
+// ficha de detalle, tooltip en la tabla) para que la etiqueta nunca aparezca sin
+// justificación.
+function explicarRiesgo(pf){
+  if(!pf.riesgo||!pf.riesgoSenales||!pf.riesgoSenales.length) return '';
+  const relevantes=[...pf.riesgoSenales].filter(s=>s.z<-0.5).sort((a,b)=>a.z-b.z);
+  if(!relevantes.length){
+    return `Combinación de señales ${Math.abs(pf.zscore).toFixed(1)} desviaciones estándar por debajo del grupo.`;
+  }
+  const partes=relevantes.map(s=>`${s.nombre} (${s.valor.toFixed(1)}${s.unidad||''}, ${Math.abs(s.z).toFixed(1)} desv. bajo el grupo)`);
+  return `En riesgo por: ${partes.join(' · ')}.`;
 }
 // Traduce las métricas crudas a lectura en lenguaje sencillo.
 function interpretar(yo,promedio,criterio){
@@ -728,6 +753,91 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
+// ── Resaltado de palabras clave en la transcripción ──
+// Diccionarios porteados TAL CUAL de procesar_curso.py / appscript.txt (lista de
+// PERCEPCION_DIFICULTAD ya auditada, ver documentacion.md 3.34). Se usan SOLO para
+// resaltar en el navegador las palabras que ya contó el backend — no se recalcula
+// ningún conteo aquí, los números siguen viniendo del pipeline de Python.
+const DICC_MULETILLAS=["eh","ehh","eeh","ah","em","emm","ehm","este","mmm","mmmm","pues","osea","o sea","o sea que","digamos","aja","tipo"];
+const DICC_DUDAS=["no se","nose","no sab*","no recuerd*","no record*","no me acuerdo","no me acord*","no comprendi","no comprend*","no capte","no capt*","no entendi","no entend*","no logre entender","no logro entender","no logr* entender","creo","creo que","creia","creiamos","pienso que","pensaba que","supongo","supon*","imagino","imagin*","me parece","me parece que","nos parece","tal vez","talvez","quizas","quiza","posiblemente","puede ser","puede que","no estoy seguro","no estoy segura","no estaba seguro","no estaba segura","no estamos seguros","mas o menos","algo asi","la verdad no se","honestamente no se","en realidad no se"];
+const DICC_DIFICULTAD=["dificil*","dificult*","difisil","complic*","complej*","confund*","confus*","se me complica","no le entiendo bien al tema","cuesta entender","me cuesta","se me cuesta","pesad*","abrumador*","me cost*","nos cost*","le cost*","me siento perdid*","estoy perdid*"];
+const DICC_NEGACION_VENTANA=new Set(["no","nunca","jamas","tampoco","ni","sin"]);
+
+function normalizarPalabra(w){
+  return w.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,'');
+}
+
+// Tokeniza el texto ORIGINAL (conserva la posición real dentro del string) para poder
+// resaltar sobre el texto tal como se ve, sin alterar acentos/mayúsculas/puntuación.
+function tokenizarConPosicion(texto){
+  const tokens=[];
+  const re=/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+/g;
+  let m;
+  while((m=re.exec(texto))!==null){
+    tokens.push({raw:m[0],norm:normalizarPalabra(m[0]),start:m.index,end:m.index+m[0].length});
+  }
+  return tokens;
+}
+
+// Mismo algoritmo de raíz (*) y consumo no-solapado que _contar_lista() en
+// procesar_curso.py, pero en vez de solo contar, devuelve los spans [start,end) del
+// texto original que matchearon, para poder envolverlos en <mark>.
+function encontrarSpans(tokens,diccionario,excluirSiNegado){
+  const spans=[];
+  const usados=new Array(tokens.length).fill(false);
+  diccionario.forEach(entrada=>{
+    const palabras=entrada.split(' ');
+    const esRaiz=palabras.map(p=>p.endsWith('*'));
+    const raices=palabras.map((p,j)=>esRaiz[j]?p.slice(0,-1):p);
+    const m=palabras.length;
+    let i=0;
+    while(i<=tokens.length-m){
+      if(usados[i]){i++;continue;}
+      let match=true;
+      for(let j=0;j<m;j++){
+        const t=tokens[i+j];
+        if(!t||usados[i+j]){match=false;break;}
+        if(esRaiz[j]?!t.norm.startsWith(raices[j]):t.norm!==raices[j]){match=false;break;}
+      }
+      if(!match){i++;continue;}
+      let cuenta=true;
+      if(excluirSiNegado){
+        for(let k=Math.max(0,i-3);k<i;k++){
+          if(DICC_NEGACION_VENTANA.has(tokens[k].norm)){cuenta=false;break;}
+        }
+      }
+      if(cuenta){
+        spans.push({start:tokens[i].start,end:tokens[i+m-1].end});
+        for(let j=0;j<m;j++)usados[i+j]=true;
+      }
+      i+=m;
+    }
+  });
+  return spans;
+}
+
+// Resalta en el texto ORIGINAL las palabras de los 3 diccionarios, cada uno con su
+// propio color (amarillo=muletillas, morado=dudas, rojo=percepción de dificultad).
+function resaltarTranscripcion(texto){
+  if(!texto) return '(sin transcripción)';
+  const tokens=tokenizarConPosicion(texto);
+  const todosSpans=[
+    ...encontrarSpans(tokens,DICC_MULETILLAS,false).map(s=>({...s,tipo:'mul'})),
+    ...encontrarSpans(tokens,DICC_DUDAS,false).map(s=>({...s,tipo:'dud'})),
+    ...encontrarSpans(tokens,DICC_DIFICULTAD,true).map(s=>({...s,tipo:'dif'})),
+  ].sort((a,b)=>a.start-b.start);
+  let out='';
+  let cursor=0;
+  todosSpans.forEach(s=>{
+    if(s.start<cursor) return; // evita solapes entre diccionarios distintos (prioridad: el que aparece primero en la lista)
+    out+=escapeHtml(texto.slice(cursor,s.start));
+    out+=`<mark class="hl-${s.tipo}">${escapeHtml(texto.slice(s.start,s.end))}</mark>`;
+    cursor=s.end;
+  });
+  out+=escapeHtml(texto.slice(cursor));
+  return out;
+}
+
 // Detalle de UNA grabación puntual: transcripción completa + todas las variables que
 // calcula el pipeline para ese audio, coloreadas con los mismos umbrales que ya usa
 // tAlertas() (para que "rojo" signifique lo mismo en toda la app, no un criterio nuevo).
@@ -752,7 +862,12 @@ function verDetalleAudio(cedula,sesionValue){
     <div style="font-size:12px;color:var(--muted);margin-top:2px">${lbl} · ${escapeHtml(ns(r.Sesion))}</div>
     <div class="modal-vars">${vars.map(x=>`<span class="badge ${x.alerta?'b-red':'b-green'}">${x.l}: ${x.v}</span>`).join('')}</div>
     <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa</div>
-    <div class="modal-transcript">${escapeHtml(r.Transcripcion)||'(sin transcripción)'}</div>
+    <div class="hl-legend">
+      <span><mark class="hl-mul">muletilla</mark></span>
+      <span><mark class="hl-dud">duda</mark></span>
+      <span><mark class="hl-dif">percepción de dificultad</mark></span>
+    </div>
+    <div class="modal-transcript">${resaltarTranscripcion(r.Transcripcion)}</div>
   `;
   document.getElementById('modal-detalle').classList.add('show');
 }
@@ -804,6 +919,7 @@ function tarjetaAtencion(pf,sesVistas){
       <div>${nombreDe(pf.ced)}<span style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-left:6px">${pf.ced}</span></div>
       <div>${pf.riesgo?'<span class="badge b-risk">🚨 En riesgo</span> ':''}<span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span></div>
     </div>
+    ${pf.riesgo?`<div class="atencion-meta" style="color:#FECACA">🚨 ${explicarRiesgo(pf)}</div>`:''}
     ${cita?`<div class="atencion-cita">💬 "${escapeHtml(cita.texto)}" <span style="opacity:0.7;font-style:normal">— ${labelSesion(cita.sesion,GP)}</span></div>`
          :`<div class="atencion-cita" style="font-style:normal">Sin frases de dificultad detectadas — el bajo desempeño no viene acompañado de dificultad expresada explícita.</div>`}
     <div class="atencion-meta">Nota prom.: <b style="color:var(--text)">${npStr}</b> · Sesiones enviadas: ${pf.enviadas}/${sesVistas.length} · Clic para ver el detalle completo →</div>
@@ -835,7 +951,7 @@ function tEstudiantes(perfiles,sesVistas){
       <td>${(pf.rep||0).toFixed(1)}</td>
       <td>${(pf.dif||0).toFixed(1)}</td>
       <td style="font-family:var(--font-m);font-weight:700">${npStr}</td>
-      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?' <span class="badge b-risk">🚨 En riesgo</span>':''}</td>
+      <td><span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>${pf.riesgo?` <span class="badge b-risk" title="${escapeHtml(explicarRiesgo(pf))}">🚨 En riesgo</span>`:''}</td>
       <td>${bm||'<span style="color:var(--muted);font-size:11px">—</span>'}</td>
       <td>${badgeDif}</td>
     </tr>`;
@@ -883,6 +999,7 @@ function fichaEstudianteDetalle(perfiles,sesVistas,perfilesGrupo){
         <span class="badge ${pf.cl.cls}">${pf.cl.emoji} ${pf.cl.label}</span>
         ${bm}
       </div>
+      ${pf.riesgo?`<div style="font-size:12px;color:var(--red);margin-top:-8px;margin-bottom:14px">${explicarRiesgo(pf)}</div>`:''}
       <div class="mr">
         <div class="ms"><div class="msl">Sesiones</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
         <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(pf.rl*100).toFixed(1)}%</div></div>
