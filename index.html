@@ -915,6 +915,33 @@ function renderDashboard(e){
     return val>=bueno?'good':val<=malo?'bad':'warn';
   }
   const sesionLabel = SESIONES.find(s=>s.value===e.sesion)?.label || e.sesion;
+
+  // Si Groq fallo al transcribir, doPost() igual sube el audio y guarda la fila (ver
+  // 3.74, documentacion.md) -- pero todas las variables de abajo (palabras, muletillas,
+  // dudas, etc.) llegan en 0 porque todavia no hay texto que analizar, no porque el
+  // estudiante no dijo nada. Mostrar el dashboard completo en ese caso seria enganoso
+  // (parece que hablo vacio). En vez de eso, solo se confirma que el audio se subio bien
+  // -- las metricas apareceran solas la proxima vez que entre, cuando el reintento
+  // automatico ya haya completado la transcripcion.
+  if (e.transcripcionPendiente) {
+    document.getElementById('dash-content').innerHTML=`
+      <div class="dash-hero">
+        <div class="dash-eyebrow">Audio subido correctamente</div>
+        <div class="dash-title">${esc(sesionLabel)}</div>
+        <div class="badge-row">
+          <span class="badge badge-blue">📚 ${esc(e.grupo)}</span>
+          <span class="badge badge-gray">${e.es_profesor?'👨‍🏫 Profesor':'🪪 '+esc(e.cedula)}</span>
+          <span class="badge badge-green">✓ Guardado</span>
+        </div>
+      </div>
+      <div class="metric" style="margin-top:16px;">
+        <div class="metric-label">Procesando</div>
+        <div class="metric-sub">Tu audio ya quedó guardado. La transcripción y las métricas se están procesando y van a estar disponibles en un rato — no necesitas volver a grabar ni hacer nada más.</div>
+      </div>
+    `;
+    return;
+  }
+
   document.getElementById('dash-content').innerHTML=`
     <div class="dash-hero">
       <div class="dash-eyebrow">Audio enviado correctamente</div>
