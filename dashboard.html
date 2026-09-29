@@ -292,6 +292,18 @@ function ordenSesion(v,grupoNombre){
   const idx=getSesionesGrupo(grupoNombre).findIndex(s=>s.v===v);
   return idx===-1?Infinity:idx;
 }
+// Fechas del calendario real del semestre (SESIONES_CALENDARIO, mismo array SESIONES de
+// appscript.txt) que ya deberían haber pasado hoy — para medir cumplimiento contra lo
+// REALMENTE esperado hasta ahora, no solo contra las sesiones donde alguien ya mandó algo
+// (ver 3.108). null si el backend todavía no manda el calendario (redeploy pendiente).
+function sesionesCalendarioHastaHoy(){
+  if(!SESIONES_CALENDARIO.length) return null;
+  const hoy=new Date();
+  return SESIONES_CALENDARIO.filter(s=>{
+    const[d,m,y]=s.split('/').map(Number);
+    return new Date(y,m-1,d)<=hoy;
+  });
+}
 const CD={plugins:{legend:{labels:{color:'#8FAD9B',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#8FAD9B',font:{size:10},maxRotation:0},grid:{color:'rgba(200,230,210,0.05)'}},y:{ticks:{color:'#8FAD9B',font:{size:10}},grid:{color:'rgba(200,230,210,0.05)'}}}};
 
 let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
@@ -310,6 +322,14 @@ let ABSA_MODELO={},TEMA_ABSA='',ABSA_LIMITE=25,ABSA_TEMAS_VISTOS=[],ABSA_LISTA_V
 // Sub-vista dentro de la pestaña "Estudiantes" (ver 3.107): 'estudiante' o 'tema' — reemplaza
 // la antigua pestaña separada "Por tema", ahora es una sola pestaña navegable.
 let SUBVISTA_ESTUDIANTES='estudiante';
+// Roster real (matriculados) y calendario real de sesiones del semestre (ver 3.108): sin
+// esto, "Cumplimiento"/"Estudiantes" se calculaban solo contra quien YA había enviado algo
+// (nunca contra quien falta), así que siempre rondaban 100%. Llegan en action=getDashboard
+// como d.rosterPorGrupo (grupoKey -> [{cedula,nombre}]) y d.sesionesCalendario (fechas
+// 'dd/MM/yyyy' fijas del semestre, mismo array SESIONES de appscript.txt). Si el backend
+// todavía no tiene el redeploy con esto, llegan vacíos y el cálculo cae al comportamiento
+// viejo (derivado de los datos), sin romper nada.
+let ROSTER_POR_GRUPO={},SESIONES_CALENDARIO=[];
 
 // ── Login — cédula+clave, igual para profesor y estudiante (ambos viven en el mismo
 // roster maestro, distinguidos solo por Vinculo del lado del backend) ──
@@ -398,6 +418,7 @@ function mostrarDashboard(){
 }
 function salir(){
   ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';gruposDeEstaCedula=[];ALERTAS_MODELO={};ABSA_MODELO={};TEMA_ABSA='';ABSA_LIMITE=25;
+  ROSTER_POR_GRUPO={};SESIONES_CALENDARIO=[];
   FILTRO_SESION='';FILTRO_ESTUDIANTE='';FILTRO_SESION_EST='';TAB_ACTIVA='resumen';SUBVISTA_ESTUDIANTES='estudiante';
   Object.values(CH).forEach(c=>{try{c.destroy();}catch(e){}});CH={};
   document.getElementById('sc-dash').style.display='none';
@@ -425,6 +446,8 @@ async function cargar(){
     NOMBRES=d.nombres||{};
     ALERTAS_MODELO=d.alertasModelo||{};
     ABSA_MODELO=d.absaModelo||{};
+    ROSTER_POR_GRUPO=d.rosterPorGrupo||{};
+    SESIONES_CALENDARIO=d.sesionesCalendario||[];
     if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
     else renderEst(DATA, NOTAS, CED, GK);
   }catch(err){
@@ -623,9 +646,30 @@ function datosFiltradosProf(){
   const estTodos=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
   const sesionesDisponibles=[...new Set(estTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a,GP)-ordenSesion(b,GP));
 
+  // Dudas/dificultades YA NO se cuentan desde Sheets (conteo_dudas/conteo_percepcion_dificultad,
+  // calculadas en vivo por el motor JS de appscript.txt sobre la transcripción de Groq) — esa
+  // transcripción es distinta a la que produce el pipeline local (Whisper + reglas v3 + árbitro
+  // LLM), y mezclar las dos mediría cosas distintas con el mismo número (ver documentacion.md
+  // 3.110). Se cuentan solo desde ABSA_MODELO (el instrumento validado, el mismo que ya usa la
+  // sub-vista "Por tema"). Sin ese JSON cargado para este curso, absaDisponible queda en false y
+  // Resumen/Alertas lo muestran como "sin analizar todavía", no como cero.
+  const absaGrupoActual=ABSA_MODELO[GK];
+  const absaDisponible=!!(absaGrupoActual&&Array.isArray(absaGrupoActual.menciones));
+  const absaTodas=absaDisponible?absaGrupoActual.menciones:[];
+  // Solo respeta el filtro de SESIÓN (nunca el de estudiante) — mismo criterio que estGrupo/
+  // perfilesGrupo más abajo, para que el conteo de cada perfil sea consistente con sus audios.
+  const absaPorSesion=FILTRO_SESION?absaTodas.filter(m=>isoADmy(m.s)===FILTRO_SESION):absaTodas;
+  const absaPorCedula={};
+  absaPorSesion.forEach(m=>{
+    const c=String(m.c);
+    const o=absaPorCedula[c]=absaPorCedula[c]||{ddsTotal:0,difTotal:0};
+    if(m.d==='DUDAS')o.ddsTotal++; else o.difTotal++;
+  });
+
   const construirPerfil=(ced,rows)=>{
     const nr=notaEst(NOTAS[GK]||[],ced);
     const np=calcPromedio(nr,GK);
+    const absaCed=absaPorCedula[String(ced)]||{ddsTotal:0,difTotal:0};
     return{ced,rows,nr,np,cl:clasificar(np?.promedio||null),
       rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),
       dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),
@@ -633,13 +677,11 @@ function datosFiltradosProf(){
       ppm:p(rows,'palabras_por_minuto'),rep:p(rows,'conteo_repeticiones'),
       pausas:p(rows,'num_pausas'),pausaProm:p(rows,'pausa_promedio'),
       dif:p(rows,'conteo_percepcion_dificultad'),
-      // Conteos crudos (suma, no promedio) — lo único que este dashboard presenta como
-      // "medida" del instrumento léxico validado (dudas + percepción de dificultad).
-      // Ver documentacion.md 3.85/3.107: el resto de variables (riqueza léxica, muletillas,
-      // similitud coseno, velocidad de habla, pausas, repeticiones) NUNCA se validaron como
-      // predictoras de desempeño — se dejan calculadas arriba por compatibilidad con el
-      // detalle de audio individual, pero ya no se usan para clasificar ni alertar a nadie.
-      ddsTotal:suma(rows,'conteo_dudas'), difTotal:suma(rows,'conteo_percepcion_dificultad'),
+      // ddsTotal/difTotal: conteo del instrumento VALIDADO (ABSA_MODELO), no de Sheets — ver
+      // nota de arriba y documentacion.md 3.85/3.107/3.110. rl/mts/dds/sim/ppm/rep/pausas/dif
+      // (Sheets, motor viejo) se dejan calculados arriba solo por compatibilidad con el detalle
+      // de audio individual — no se usan para clasificar ni alertar a nadie.
+      ddsTotal:absaCed.ddsTotal, difTotal:absaCed.difTotal,
       get totalMenciones(){return this.ddsTotal+this.difTotal;},
       enviadas:rows.length};
   };
@@ -648,7 +690,14 @@ function datosFiltradosProf(){
   // correcta para calcular "mejor/peor del grupo", incluso cuando se está viendo a 1 solo estudiante.
   let estGrupo=estTodos;
   if(FILTRO_SESION) estGrupo=estGrupo.filter(r=>ns(r.Sesion)===FILTRO_SESION);
-  const cedsGrupo=[...new Set(estGrupo.map(r=>String(r.Cedula)))];
+  // cedsGrupo: el ROSTER real (matriculados en este curso, ver 3.108) cuando el backend ya
+  // lo manda — así un estudiante que nunca ha enviado nada SÍ aparece (0 audios, 0 menciones)
+  // en vez de ser invisible. Se completa con cualquier cédula que sí aparezca en los datos
+  // pero no esté (todavía) en el roster, para no perder nunca un audio real. Sin roster
+  // (backend viejo), cae al comportamiento anterior: solo quien ya envió algo.
+  const cedsRoster=(ROSTER_POR_GRUPO[GK]||[]).map(e=>String(e.cedula));
+  const cedsEnDatos=[...new Set(estGrupo.map(r=>String(r.Cedula)))];
+  const cedsGrupo=cedsRoster.length?[...new Set([...cedsRoster,...cedsEnDatos])]:cedsEnDatos;
   // Orden por menciones (no por nota — ver 3.107): quién ha expresado más dudas/dificultad primero.
   const perfilesGrupo=cedsGrupo.map(ced=>construirPerfil(ced,estGrupo.filter(r=>String(r.Cedula)===ced)))
     .sort((a,b)=>b.totalMenciones-a.totalMenciones);
@@ -657,17 +706,29 @@ function datosFiltradosProf(){
   let est=estGrupo;
   if(FILTRO_ESTUDIANTE) est=est.filter(r=>String(r.Cedula)===FILTRO_ESTUDIANTE);
   const sesVistas=FILTRO_SESION?[FILTRO_SESION]:sesionesDisponibles;
-  const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
-  const perfiles=FILTRO_ESTUDIANTE?perfilesGrupo.filter(pf=>ceds.includes(pf.ced)):perfilesGrupo;
+  // Filtra directo por cédula elegida (no por "quién tiene filas en est"): si no, un
+  // estudiante del roster con 0 audios en la sesión filtrada desaparecía en vez de
+  // mostrarse con 0/0 — el mismo síntoma que se está corrigiendo acá.
+  const perfiles=FILTRO_ESTUDIANTE?perfilesGrupo.filter(pf=>pf.ced===FILTRO_ESTUDIANTE):perfilesGrupo;
 
-  return{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles};
+  // Sesiones REALMENTE esperadas hasta hoy (calendario fijo del semestre), para el
+  // denominador de "Cumplimiento" — nunca las que ya tienen algún audio, que es lo que
+  // hacía que siempre diera ~100% (ver 3.108). Cae a sesVistas si no hay calendario aún.
+  const sesionesCumplimiento=FILTRO_SESION?[FILTRO_SESION]:(sesionesCalendarioHastaHoy()||sesionesDisponibles);
+
+  return{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles,cedsGrupo,sesionesCumplimiento,absaDisponible};
 }
 
 function renderProf(reg, notas){
-  const{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles}=datosFiltradosProf();
-  const estudiantesDisponibles=[...new Set(estTodos.map(r=>String(r.Cedula)))];
-  const ceds=[...new Set(est.map(r=>String(r.Cedula)))];
-  const cumpl=Math.round((est.length/(Math.max(1,ceds.length)*sesVistas.length))*100)||0;
+  const{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles,cedsGrupo,sesionesCumplimiento,absaDisponible}=datosFiltradosProf();
+  // Roster real para el selector "Estudiante" (así se puede elegir a alguien con 0 audios
+  // enviados, justo a quien más vale la pena revisar — ver 3.108); sin roster, cae a quien
+  // ya aparece en los datos, como antes.
+  const estudiantesDisponibles=cedsGrupo.length?cedsGrupo:[...new Set(estTodos.map(r=>String(r.Cedula)))];
+  // "Estudiantes" ya no es "quién envió algo en esta vista" sino perfiles.length (roster real
+  // cuando está disponible, ver datosFiltradosProf) — y el cumplimiento se mide contra las
+  // sesiones YA esperadas del calendario real, no solo las que tienen algún audio.
+  const cumpl=Math.round((est.length/(Math.max(1,perfiles.length)*Math.max(1,sesionesCumplimiento.length)))*100)||0;
 
   const filtrosActivos=FILTRO_SESION||FILTRO_ESTUDIANTE;
 
@@ -690,7 +751,7 @@ function renderProf(reg, notas){
       ${filtrosActivos?`<button class="btn-sm" onclick="limpiarFiltrosProf()">✕ Limpiar filtros</button>`:''}
     </div>`;
 
-  if(ceds.length===0){
+  if(perfiles.length===0){
     document.getElementById('dm').innerHTML=`
       <div class="page-title">${GP}</div>
       <div class="page-sub">Análisis de Voz Académica</div>
@@ -717,10 +778,10 @@ function renderProf(reg, notas){
     ${barraFiltros}
 
     <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${ceds.length}</div><div class="kpi-sub">${sesVistas.length} sesion${sesVistas.length===1?'':'es'}</div></div>
-      <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/ceds.length*10)/10} prom/est</div></div>
+      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${perfiles.length}</div><div class="kpi-sub">${sesionesCumplimiento.length} sesion${sesionesCumplimiento.length===1?'':'es'} esperadas</div></div>
+      <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/perfiles.length*10)/10} prom/est</div></div>
       <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${cumpl}%</div><div class="kpi-sub">audios / esperados</div></div>
-      <div class="kpi highlight"><div class="kpi-label">Dudas y dificultades</div><div class="kpi-value">🗣️ ${totalMenciones}</div><div class="kpi-sub">${estudiantesConMenciones} estudiante${estudiantesConMenciones===1?'':'s'} las expresó</div></div>
+      <div class="kpi highlight"><div class="kpi-label">Dudas y dificultades</div><div class="kpi-value">${absaDisponible?`🗣️ ${totalMenciones}`:'—'}</div><div class="kpi-sub">${absaDisponible?`${estudiantesConMenciones} estudiante${estudiantesConMenciones===1?'':'s'} las expresó`:'sin análisis validado cargado'}</div></div>
     </div>
 
     <div class="tabs">
@@ -729,9 +790,9 @@ function renderProf(reg, notas){
       <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
     </div>
 
-    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo)}</div>
-    <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas)}</div>
-    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas)}</div>
+    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo,absaDisponible)}</div>
+    <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas,absaDisponible)}</div>
+    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas,absaDisponible)}</div>
   `;
   setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
   // Reactivar la pestaña que estaba abierta antes de aplicar el filtro
@@ -749,7 +810,7 @@ function limpiarFiltrosProf(){
   renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
 }
 
-function tResumen(perfiles,sesVistas,est,perfilesGrupo){
+function tResumen(perfiles,sesVistas,est,perfilesGrupo,absaDisponible){
   const totalMenciones=perfiles.reduce((a,pf)=>a+pf.totalMenciones,0);
   const top=[...perfiles].filter(pf=>pf.totalMenciones>0).sort((a,b)=>b.totalMenciones-a.totalMenciones).slice(0,5);
   return `
@@ -760,8 +821,13 @@ function tResumen(perfiles,sesVistas,est,perfilesGrupo){
       probaron a fondo en la tesis y <b style="color:var(--text)">no mostraron valor como predictores</b>,
       así que ya no se presentan aquí como si lo tuvieran.
     </div>
+    ${!absaDisponible?`<div class="card absa-vacio">
+      <div style="font-size:30px;margin-bottom:8px">🧩</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Sin análisis validado cargado todavía</div>
+      <div style="font-size:13px;max-width:480px;margin:0 auto">Las dudas y dificultades se cuentan con el instrumento validado (transcripción local + reglas + árbitro), no con la transcripción de Groq que ya vive en Sheets — mezclarlas mediría cosas distintas con el mismo número. Sube el JSON en la pestaña Estudiantes → Por tema para ver estos números.</div>
+    </div>`:''}
     <div class="grid-2">
-      <div class="card"><div class="card-title">🗣️ Dudas y dificultades por sesión</div><div class="cw"><canvas id="ch-menciones-sesion"></canvas></div></div>
+      ${absaDisponible?`<div class="card"><div class="card-title">🗣️ Dudas y dificultades por sesión</div><div class="cw"><canvas id="ch-menciones-sesion"></canvas></div></div>`:''}
       <div class="card"><div class="card-title">👥 Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
     </div>
     ${top.length?`<div class="card">
@@ -778,11 +844,18 @@ function tResumen(perfiles,sesVistas,est,perfilesGrupo){
 function tiraDificultad(rows,sesionesRef,cedula,grande){
   const porSesion={};
   rows.forEach(r=>{porSesion[ns(r.Sesion)]=r;});
+  // La marca roja de "dificultad" sale del instrumento validado (ABSA_MODELO), no del conteo
+  // viejo de Sheets/Groq — mismo motivo que ddsTotal/difTotal en construirPerfil (ver 3.110).
+  // Sin ABSA_MODELO cargado para este curso, ninguna sesión se marca (no se inventa con Sheets).
+  const g=absaGrupo();
+  const sesionesConDificultad=new Set(
+    g?g.menciones.filter(m=>String(m.c)===String(cedula)&&m.d==='DIFICULTAD').map(m=>isoADmy(m.s)):[]
+  );
   const cajas=sesionesRef.map(sv=>{
     const r=porSesion[sv];
     const lbl=labelSesion(sv,GP);
     if(!r) return `<span class="dif-box dif-vacio" title="${lbl} (${sv}): sin audio enviado">${lbl}</span>`;
-    const dif=parseFloat(r.conteo_percepcion_dificultad||0)>0;
+    const dif=sesionesConDificultad.has(sv);
     const cls=dif?'dif-si':'dif-no';
     return `<span class="dif-box ${cls} clicable" title="Clic para ver el audio completo de ${lbl} (${sv})" onclick="verDetalleAudio('${cedula}','${sv}')">${lbl}${dif?' ⚠️':''}</span>`;
   }).join('');
@@ -917,26 +990,36 @@ function verDetalleAudio(cedula,sesionValue){
   const r=DATA.find(x=>x.Grupo===GP&&String(x.Cedula)===String(cedula)&&ns(x.Sesion)===sesionValue);
   if(!r){toast('No se encontró ese audio','error');return;}
   const lbl=labelSesion(sesionValue,GP);
-  const num=k=>parseFloat(r[k]||0);
-  // Solo se muestran como "alerta" las 2 variables del instrumento léxico validado (dudas,
-  // percepción de dificultad — ver 3.107). El resto (muletillas, riqueza léxica, similitud
-  // coseno, velocidad de habla, repeticiones, pausas) no se probó como interpretable de
-  // desempeño, así que se dejaron de mostrar aquí para no sugerir que sí lo son.
-  const vars=[
-    {l:'Dudas',v:num('conteo_dudas').toFixed(0),alerta:num('conteo_dudas')>3},
-    {l:'Percepción dificultad',v:num('conteo_percepcion_dificultad').toFixed(0),alerta:num('conteo_percepcion_dificultad')>2},
-  ];
+  // Dudas/dificultad y la transcripción salen de ABSA_MODELO (instrumento validado, transcripción
+  // local) cuando existe registro para este audio puntual — nunca del conteo/texto de Sheets/Groq,
+  // que mide algo distinto (ver documentacion.md 3.110). Si el curso no tiene ABSA_MODELO cargado,
+  // o este audio en particular todavía no pasó por el pipeline local, se avisa en vez de inventar
+  // un conteo con Groq.
+  const g=absaGrupo();
+  const [dd,mm,yyyy]=sesionValue.split('/');
+  const claveAbsa=`${cedula}|${yyyy}-${mm}-${dd}`;
+  const menciones=g?g.menciones.filter(m=>String(m.c)===String(cedula)&&isoADmy(m.s)===sesionValue):[];
+  const nDudas=menciones.filter(m=>m.d==='DUDAS').length;
+  const nDif=menciones.filter(m=>m.d==='DIFICULTAD').length;
+  const transcripcionAbsa=g?g.transcripciones[claveAbsa]:null;
+  const usaAbsa=!!transcripcionAbsa;
+  const textoMostrado=usaAbsa?transcripcionAbsa:r.Transcripcion;
+  const vars=usaAbsa?[
+    {l:'Dudas',v:String(nDudas),alerta:nDudas>3},
+    {l:'Percepción dificultad',v:String(nDif),alerta:nDif>2},
+  ]:[];
+  const avisoSinAbsa=usaAbsa?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${g?'Este audio todavía no pasó por el pipeline local validado — se muestra la transcripción de Groq, sin conteo de dudas/dificultad.':'Este curso todavía no tiene el análisis validado cargado — se muestra la transcripción de Groq, sin conteo de dudas/dificultad.'}</div>`;
   document.getElementById('modal-detalle-body').innerHTML=`
     <div class="card-title">${escapeHtml(nombreDe(cedula))} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${escapeHtml(cedula)}</span></div>
     <div style="font-size:12px;color:var(--muted);margin-top:2px">${lbl} · ${escapeHtml(ns(r.Sesion))}</div>
-    <div class="modal-vars">${vars.map(x=>`<span class="badge ${x.alerta?'b-red':'b-green'}">${x.l}: ${x.v}</span>`).join('')}</div>
-    <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa</div>
+    ${vars.length?`<div class="modal-vars">${vars.map(x=>`<span class="badge ${x.alerta?'b-red':'b-green'}">${x.l}: ${x.v}</span>`).join('')}</div>`:avisoSinAbsa}
+    <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa ${usaAbsa?'':'<span style="font-weight:400;color:var(--muted);font-size:11px">(Groq)</span>'}</div>
     <div class="hl-legend">
       <span><mark class="hl-mul">muletilla</mark></span>
       <span><mark class="hl-dud">duda</mark></span>
       <span><mark class="hl-dif">percepción de dificultad</mark></span>
     </div>
-    <div class="modal-transcript">${resaltarTranscripcion(r.Transcripcion)}</div>
+    <div class="modal-transcript">${resaltarTranscripcion(textoMostrado)}</div>
   `;
   document.getElementById('modal-detalle').classList.add('show');
 }
@@ -964,16 +1047,22 @@ function badgeModelo(cedula){
   return `<span class="badge ${m.cls}" title="Probabilidad severo: ${Math.round(entry.proba_severo*100)}% · Probabilidad alto: ${Math.round(entry.proba_alto*100)}%">${m.label}</span>`;
 }
 
-// Busca, entre los audios de un estudiante, el más reciente donde marcó
-// dificultad explícita — para mostrar la frase real, no solo el número.
+// Busca, entre las menciones de ABSA_MODELO de un estudiante, la más reciente (duda o
+// dificultad) — para mostrar la frase real, no solo el número. Sale del instrumento
+// validado (transcripción local), no de Sheets/Groq (ver 3.110) — null si no hay
+// ABSA_MODELO cargado para este curso.
 function citaMasReciente(pf){
-  const conDificultad=pf.rows.filter(r=>parseFloat(r.conteo_percepcion_dificultad||0)>0);
-  if(!conDificultad.length) return null;
-  const ord=[...conDificultad].sort((a,b)=>ordenSesion(ns(b.Sesion),GP)-ordenSesion(ns(a.Sesion),GP));
-  const r=ord[0];
-  const texto=String(r.Transcripcion||'').trim();
-  const corta=texto.length>200?texto.slice(0,200)+'…':texto;
-  return{sesion:ns(r.Sesion),texto:corta};
+  const g=absaGrupo();
+  if(!g) return null;
+  const menciones=g.menciones.filter(m=>String(m.c)===String(pf.ced));
+  if(!menciones.length) return null;
+  const m=[...menciones].sort((a,b)=>b.s.localeCompare(a.s))[0]; // 's' es ISO yyyy-MM-dd, ordena bien como texto
+  const texto=g.transcripciones[m.k]||'';
+  const ini0=Math.max(0,m.r[0]-100),fin0=Math.min(texto.length,m.r[1]+100);
+  let ini=ini0>0?texto.indexOf(' ',ini0):0;if(ini<0||ini>m.r[0])ini=ini0;
+  let fin=fin0<texto.length?texto.lastIndexOf(' ',fin0):texto.length;if(fin<m.r[1])fin=fin0;
+  const corta=(ini>0?'…':'')+texto.slice(ini,fin)+(fin<texto.length?'…':'');
+  return{sesion:isoADmy(m.s),texto:corta};
 }
 
 // Tarjeta compacta para un estudiante con dudas/dificultad expresadas — nombre, conteo
@@ -995,41 +1084,44 @@ function tarjetaMenciones(pf,sesVistas){
 // Pestaña "Estudiantes": UNA sola pestaña con dos sub-vistas navegables (ver 3.107) — por
 // estudiante (roster + ficha individual) o por tema (ABSA) — en vez de dos pestañas
 // separadas, compartiendo siempre los mismos filtros globales de sesión/estudiante.
-function tEstudiantes(perfiles,sesVistas){
+function tEstudiantes(perfiles,sesVistas,absaDisponible){
   return `
     <div class="absa-chips" style="margin-bottom:16px">
       <button class="absa-chip ${SUBVISTA_ESTUDIANTES==='estudiante'?'active':''}" onclick="cambiarSubvista('estudiante')">👥 Por estudiante</button>
       <button class="absa-chip ${SUBVISTA_ESTUDIANTES==='tema'?'active':''}" onclick="cambiarSubvista('tema')">🧩 Por tema</button>
     </div>
-    <div id="subvista-contenido">${SUBVISTA_ESTUDIANTES==='tema'?tAbsa():tPorEstudiante(perfiles,sesVistas)}</div>`;
+    <div id="subvista-contenido">${SUBVISTA_ESTUDIANTES==='tema'?tAbsa():tPorEstudiante(perfiles,sesVistas,absaDisponible)}</div>`;
 }
 function cambiarSubvista(v){
   SUBVISTA_ESTUDIANTES=v;
   if(!DATA)return;
-  const{perfiles,sesVistas}=datosFiltradosProf();
-  document.getElementById('t-estudiantes').innerHTML=tEstudiantes(perfiles,sesVistas);
+  const{perfiles,sesVistas,absaDisponible}=datosFiltradosProf();
+  document.getElementById('t-estudiantes').innerHTML=tEstudiantes(perfiles,sesVistas,absaDisponible);
   if(v==='tema') setTimeout(()=>renderChartsAbsa(),100);
 }
 
-function tPorEstudiante(perfiles,sesVistas){
-  if(perfiles.length===1) return fichaEstudianteDetalle(perfiles[0],sesVistas);
+function tPorEstudiante(perfiles,sesVistas,absaDisponible){
+  if(perfiles.length===1) return fichaEstudianteDetalle(perfiles[0],sesVistas,absaDisponible);
+  const g=absaGrupo();
   const ordenados=[...perfiles].sort((a,b)=>nombreDe(a.ced).localeCompare(nombreDe(b.ced)));
   const filaTabla=pf=>{
     const pct=Math.round(pf.enviadas/sesVistas.length*100);
-    const nDif=pf.rows.filter(r=>parseFloat(r.conteo_percepcion_dificultad||0)>0).length;
-    const badgeDif=nDif>0
+    // Sesiones con dificultad: desde ABSA_MODELO (instrumento validado), no Sheets/Groq —
+    // mismo criterio que tiraDificultad()/construirPerfil (ver 3.110).
+    const nDif=g?new Set(g.menciones.filter(m=>String(m.c)===String(pf.ced)&&m.d==='DIFICULTAD').map(m=>m.s)).size:0;
+    const badgeDif=!absaDisponible?`<span style="color:var(--muted);font-size:11px">—</span>`:nDif>0
       ?`<span class="badge b-red" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle">⚠️ ${nDif} sesi${nDif>1?'ones':'ón'}</span>`
       :`<span class="badge b-green" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle">✅</span>`;
     return `<tr>
       <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
       <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
-      <td>${pf.ddsTotal}</td>
-      <td>${pf.difTotal}</td>
+      <td>${absaDisponible?pf.ddsTotal:'—'}</td>
+      <td>${absaDisponible?pf.difTotal:'—'}</td>
       <td>${badgeDif}</td>
     </tr>`;
   };
   return `
-    <div class="card" style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para ver la ficha completa de una sola persona.</div>
+    <div class="card" style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para ver la ficha completa de una sola persona.${absaDisponible?'':' Las columnas de Dudas/Dificultades muestran "—" porque este curso todavía no tiene el análisis validado cargado (pestaña Por tema).'}</div>
     <div class="tw"><table>
       <tr><th>Estudiante</th><th>Sesiones</th><th>Dudas</th><th>Dificultades</th><th>Detalle</th></tr>
       ${ordenados.map(filaTabla).join('')}
@@ -1040,7 +1132,7 @@ function tPorEstudiante(perfiles,sesVistas){
 // estudiante") cuando el filtro global deja exactamente uno. Ya no compara contra nota,
 // riqueza léxica ni similitud coseno (ver 3.107): solo la línea de tiempo de dudas/
 // dificultad y, si el análisis por tema está cargado, los temas que mencionó.
-function fichaEstudianteDetalle(pf,sesVistas){
+function fichaEstudianteDetalle(pf,sesVistas,absaDisponible){
   const g=absaGrupo();
   const temasEst=g?absaAgregar((g.menciones||[]).filter(m=>String(m.c)===String(pf.ced))).lista:[];
   return `
@@ -1048,13 +1140,13 @@ function fichaEstudianteDetalle(pf,sesVistas){
       <div class="card-title">${nombreDe(pf.ced)} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${pf.ced}</span></div>
       <div class="mr">
         <div class="ms"><div class="msl">Sesiones enviadas</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
-        <div class="ms"><div class="msl">Dudas</div><div class="msv">${pf.ddsTotal}</div></div>
-        <div class="ms"><div class="msl">Percepción dificultad</div><div class="msv">${pf.difTotal}</div></div>
+        <div class="ms"><div class="msl">Dudas</div><div class="msv">${absaDisponible?pf.ddsTotal:'—'}</div></div>
+        <div class="ms"><div class="msl">Percepción dificultad</div><div class="msv">${absaDisponible?pf.difTotal:'—'}</div></div>
       </div>
     </div>
     <div class="card">
       <div class="card-title">🗓️ Línea de tiempo</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Las sesiones marcadas en rojo tuvieron percepción de dificultad explícita. Clic en cualquier sesión para ver la transcripción completa de ese audio.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${absaDisponible?'Las sesiones marcadas en rojo tuvieron percepción de dificultad explícita según el análisis validado.':'Este curso todavía no tiene el análisis validado cargado — ninguna sesión se marca con dificultad todavía.'} Clic en cualquier sesión para ver la transcripción completa de ese audio.</div>
       ${tiraDificultad(pf.rows,sesVistas,pf.ced,true)}
     </div>
     ${temasEst.length?`<div class="card">
@@ -1097,7 +1189,7 @@ function renderAlertaModelo(modeloGrupo){
 // documentacion.md 3.107) — NO un modelo predictivo ni un cruce con nota/riqueza léxica/
 // similitud coseno. Es literalmente lo que mide el instrumento léxico validado: quién ha
 // expresado más dudas o dificultad, en total, a lo largo de las sesiones visibles.
-function tAlertas(perfiles,sesVistas){
+function tAlertas(perfiles,sesVistas,absaDisponible){
   const conMenciones=[...perfiles].filter(pf=>pf.totalMenciones>0).sort((a,b)=>b.totalMenciones-a.totalMenciones);
   const pocas=perfiles.filter(pf=>pf.enviadas/sesVistas.length<0.6);
   const cedCol=pf=>`<td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>`;
@@ -1108,10 +1200,14 @@ function tAlertas(perfiles,sesVistas){
       expresaron duda o dificultad en total. Es un conteo, no una predicción — sirve para saber con
       quién vale la pena hablar, no para anticipar una nota.
     </div>
+    ${!absaDisponible?`<div class="card absa-vacio">
+      <div style="font-size:30px;margin-bottom:8px">🧩</div>
+      <div style="font-size:13px">Sin análisis validado cargado para este curso todavía — sube el JSON en Estudiantes → Por tema para ver este ranking.</div>
+    </div>`:`
     <div class="card-title" style="margin-top:4px">🗣️ Más dudas y dificultades expresadas (${conMenciones.length})</div>
     ${conMenciones.length
       ?conMenciones.map(pf=>tarjetaMenciones(pf,sesVistas)).join('')
-      :`<div class="card"><div style="color:var(--green);font-size:13px">✅ Nadie expresó dudas o dificultad en esta selección.</div></div>`}
+      :`<div class="card"><div style="color:var(--green);font-size:13px">✅ Nadie expresó dudas o dificultad en esta selección.</div></div>`}`}
     ${pocas.length?`<div class="card"><div class="card-title">📭 Bajo cumplimiento (&lt;60%)</div><div class="tw"><table>
       <tr><th>Estudiante</th><th>Enviadas</th><th>%</th></tr>
       ${pocas.map(pf=>`<tr>${cedCol(pf)}<td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`).join('')}
@@ -1347,11 +1443,11 @@ function renderChartsProf(est,sesVistas,perfiles){
   const bySes=gb(est,'Sesion');
   const lbl=sesVistas.map(s=>labelSesion(s,GP));
 
-  // Conteos crudos (suma, no promedio) de dudas/dificultad por sesión — el instrumento
-  // léxico validado. Reemplaza los charts de riqueza léxica/muletillas/similitud coseno/
-  // nota (ver 3.107): esas variables no se validaron como interpretables de desempeño.
-  const dataDif=sesVistas.map(s=>suma(bySes[s]||[],'conteo_percepcion_dificultad'));
-  const dataDds=sesVistas.map(s=>suma(bySes[s]||[],'conteo_dudas'));
+  // Conteo de dudas/dificultad por sesión — el instrumento léxico validado (ABSA_MODELO), NO
+  // Sheets/Groq (ver 3.110). absaFiltradas() ya respeta FILTRO_SESION/FILTRO_ESTUDIANTE.
+  const absaVista=absaFiltradas();
+  const dataDif=sesVistas.map(s=>absaVista.filter(m=>m.d==='DIFICULTAD'&&isoADmy(m.s)===s).length);
+  const dataDds=sesVistas.map(s=>absaVista.filter(m=>m.d==='DUDAS'&&isoADmy(m.s)===s).length);
   const dataPart=sesVistas.map(s=>(bySes[s]||[]).length);
 
   mkChart('ch-menciones-sesion','bar',lbl,[
