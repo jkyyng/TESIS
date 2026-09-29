@@ -98,3 +98,1553 @@
     .atencion-meta{font-size:11px;color:var(--muted);margin-top:8px;}
     /* Interpretación */
     .interp{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);}
+    .interp:last-child{border-bottom:none;}
+    .interp .ii{font-size:20px;line-height:1;}
+    .interp .it{font-size:13px;color:var(--text);line-height:1.5;}
+    .interp .it b{color:var(--accent2);}
+    .sel-est{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);font-family:var(--font-b);}
+    .sel-est:focus{outline:none;border-color:var(--accent);}
+    /* Sesiones */
+    .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
+    .sc{padding:10px 8px;border-radius:10px;text-align:center;border:1px solid var(--border);transition:all 0.2s;}
+    .sc.ok{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.3);}
+    .sc.no{background:rgba(248,113,113,0.05);border-color:rgba(248,113,113,0.15);}
+    .sc .sn{font-family:var(--font-d);font-weight:700;font-size:15px;display:block;margin-bottom:2px;}
+    .sc .sf{font-size:10px;color:var(--muted);}
+    .sc .st{font-size:10px;margin-top:3px;display:block;}
+    .sc.ok .st{color:var(--green);}
+    .sc.no .st{color:var(--red);}
+    /* Franja de dificultad por sesión (tiraDificultad) */
+    .dif-strip{display:flex;flex-wrap:wrap;gap:4px;}
+    .dif-box{font-size:9px;font-family:var(--font-m);padding:4px 5px;border-radius:5px;border:1px solid var(--border);color:var(--muted);cursor:default;min-width:22px;text-align:center;}
+    .dif-vacio{background:var(--bg3);opacity:0.5;}
+    .dif-no{background:rgba(74,222,128,0.08);border-color:rgba(74,222,128,0.3);color:var(--green);}
+    .dif-si{background:rgba(248,113,113,0.15);border-color:var(--red);color:var(--red);font-weight:700;}
+    .dif-strip.grande .dif-box{font-size:11px;padding:8px 10px;min-width:34px;}
+    .dif-box.clicable{cursor:pointer;}
+    .dif-box.clicable:hover{filter:brightness(1.25);transform:translateY(-1px);}
+    /* Modal de detalle de un audio (transcripción completa + todas las variables contadas) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal-card{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:22px;max-width:680px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+    .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer;}
+    .modal-close:hover{color:var(--text);}
+    .modal-vars{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+    .modal-transcript{background:var(--bg3);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;white-space:pre-wrap;}
+    /* Resaltado de palabras clave dentro de la transcripción (ver resaltarTranscripcion) */
+    mark.hl-mul{background:rgba(251,191,36,0.35);color:inherit;border-radius:3px;padding:0 2px;}
+    mark.hl-dud{background:rgba(167,139,250,0.4);color:inherit;border-radius:3px;padding:0 2px;}
+    mark.hl-dif{background:rgba(248,113,113,0.4);color:inherit;border-radius:3px;padding:0 2px;font-weight:700;}
+    .hl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:8px;}
+    .hl-legend span mark{padding:1px 5px;}
+    /* Progress bar comparativa */
+    .cmp-row{display:flex;flex-direction:column;gap:12px;}
+    .cmp-item{display:grid;grid-template-columns:140px 1fr 50px;align-items:center;gap:10px;font-size:12px;}
+    .cmp-label{color:var(--muted);text-align:right;}
+    .cmp-bar{background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;position:relative;}
+    .cmp-fill{height:100%;border-radius:4px;transition:width 0.6s ease;}
+    .cmp-fill.me{background:var(--accent2);}
+    .cmp-fill.best{background:var(--green);}
+    .cmp-fill.worst{background:var(--red);}
+    .cmp-fill.prom{background:var(--purple);}
+    .cmp-val{font-family:var(--font-m);font-size:11px;color:var(--text);}
+    .cmp-legend{display:flex;gap:16px;margin-bottom:14px;font-size:11px;}
+    .cmp-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+    /* Notas */
+    .nota-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+    .nota-card{background:var(--bg3);border-radius:10px;padding:14px;text-align:center;}
+    .nota-card-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px;}
+    .nota-card-value{font-family:var(--font-d);font-size:22px;font-weight:800;}
+    /* Spinner */
+    .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:50px auto;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-msg{text-align:center;color:var(--muted);font-size:13px;padding:8px;}
+    /* Chart */
+    .cw{position:relative;height:220px;}
+    .cw-tall{position:relative;height:280px;}
+    /* Metric mini */
+    .mr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    @media(max-width:600px){.mr{grid-template-columns:repeat(2,1fr);}}
+    .ms{background:var(--bg3);border-radius:10px;padding:12px 14px;}
+    .msl{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;}
+    .msv{font-family:var(--font-d);font-size:18px;font-weight:700;}
+    .mss{font-size:10px;color:var(--muted);margin-top:2px;}
+    /* Toast */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none;}
+    .toast.show{opacity:1;transform:translateY(0);}
+
+    /* Pestaña "Por tema (ABSA)" */
+    mark.hl-tema{background:rgba(94,224,163,0.3);color:inherit;border-radius:3px;padding:0 2px;}
+    .absa-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+    .absa-chip{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:var(--font-b);transition:all 0.15s;}
+    .absa-chip:hover{color:var(--text);border-color:var(--border2);}
+    .absa-chip.active{color:var(--accent2);border-color:var(--accent);background:rgba(43,175,122,0.1);font-weight:600;}
+    .absa-cita{padding:14px 0;border-bottom:1px solid var(--border);}
+    .absa-cita:last-child{border-bottom:none;}
+    .absa-cita-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;}
+    .absa-cita-txt{font-size:13px;line-height:1.6;color:var(--text);}
+    .absa-cita .btn-sm{color:var(--accent2);border-color:var(--border2);}
+    .absa-cita .btn-sm:hover{border-color:var(--accent);color:var(--text);}
+    .heat{border-collapse:separate;border-spacing:3px;width:100%;}
+    .heat th{padding:4px 6px;text-align:center;border:none;}
+    .heat td.heat-tema{text-align:left;font-size:12px;color:var(--text);padding:4px 10px 4px 0;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;border:none;}
+    .heat td.heat-cell{text-align:center;font-family:var(--font-m);font-size:11px;border-radius:6px;padding:7px 4px;min-width:34px;border:none;}
+    .absa-vacio{text-align:center;padding:40px 20px;color:var(--muted);}
+    .absa-nota{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="sc-login" class="login-wrap">
+  <div class="login-card">
+    <div class="login-title" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <img src="data:image/jpeg;base64,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" alt="Universidad Externado de Colombia" style="height:44px;width:auto;">
+    </div>
+    <div class="login-sub">Dashboard de análisis de voz académica</div>
+    <div class="rol-grid" id="rol-grid">
+      <div class="rol-opt" id="opt-p" onclick="elegirRol('p')"><span class="ri">👨‍🏫</span><div class="rl">Profesor</div></div>
+      <div class="rol-opt" id="opt-e" onclick="elegirRol('e')"><span class="ri">🎓</span><div class="rl">Estudiante</div></div>
+    </div>
+    <div id="bloque-credenciales">
+      <div id="hint-rol" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px;">👆 Elige primero si eres profesor o estudiante</div>
+      <div id="cc">
+        <label class="fl">Cédula</label>
+        <input class="fi" type="number" id="ic" placeholder="0000000000" oninput="vC()" onkeydown="if(event.key==='Enter')entrar()" disabled/>
+        <div class="fm" id="mc"></div>
+      </div>
+      <label class="fl">Clave de acceso</label>
+      <input class="fi" type="password" id="ik" placeholder="_ _ _" maxlength="3" oninput="vK()" onkeydown="if(event.key==='Enter')entrar()" style="letter-spacing:6px;font-family:var(--font-m);text-align:center;" disabled/>
+      <div class="fm" id="mk"></div>
+      <button class="btn-p" id="be" onclick="entrar()" disabled>Entrar →</button>
+    </div>
+    <div id="bloque-elegir-curso" style="display:none;">
+      <label class="fl">Estás en más de un curso — ¿cuál quieres ver?</label>
+      <div id="grid-cursos" style="display:flex;flex-direction:column;gap:10px;margin-top:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="sc-dash" style="display:none;">
+  <div class="header">
+    <div class="logo"><img src="data:image/jpeg;base64,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" alt="Universidad Externado de Colombia"><span style="font-size:11px;color:#5C6B62;font-family:var(--font-b);font-weight:400;">Análisis de Voz Académica · Dashboard</span></div>
+    <div class="header-right">
+      <div class="user-badge" id="ub"></div>
+      <button class="btn-sm" onclick="salir()">Salir</button>
+    </div>
+  </div>
+  <div class="main" id="dm"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Detalle de un audio puntual: transcripción completa + todas las variables contadas
+     para esa grabación (ver verDetalleAudio()). Se abre al hacer clic en una sesión de la
+     franja de dificultad, en vez de un tooltip truncado. -->
+<div class="modal-overlay" id="modal-detalle" onclick="if(event.target===this)cerrarModalDetalle()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="cerrarModalDetalle()">✕</button>
+    <div id="modal-detalle-body"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ──
+const URL_AS = 'https://script.google.com/macros/s/AKfycbw12TxEJDssZ8JYEx7GH7nd0TD5IfELgqki5KmuCbRp7kDlPIdyVO8Aka0zGtQlbIAe0A/exec';
+const GRUPOS = {
+  edwin_metodos: 'Edwin Muñoz - Métodos Numéricos',
+  edwin_algebra: 'Edwin Muñoz - Álgebra Líneal',
+  omar_24: 'Omar Palacios - Data Mining (Grupo 2-4)',
+  omar_46: 'Omar Palacios - Data Mining (Grupo 4-6)'
+};
+// Los nombres de estudiantes ya NO viven hardcodeados aquí — vienen del backend
+// (roster maestro en Sheets) en cada login/consulta. nombreDe() ahora resuelve
+// contra un mapa que se llena en tiempo de ejecución (ver poblarNombres()).
+let NOMBRES = {};
+function nombreDe(ced){
+  const n=NOMBRES[String(ced)];
+  if(!n)return String(ced);
+  return n;
+}
+// Etiquetas de sesión (A1, A2, ...) calculadas dinámicamente POR GRUPO a partir de
+// las fechas reales que aparecen en los datos de ESE curso. Antes había una tabla
+// fija (24/07/2026→A1, 31/07/2026→A2, ...) hardcodeada para un solo curso específico
+// — cualquier otro curso con fechas de sesión distintas nunca encontraba coincidencia
+// y mostraba la fecha cruda en vez de "A#". Las fechas de Sesion vienen como texto
+// 'dd/MM/yyyy', así que ordenarlas con .sort()/.localeCompare() las trata como texto
+// y las desordena (ej. '01/07/2026' queda antes que '09/06/2026' porque empieza por
+// '0','1') — por eso se parsean a fecha real antes de ordenar.
+const SESIONES_POR_GRUPO={};
+function getSesionesGrupo(grupoNombre){
+  if(SESIONES_POR_GRUPO[grupoNombre]) return SESIONES_POR_GRUPO[grupoNombre];
+  const fechas=[...new Set(DATA.filter(r=>r.Grupo===grupoNombre).map(r=>ns(r.Sesion)))];
+  fechas.sort((a,b)=>{
+    const[da,ma,ya]=a.split('/').map(Number),[db,mb,yb]=b.split('/').map(Number);
+    return new Date(ya,ma-1,da)-new Date(yb,mb-1,db);
+  });
+  const arr=fechas.map((v,i)=>({v,l:'A'+(i+1)}));
+  SESIONES_POR_GRUPO[grupoNombre]=arr;
+  return arr;
+}
+function labelSesion(v,grupoNombre){ return getSesionesGrupo(grupoNombre).find(s=>s.v===v)?.l||v; }
+function ordenSesion(v,grupoNombre){
+  const idx=getSesionesGrupo(grupoNombre).findIndex(s=>s.v===v);
+  return idx===-1?Infinity:idx;
+}
+// Fechas del calendario real del semestre (SESIONES_CALENDARIO, mismo array SESIONES de
+// appscript.txt) que ya deberían haber pasado hoy — para medir cumplimiento contra lo
+// REALMENTE esperado hasta ahora, no solo contra las sesiones donde alguien ya mandó algo
+// (ver 3.108). null si el backend todavía no manda el calendario (redeploy pendiente).
+function sesionesCalendarioHastaHoy(){
+  if(!SESIONES_CALENDARIO.length) return null;
+  const hoy=new Date();
+  return SESIONES_CALENDARIO.filter(s=>{
+    const[d,m,y]=s.split('/').map(Number);
+    return new Date(y,m-1,d)<=hoy;
+  });
+}
+const CD={plugins:{legend:{labels:{color:'#8FAD9B',font:{family:'DM Sans',size:11}}}},scales:{x:{ticks:{color:'#8FAD9B',font:{size:10},maxRotation:0},grid:{color:'rgba(200,230,210,0.05)'}},y:{ticks:{color:'#8FAD9B',font:{size:10}},grid:{color:'rgba(200,230,210,0.05)'}}}};
+
+let ROL='',CED='',DATA=null,NOTAS=null,GP='',GK='',CH={};
+// Alertas del modelo (piloto local, "mientras tanto") — JSON subido a mano a Drive por
+// el usuario tras correr el pipeline localmente; leído por Apps Script (leerAlertasModelo())
+// y expuesto en action=getDashboard como alertasModelo[NombreGrupo].estudiantes. Puede llegar
+// vacío ({}) si todavía no se ha subido nada, o si el curso actual no está en el modelo.
+let ALERTAS_MODELO={};
+let FILTRO_SESION='',FILTRO_ESTUDIANTE='',TAB_ACTIVA='resumen';
+let FILTRO_SESION_EST='';
+// Pestaña "Por tema (ABSA)": { grupo_key: {generado,n_audios,n_estudiantes,menciones,transcripciones} }.
+// Llega en action=getDashboard como d.absaModelo (mismo contrato que alertasModelo) o se carga a
+// mano desde el selector de archivo de la pestaña. NUNCA va embebido en este HTML (trae cédulas y
+// transcripciones; ver documentacion.md 3.86).
+let ABSA_MODELO={},TEMA_ABSA='',ABSA_LIMITE=25,ABSA_TEMAS_VISTOS=[],ABSA_LISTA_VISTA=[];
+// Sub-vista dentro de la pestaña "Estudiantes" (ver 3.107): 'estudiante' o 'tema' — reemplaza
+// la antigua pestaña separada "Por tema", ahora es una sola pestaña navegable.
+let SUBVISTA_ESTUDIANTES='estudiante';
+// Roster real (matriculados) y calendario real de sesiones del semestre (ver 3.108): sin
+// esto, "Cumplimiento"/"Estudiantes" se calculaban solo contra quien YA había enviado algo
+// (nunca contra quien falta), así que siempre rondaban 100%. Llegan en action=getDashboard
+// como d.rosterPorGrupo (grupoKey -> [{cedula,nombre}]) y d.sesionesCalendario (fechas
+// 'dd/MM/yyyy' fijas del semestre, mismo array SESIONES de appscript.txt). Si el backend
+// todavía no tiene el redeploy con esto, llegan vacíos y el cálculo cae al comportamiento
+// viejo (derivado de los datos), sin romper nada.
+let ROSTER_POR_GRUPO={},SESIONES_CALENDARIO=[];
+
+// ── Login — cédula+clave, igual para profesor y estudiante (ambos viven en el mismo
+// roster maestro, distinguidos solo por Vinculo del lado del backend) ──
+let gruposDeEstaCedula=[]; // grupos a los que pertenece la cédula que acaba de iniciar sesión
+function elegirRol(r){
+  ROL=r;
+  document.getElementById('opt-p').classList.toggle('selected',r==='p');
+  document.getElementById('opt-e').classList.toggle('selected',r==='e');
+  document.getElementById('ik').value='';document.getElementById('mk').textContent='';
+  document.getElementById('ic').value='';document.getElementById('mc').textContent='';
+  document.getElementById('ic').disabled=false;
+  document.getElementById('ik').disabled=false;
+  document.getElementById('hint-rol').style.display='none';
+  document.getElementById('be').disabled=true;
+}
+function vC(){
+  document.getElementById('mc').textContent='';
+  vK();
+}
+function vK(){
+  const k=document.getElementById('ik').value.trim();
+  const c=document.getElementById('ic').value.trim();
+  document.getElementById('be').disabled = !(ROL && c && /^[A-Za-z0-9]{3}$/.test(k));
+  document.getElementById('mk').textContent='';
+}
+async function entrar(){
+  if(!ROL){
+    document.getElementById('mk').textContent='Elige primero si eres profesor o estudiante';
+    document.getElementById('mk').className='fm err';
+    return;
+  }
+  const k=document.getElementById('ik').value.trim().toUpperCase();
+  const c=document.getElementById('ic').value.trim();
+  const btn=document.getElementById('be');
+  btn.disabled=true; btn.textContent='Verificando...';
+  try{
+    const url=`${URL_AS}?action=loginEstudiante&cedula=${encodeURIComponent(c)}&clave=${encodeURIComponent(k)}`;
+    const res=await fetch(url);
+    const data=await res.json();
+    btn.textContent='Entrar →';
+    if(!data.ok){
+      document.getElementById('mk').textContent=data.error||'Cédula o clave incorrecta';
+      document.getElementById('mk').className='fm err';
+      btn.disabled=false;
+      return;
+    }
+    CED=c;
+    gruposDeEstaCedula=data.grupos;
+    if(gruposDeEstaCedula.length===0){
+      document.getElementById('mk').textContent='No estás matriculado en ningún curso todavía';
+      document.getElementById('mk').className='fm err';
+      btn.disabled=false;
+      return;
+    }
+    if(gruposDeEstaCedula.length===1){
+      GK=gruposDeEstaCedula[0]; GP=GRUPOS[GK]||GK;
+      mostrarDashboard();
+    } else {
+      mostrarElegirCurso();
+    }
+  }catch(e){
+    document.getElementById('mk').textContent='Error de conexión, intenta de nuevo';
+    document.getElementById('mk').className='fm err';
+    btn.disabled=false; btn.textContent='Entrar →';
+  }
+}
+function mostrarElegirCurso(){
+  document.getElementById('rol-grid').style.display='none';
+  document.getElementById('bloque-credenciales').style.display='none';
+  document.getElementById('bloque-elegir-curso').style.display='';
+  document.getElementById('grid-cursos').innerHTML=gruposDeEstaCedula.map(g=>`
+    <button class="grupo-btn" onclick="elegirCursoDashboard('${g}')" style="text-align:left;padding:14px 16px;">
+      <div style="font-weight:700;">${GRUPOS[g]||g}</div>
+    </button>`).join('');
+}
+function elegirCursoDashboard(g){
+  GK=g; GP=GRUPOS[g]||g;
+  mostrarDashboard();
+}
+function mostrarDashboard(){
+  document.getElementById('sc-login').style.display='none';
+  document.getElementById('sc-dash').style.display='';
+  document.getElementById('ub').textContent=ROL==='p'?'👨‍🏫 '+GP:'🎓 '+CED;
+  document.getElementById('dm').innerHTML='<div class="spinner"></div><div class="loading-msg">Cargando datos...</div>';
+  cargar();
+}
+function salir(){
+  ROL='';CED='';DATA=null;NOTAS=null;GP='';GK='';gruposDeEstaCedula=[];ALERTAS_MODELO={};ABSA_MODELO={};TEMA_ABSA='';ABSA_LIMITE=25;
+  ROSTER_POR_GRUPO={};SESIONES_CALENDARIO=[];
+  FILTRO_SESION='';FILTRO_ESTUDIANTE='';FILTRO_SESION_EST='';TAB_ACTIVA='resumen';SUBVISTA_ESTUDIANTES='estudiante';
+  Object.values(CH).forEach(c=>{try{c.destroy();}catch(e){}});CH={};
+  document.getElementById('sc-dash').style.display='none';
+  document.getElementById('sc-login').style.display='flex';
+  document.getElementById('rol-grid').style.display='';
+  document.getElementById('bloque-credenciales').style.display='';
+  document.getElementById('bloque-elegir-curso').style.display='none';
+  document.getElementById('ik').value='';document.getElementById('ic').value='';
+  document.getElementById('mk').textContent='';document.getElementById('mc').textContent='';
+  document.getElementById('be').disabled=true;
+  document.getElementById('ic').disabled=true;
+  document.getElementById('ik').disabled=true;
+  document.getElementById('hint-rol').style.display='';
+  document.querySelectorAll('.rol-opt').forEach(o=>o.classList.remove('selected'));
+}
+
+// ── Cargar datos ──
+// Reintento automático y silencioso (ver documentacion.md 3.109/3.111): el backend a veces
+// tarda tanto (hojas de Grabaciones grandes, sin caché) que la infraestructura de Google
+// corta la respuesta antes de que termine y devuelve una página de error HTML en vez del
+// JSON -- de ahí el "Unexpected token '<'" reportado. Un segundo o tercer intento casi
+// siempre funciona (el backend en sí no está roto, solo lento), así que no vale la pena
+// mostrarle el error al usuario en el primer fallo.
+async function cargar(intento){
+  intento=intento||1;
+  const MAX_INTENTOS=3;
+  try{
+    const res=await fetch(`${URL_AS}?action=getDashboard`);
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'Error');
+    DATA=dedupUltimaPorSesion(d.registros);
+    NOTAS=d.notas||{};
+    NOMBRES=d.nombres||{};
+    ALERTAS_MODELO=d.alertasModelo||{};
+    ABSA_MODELO=d.absaModelo||{};
+    ROSTER_POR_GRUPO=d.rosterPorGrupo||{};
+    SESIONES_CALENDARIO=d.sesionesCalendario||[];
+    if(ROL==='p') renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
+    else renderEst(DATA, NOTAS, CED, GK);
+  }catch(err){
+    if(intento<MAX_INTENTOS){
+      document.getElementById('dm').innerHTML=`<div class="spinner"></div><div class="loading-msg">Cargando datos... (reintentando ${intento+1}/${MAX_INTENTOS})</div>`;
+      setTimeout(()=>cargar(intento+1), 1500*intento);
+      return;
+    }
+    document.getElementById('dm').innerHTML=`<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">⚠️</div><div style="font-size:15px;color:var(--text);margin-bottom:8px">Error al cargar datos</div><div style="font-size:13px">${err.message}</div><br/><button onclick="cargar()" style="background:var(--accent-btn);color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer">Reintentar</button></div>`;
+  }
+}
+
+// ── Utils ──
+function ns(s){return String(s||'').split(' ')[0].trim();}
+// Si un estudiante (o profesor) mandó más de un audio para la misma sesión, se queda solo con el
+// más reciente. Las filas llegan del backend en orden cronológico (siempre se agregan al final),
+// así que la última que pisa cada clave Cedula+Sesion es la correcta.
+function dedupUltimaPorSesion(rows){
+  const m={};
+  rows.forEach(r=>{ m[String(r.Cedula)+'|'+ns(r.Sesion)]=r; });
+  return Object.values(m);
+}
+function p(rows,key){const v=rows.map(r=>parseFloat(r[key])).filter(v=>!isNaN(v));return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
+// Suma cruda (no promedio) — para "cuántas veces en total", el conteo que sí mide el
+// instrumento léxico validado (dudas/dificultad), en vez de un promedio por audio.
+function suma(rows,key){return rows.reduce((a,r)=>a+(parseFloat(r[key])||0),0);}
+function gb(arr,key){return arr.reduce((acc,r)=>{const k=ns(r[key]||r['Sesion']||key);(acc[k]=acc[k]||[]).push(r);return acc;},{});}
+function gbc(arr,key){return arr.reduce((acc,r)=>{(acc[r[key]]=acc[r[key]]||[]).push(r);return acc;},{});}
+function notaEst(notas, cedula){
+  if(!notas||!notas.length)return null;
+  const row=notas.find(r=>String(r['Documento']||r['Cedula']||r['cedula']||'')===String(cedula));
+  if(!row)return null;
+  return row;
+}
+// Ya no depende de nombres de columna hardcodeados por grupo (eso se rompía apenas
+// cambiaban los grupos, como pasó ahora). Busca cualquier columna que contenga la
+// palabra "parcial" o "ep c" como el 50% principal, y promedia todas las demás columnas
+// numéricas (menos identificadores obvios) como el otro 50% de actividades.
+function calcPromedio(notaRow, grupoKey){
+  if(!notaRow)return null;
+  const EXCLUIR=['documento','cedula','cédula','nombre','correo','email','vinculo','grupos','grupo','clave','promedio final'];
+  let colParcial=null;
+  const actividades=[];
+  Object.keys(notaRow).forEach(k=>{
+    const kl=k.trim().toLowerCase();
+    if(EXCLUIR.includes(kl))return;
+    const val=parseFloat(notaRow[k]);
+    if(isNaN(val))return;
+    if(kl.includes('parcial')||kl.includes('ep c')){
+      if(colParcial===null)colParcial=val; // la primera columna que matchee como "el parcial"
+    } else if(val>0){
+      actividades.push(val);
+    }
+  });
+  if(colParcial===null||colParcial<=0)return null;
+  const promAct=actividades.length?actividades.reduce((a,b)=>a+b,0)/actividades.length:0;
+  return{parcial:colParcial,actividades:promAct,promedio:(colParcial*0.5+promAct*0.5),notaRow};
+}
+function clasificar(prom){
+  if(prom===null||isNaN(prom))return{cls:'b-blue',label:'Sin nota',emoji:'—'};
+  // Notas sobre 50 → convertir a escala 5
+  const n=prom>10?prom/10:prom;
+  if(n>=4.0)return{cls:'b-green',label:'Alto',emoji:'🟢'};
+  if(n>=3.0)return{cls:'b-yellow',label:'Medio',emoji:'🟡'};
+  return{cls:'b-red',label:'Bajo',emoji:'🔴'};
+}
+// Promedio del grupo por variable — se usa como referencia de comparación en vez de
+// "mejor/peor" (comparar contra un extremo es comparar contra un caso posiblemente atípico,
+// inestable con grupos de 14-30 personas; el promedio es una referencia más robusta).
+// Es promedio de promedios: primero se promedia cada estudiante, luego se promedian esos
+// promedios — así un estudiante que mandó más audios no pesa más que otro en la comparación.
+function calcularPromedioGrupo(perfiles){
+  const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
+  const conNota=perfiles.filter(pf=>pf.np);
+  const conSim=perfiles.filter(pf=>pf.sim>0);
+  const conPpm=perfiles.filter(pf=>pf.ppm>0);
+  return{
+    rl:avg(perfiles.map(pf=>pf.rl)), mts:avg(perfiles.map(pf=>pf.mts)),
+    dds:avg(perfiles.map(pf=>pf.dds)), neg:avg(perfiles.map(pf=>pf.neg)),
+    sim:conSim.length?avg(conSim.map(pf=>pf.sim)):0,
+    pal:avg(perfiles.map(pf=>pf.pal)),
+    ppm:conPpm.length?avg(conPpm.map(pf=>pf.ppm)):0,
+    rep:avg(perfiles.map(pf=>pf.rep||0)), dif:avg(perfiles.map(pf=>pf.dif||0)),
+    nota:conNota.length?avg(conNota.map(pf=>pf.np.promedio)):null,
+  };
+}
+// Si hay al menos 3 estudiantes con nota, la comparación usa nota (la variable de resultado
+// real); si no (típico antes del Parcial 1), cae de vuelta a riqueza léxica como proxy temporal.
+function criterioComparacion(perfiles){
+  return perfiles.filter(pf=>pf.np).length>=3?'nota':'riqueza_lexica';
+}
+
+// Riesgo: puntaje compuesto (z-score combinado de nota, riqueza léxica y similitud coseno,
+// cuando existan) en vez de un solo indicador. Umbral estadístico fijo (z < -1, "notablemente
+// por debajo del grupo") en vez de forzar siempre el 10% con peor desempeño — con un umbral fijo,
+// si nadie está realmente mal, nadie se marca (antes SIEMPRE marcaba a alguien, incluso en un
+// grupo donde todos van bien, solo por ser el último de la fila).
+// Requiere al menos 5 estudiantes para tener una base estadística mínima razonable.
+function calcularRiesgo(perfiles){
+  if(perfiles.length<5){ perfiles.forEach(pf=>{pf.riesgo=false;pf.zscore=0;}); return; }
+  const zscores=(vals)=>{
+    const validos=vals.map((v,i)=>({v,i})).filter(x=>x.v!=null&&!isNaN(x.v));
+    if(validos.length<3) return vals.map(()=>null);
+    const media=validos.reduce((a,b)=>a+b.v,0)/validos.length;
+    const desv=Math.sqrt(validos.reduce((s,x)=>s+(x.v-media)**2,0)/validos.length)||1;
+    const out=vals.map(()=>null);
+    validos.forEach(x=>{out[x.i]=(x.v-media)/desv;});
+    return out;
+  };
+  const zNota=zscores(perfiles.map(pf=>pf.np?pf.np.promedio:null));
+  const zRl=zscores(perfiles.map(pf=>pf.rl));
+  const zSim=zscores(perfiles.map(pf=>pf.sim>0?pf.sim:null));
+  perfiles.forEach((pf,i)=>{
+    // Combina las señales disponibles para ese estudiante (no todas siempre existen:
+    // sim. coseno puede faltar si el profesor no ha subido audio de esa sesión aún).
+    // Se guarda cada señal con nombre y valor (no solo el z-score compuesto) para poder
+    // JUSTIFICAR el badge "En riesgo" en vez de mostrarlo como una caja negra — ver
+    // explicarRiesgo().
+    const señales=[
+      zNota[i]!=null?{nombre:'Nota',z:zNota[i],w:2,valor:pf.np.promedio}:null,   // nota pesa más — es el resultado real
+      zRl[i]!=null?{nombre:'Riqueza léxica',z:zRl[i],w:1,valor:pf.rl*100,unidad:'%'}:null,
+      zSim[i]!=null?{nombre:'Similitud coseno',z:zSim[i],w:1,valor:pf.sim*100,unidad:'%'}:null,
+    ].filter(Boolean);
+    if(señales.length===0){ pf.riesgo=false; pf.zscore=0; pf.riesgoSenales=[]; return; }
+    const wTotal=señales.reduce((a,s)=>a+s.w,0);
+    const zCompuesto=señales.reduce((a,s)=>a+s.z*s.w,0)/wTotal;
+    pf.zscore=zCompuesto;
+    pf.riesgo=zCompuesto<-1; // más de 1 desviación estándar por debajo del grupo
+    pf.riesgoSenales=señales;
+  });
+}
+
+// Texto legible explicando POR QUÉ un estudiante quedó marcado "en riesgo" — qué
+// señal(es) concreta(s) están más por debajo del grupo, no solo el z-score compuesto.
+// Se usa en todos los lugares donde aparece el badge "🚨 En riesgo" (tarjeta de atención,
+// ficha de detalle, tooltip en la tabla) para que la etiqueta nunca aparezca sin
+// justificación.
+function explicarRiesgo(pf){
+  if(!pf.riesgo||!pf.riesgoSenales||!pf.riesgoSenales.length) return '';
+  const relevantes=[...pf.riesgoSenales].filter(s=>s.z<-0.5).sort((a,b)=>a.z-b.z);
+  if(!relevantes.length){
+    return `Combinación de señales ${Math.abs(pf.zscore).toFixed(1)} desviaciones estándar por debajo del grupo.`;
+  }
+  const partes=relevantes.map(s=>`${s.nombre} (${s.valor.toFixed(1)}${s.unidad||''}, ${Math.abs(s.z).toFixed(1)} desv. bajo el grupo)`);
+  return `En riesgo por: ${partes.join(' · ')}.`;
+}
+// Traduce las métricas crudas a lectura en lenguaje sencillo.
+function interpretar(yo,promedio,criterio){
+  const out=[];
+  // Riqueza léxica
+  if(yo.rl>=0.65) out.push({icon:'🟢',text:`<b>Vocabulario variado.</b> Usa palabras distintas con frecuencia, lo que suele reflejar buen dominio del tema.`});
+  else if(yo.rl>=0.45) out.push({icon:'🟡',text:`<b>Vocabulario adecuado.</b> Está en un rango normal, aunque repetir menos palabras podría mejorar la claridad.`});
+  else out.push({icon:'🔴',text:`<b>Vocabulario limitado.</b> Repite bastantes palabras; ampliar el vocabulario usado en las respuestas podría ayudar.`});
+  // Muletillas
+  if(yo.mts<=2) out.push({icon:'🟢',text:`<b>Discurso fluido.</b> Casi no usa muletillas ("o sea", "eh", etc.).`});
+  else if(yo.mts<=5) out.push({icon:'🟡',text:`<b>Algunas muletillas.</b> Es un nivel normal, no representa una alerta por sí solo.`});
+  else out.push({icon:'🔴',text:`<b>Muchas muletillas.</b> Puede indicar nerviosismo o que la respuesta no fue preparada con anticipación.`});
+  // Dudas
+  if(yo.dds<=1) out.push({icon:'🟢',text:`<b>Habla con seguridad.</b> Pocas expresiones de duda en sus respuestas.`});
+  else if(yo.dds<=3) out.push({icon:'🟡',text:`<b>Duda ocasional.</b> Normal en explicaciones más complejas.`});
+  else out.push({icon:'🔴',text:`<b>Duda frecuente.</b> Repasar el tema antes de grabar podría ayudar a responder con más confianza.`});
+  // Velocidad de habla (solo si hay dato — puede venir en 0 por audios sin duración registrada)
+  if(yo.ppm>0){
+    if(yo.ppm>220) out.push({icon:'🏃',text:`<b>Habla muy rápido.</b> Puede ser apuro o ansiedad al grabar; tomarse un momento antes de empezar podría ayudar.`});
+    else if(yo.ppm<80) out.push({icon:'🐢',text:`<b>Habla muy despacio.</b> Puede reflejar duda o que la respuesta se está construyendo sobre la marcha.`});
+  }
+  // Repeticiones de contenido (distinto de muletillas — repetir palabras reales, no relleno)
+  if(yo.rep>3) out.push({icon:'🔁',text:`<b>Repite bastante contenido.</b> Frases como "la, la derivada" pueden indicar que se está pensando la respuesta en tiempo real.`});
+  // Percepción de dificultad del tema (distinto de "dudas" — esto es sobre el tema, no la seguridad propia)
+  if(yo.dif>2) out.push({icon:'😕',text:`<b>Menciona que el tema le pareció difícil.</b> Vale la pena repasarlo o consultar dudas puntuales sobre esta sesión.`});
+  // Comparativa vs el PROMEDIO del grupo (no contra el mejor/peor — comparar contra un extremo
+  // es comparar contra un posible caso atípico; el promedio es una referencia más estable).
+  if(promedio){
+    if(criterio==='nota' && yo.nota!=null && promedio.nota!=null && promedio.nota>0){
+      const diff=yo.nota-promedio.nota;
+      if(diff>=0.3) out.push({icon:'⭐',text:`Su nota está <b>por encima del promedio del grupo</b> (${yo.nota.toFixed(1)} vs. ${promedio.nota.toFixed(1)}).`});
+      else if(diff<=-0.3) out.push({icon:'⚠️',text:`Su nota está <b>por debajo del promedio del grupo</b> (${yo.nota.toFixed(1)} vs. ${promedio.nota.toFixed(1)}) — vale la pena revisar qué está pasando.`});
+    } else if(promedio.rl>0){
+      const diff=yo.rl-promedio.rl;
+      if(diff>=0.1) out.push({icon:'⭐',text:`Su riqueza léxica está <b>por encima del promedio del grupo</b>.`});
+      else if(diff<=-0.1) out.push({icon:'⚠️',text:`Su riqueza léxica está <b>por debajo del promedio del grupo</b> — vale la pena reforzar este punto.`});
+    }
+  }
+  return out;
+}
+function mkChart(id,type,labels,datasets,opts={}){
+  const c=document.getElementById(id);
+  if(!c)return;
+  try{if(CH[id])CH[id].destroy();}catch(e){}
+  CH[id]=new Chart(c,{type,data:{labels,datasets},options:{...CD,...opts,responsive:true,maintainAspectRatio:false}});
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD PROFESOR
+// ══════════════════════════════════════════════════════
+// Deriva {est, sesVistas, perfiles} aplicando los filtros globales activos.
+// Se usa tanto en renderProf() como en st() (al cambiar de pestaña hay que
+// volver a dibujar las gráficas porque los canvas estaban ocultos y sin tamaño).
+function datosFiltradosProf(){
+  const d=DATA.filter(r=>r.Grupo===GP);
+  const estTodos=d.filter(r=>r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+  const sesionesDisponibles=[...new Set(estTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a,GP)-ordenSesion(b,GP));
+
+  // Dudas/dificultades YA NO se cuentan desde Sheets (conteo_dudas/conteo_percepcion_dificultad,
+  // calculadas en vivo por el motor JS de appscript.txt sobre la transcripción de Groq) — esa
+  // transcripción es distinta a la que produce el pipeline local (Whisper + reglas v3 + árbitro
+  // LLM), y mezclar las dos mediría cosas distintas con el mismo número (ver documentacion.md
+  // 3.110). Se cuentan solo desde ABSA_MODELO (el instrumento validado, el mismo que ya usa la
+  // sub-vista "Por tema"). Sin ese JSON cargado para este curso, absaDisponible queda en false y
+  // Resumen/Alertas lo muestran como "sin analizar todavía", no como cero.
+  const absaGrupoActual=ABSA_MODELO[GK];
+  const absaDisponible=!!(absaGrupoActual&&Array.isArray(absaGrupoActual.menciones));
+  const absaTodas=absaDisponible?absaGrupoActual.menciones:[];
+  // Solo respeta el filtro de SESIÓN (nunca el de estudiante) — mismo criterio que estGrupo/
+  // perfilesGrupo más abajo, para que el conteo de cada perfil sea consistente con sus audios.
+  const absaPorSesion=FILTRO_SESION?absaTodas.filter(m=>isoADmy(m.s)===FILTRO_SESION):absaTodas;
+  const absaPorCedula={};
+  absaPorSesion.forEach(m=>{
+    const c=String(m.c);
+    const o=absaPorCedula[c]=absaPorCedula[c]||{ddsTotal:0,difTotal:0};
+    if(m.d==='DUDAS')o.ddsTotal++; else o.difTotal++;
+  });
+
+  const construirPerfil=(ced,rows)=>{
+    const nr=notaEst(NOTAS[GK]||[],ced);
+    const np=calcPromedio(nr,GK);
+    const absaCed=absaPorCedula[String(ced)]||{ddsTotal:0,difTotal:0};
+    return{ced,rows,nr,np,cl:clasificar(np?.promedio||null),
+      rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),
+      dds:p(rows,'conteo_dudas'),neg:p(rows,'conteo_negaciones'),
+      sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),
+      ppm:p(rows,'palabras_por_minuto'),rep:p(rows,'conteo_repeticiones'),
+      pausas:p(rows,'num_pausas'),pausaProm:p(rows,'pausa_promedio'),
+      dif:p(rows,'conteo_percepcion_dificultad'),
+      // ddsTotal/difTotal: conteo del instrumento VALIDADO (ABSA_MODELO), no de Sheets — ver
+      // nota de arriba y documentacion.md 3.85/3.107/3.110. rl/mts/dds/sim/ppm/rep/pausas/dif
+      // (Sheets, motor viejo) se dejan calculados arriba solo por compatibilidad con el detalle
+      // de audio individual — no se usan para clasificar ni alertar a nadie.
+      ddsTotal:absaCed.ddsTotal, difTotal:absaCed.difTotal,
+      get totalMenciones(){return this.ddsTotal+this.difTotal;},
+      enviadas:rows.length};
+  };
+
+  // perfilesGrupo: solo respeta el filtro de SESIÓN (nunca el de estudiante) — es la base
+  // correcta para calcular "mejor/peor del grupo", incluso cuando se está viendo a 1 solo estudiante.
+  let estGrupo=estTodos;
+  if(FILTRO_SESION) estGrupo=estGrupo.filter(r=>ns(r.Sesion)===FILTRO_SESION);
+  // cedsGrupo: el ROSTER real (matriculados en este curso, ver 3.108) cuando el backend ya
+  // lo manda — así un estudiante que nunca ha enviado nada SÍ aparece (0 audios, 0 menciones)
+  // en vez de ser invisible. Se completa con cualquier cédula que sí aparezca en los datos
+  // pero no esté (todavía) en el roster, para no perder nunca un audio real. Sin roster
+  // (backend viejo), cae al comportamiento anterior: solo quien ya envió algo.
+  const cedsRoster=(ROSTER_POR_GRUPO[GK]||[]).map(e=>String(e.cedula));
+  const cedsEnDatos=[...new Set(estGrupo.map(r=>String(r.Cedula)))];
+  const cedsGrupo=cedsRoster.length?[...new Set([...cedsRoster,...cedsEnDatos])]:cedsEnDatos;
+  // Orden por menciones (no por nota — ver 3.107): quién ha expresado más dudas/dificultad primero.
+  const perfilesGrupo=cedsGrupo.map(ced=>construirPerfil(ced,estGrupo.filter(r=>String(r.Cedula)===ced)))
+    .sort((a,b)=>b.totalMenciones-a.totalMenciones);
+
+  // est/perfiles: respeta AMBOS filtros — es lo que efectivamente se muestra en tablas/gráficas.
+  let est=estGrupo;
+  if(FILTRO_ESTUDIANTE) est=est.filter(r=>String(r.Cedula)===FILTRO_ESTUDIANTE);
+  const sesVistas=FILTRO_SESION?[FILTRO_SESION]:sesionesDisponibles;
+  // Filtra directo por cédula elegida (no por "quién tiene filas en est"): si no, un
+  // estudiante del roster con 0 audios en la sesión filtrada desaparecía en vez de
+  // mostrarse con 0/0 — el mismo síntoma que se está corrigiendo acá.
+  const perfiles=FILTRO_ESTUDIANTE?perfilesGrupo.filter(pf=>pf.ced===FILTRO_ESTUDIANTE):perfilesGrupo;
+
+  // Sesiones REALMENTE esperadas hasta hoy (calendario fijo del semestre), para el
+  // denominador de "Cumplimiento" — nunca las que ya tienen algún audio, que es lo que
+  // hacía que siempre diera ~100% (ver 3.108). Cae a sesVistas si no hay calendario aún.
+  const sesionesCumplimiento=FILTRO_SESION?[FILTRO_SESION]:(sesionesCalendarioHastaHoy()||sesionesDisponibles);
+
+  return{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles,cedsGrupo,sesionesCumplimiento,absaDisponible};
+}
+
+function renderProf(reg, notas){
+  const{est,sesVistas,perfiles,perfilesGrupo,estTodos,sesionesDisponibles,cedsGrupo,sesionesCumplimiento,absaDisponible}=datosFiltradosProf();
+  // Roster real para el selector "Estudiante" (así se puede elegir a alguien con 0 audios
+  // enviados, justo a quien más vale la pena revisar — ver 3.108); sin roster, cae a quien
+  // ya aparece en los datos, como antes.
+  const estudiantesDisponibles=cedsGrupo.length?cedsGrupo:[...new Set(estTodos.map(r=>String(r.Cedula)))];
+  // "Estudiantes" ya no es "quién envió algo en esta vista" sino perfiles.length (roster real
+  // cuando está disponible, ver datosFiltradosProf) — y el cumplimiento se mide contra las
+  // sesiones YA esperadas del calendario real, no solo las que tienen algún audio.
+  const cumpl=Math.round((est.length/(Math.max(1,perfiles.length)*Math.max(1,sesionesCumplimiento.length)))*100)||0;
+
+  const filtrosActivos=FILTRO_SESION||FILTRO_ESTUDIANTE;
+
+  const barraFiltros=`
+    <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
+        <select class="sel-est" id="filtro-sesion" onchange="aplicarFiltrosProf()">
+          <option value="">Todas</option>
+          ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION?'selected':''}>${labelSesion(s,GP)}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--muted)">🎓 Estudiante:</span>
+        <select class="sel-est" id="filtro-estudiante" onchange="aplicarFiltrosProf()">
+          <option value="">Todos</option>
+          ${estudiantesDisponibles.map(c=>`<option value="${c}" ${c===FILTRO_ESTUDIANTE?'selected':''}>${nombreDe(c)}</option>`).join('')}
+        </select>
+      </div>
+      ${filtrosActivos?`<button class="btn-sm" onclick="limpiarFiltrosProf()">✕ Limpiar filtros</button>`:''}
+    </div>`;
+
+  if(perfiles.length===0){
+    document.getElementById('dm').innerHTML=`
+      <div class="page-title">${GP}</div>
+      <div class="page-sub">Análisis de Voz Académica</div>
+      ${barraFiltros}
+      <div class="card" style="text-align:center;padding:50px;color:var(--muted)">
+        <div style="font-size:32px;margin-bottom:10px">🔍</div>
+        Sin registros para esta combinación de filtros.
+      </div>`;
+    return;
+  }
+
+  // Total de dudas/dificultades expresadas (conteo crudo, el instrumento léxico validado
+  // — ver documentacion.md 3.85) reemplaza a la antigua "Distribución"/"En riesgo" basada
+  // en nota+riqueza léxica+similitud coseno: ninguna de esas variables se validó como
+  // predictora de desempeño (ver 3.11/3.14/3.61/3.82/3.83/3.84), así que ya no se presentan
+  // como si lo fueran.
+  const totalMenciones=perfiles.reduce((a,pf)=>a+pf.totalMenciones,0);
+  const estudiantesConMenciones=perfiles.filter(pf=>pf.totalMenciones>0).length;
+
+  document.getElementById('dm').innerHTML=`
+    <div class="page-title">${GP}</div>
+    <div class="page-sub">Análisis de Voz Académica ${filtrosActivos?`<span style="color:var(--accent2)">· Filtrado</span>`:''}</div>
+
+    ${barraFiltros}
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Estudiantes</div><div class="kpi-value">${perfiles.length}</div><div class="kpi-sub">${sesionesCumplimiento.length} sesion${sesionesCumplimiento.length===1?'':'es'} esperadas</div></div>
+      <div class="kpi"><div class="kpi-label">Audios recibidos</div><div class="kpi-value">${est.length}</div><div class="kpi-sub">${Math.round(est.length/perfiles.length*10)/10} prom/est</div></div>
+      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${cumpl}%</div><div class="kpi-sub">audios / esperados</div></div>
+      <div class="kpi highlight"><div class="kpi-label">Dudas y dificultades</div><div class="kpi-value">${absaDisponible?`🗣️ ${totalMenciones}`:'—'}</div><div class="kpi-sub">${absaDisponible?`${estudiantesConMenciones} estudiante${estudiantesConMenciones===1?'':'s'} las expresó`:'sin análisis validado cargado'}</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="resumen" onclick="st('resumen')">📊 Resumen</button>
+      <button class="tab" data-tab="alertas" onclick="st('alertas')">⚠️ Alertas</button>
+      <button class="tab" data-tab="estudiantes" onclick="st('estudiantes')">👥 Estudiantes</button>
+    </div>
+
+    <div id="t-resumen" class="tab-content active">${tResumen(perfiles,sesVistas,est,perfilesGrupo,absaDisponible)}</div>
+    <div id="t-alertas" class="tab-content">${tAlertas(perfiles,sesVistas,absaDisponible)}</div>
+    <div id="t-estudiantes" class="tab-content">${tEstudiantes(perfiles,sesVistas,absaDisponible)}</div>
+  `;
+  setTimeout(()=>renderChartsProf(est,sesVistas,perfiles),100);
+  // Reactivar la pestaña que estaba abierta antes de aplicar el filtro
+  const btnActivo=document.querySelector(`.tab[data-tab="${TAB_ACTIVA}"]`);
+  if(btnActivo && TAB_ACTIVA!=='resumen') st(TAB_ACTIVA);
+}
+
+function aplicarFiltrosProf(){
+  FILTRO_SESION=document.getElementById('filtro-sesion').value;
+  FILTRO_ESTUDIANTE=document.getElementById('filtro-estudiante').value;
+  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
+}
+function limpiarFiltrosProf(){
+  FILTRO_SESION='';FILTRO_ESTUDIANTE='';
+  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
+}
+
+function tResumen(perfiles,sesVistas,est,perfilesGrupo,absaDisponible){
+  const totalMenciones=perfiles.reduce((a,pf)=>a+pf.totalMenciones,0);
+  const top=[...perfiles].filter(pf=>pf.totalMenciones>0).sort((a,b)=>b.totalMenciones-a.totalMenciones).slice(0,5);
+  return `
+    <div class="card" style="font-size:12px;color:var(--muted);line-height:1.5">
+      📏 Este panel mide <b style="color:var(--text)">cuántas veces</b> los estudiantes expresaron dudas o
+      dificultad en sus audios — es una medida directa (léxico validado, ver metodología), no una
+      predicción de desempeño. Riqueza léxica, muletillas, velocidad de habla y similitud coseno se
+      probaron a fondo en la tesis y <b style="color:var(--text)">no mostraron valor como predictores</b>,
+      así que ya no se presentan aquí como si lo tuvieran.
+    </div>
+    ${!absaDisponible?`<div class="card absa-vacio">
+      <div style="font-size:30px;margin-bottom:8px">🧩</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Sin análisis validado cargado todavía</div>
+      <div style="font-size:13px;max-width:480px;margin:0 auto">Las dudas y dificultades se cuentan con el instrumento validado (transcripción local + reglas + árbitro), no con la transcripción de Groq que ya vive en Sheets — mezclarlas mediría cosas distintas con el mismo número. Sube el JSON en la pestaña Estudiantes → Por tema para ver estos números.</div>
+    </div>`:''}
+    <div class="grid-2">
+      ${absaDisponible?`<div class="card"><div class="card-title">🗣️ Dudas y dificultades por sesión</div><div class="cw"><canvas id="ch-menciones-sesion"></canvas></div></div>`:''}
+      <div class="card"><div class="card-title">👥 Participación por sesión</div><div class="cw"><canvas id="ch-part"></canvas></div></div>
+    </div>
+    ${top.length?`<div class="card">
+      <div class="card-title">🔝 Quiénes expresaron más dudas o dificultad ${totalMenciones?`<span style="font-size:11px;color:var(--muted);font-weight:400">· ${totalMenciones} en total</span>`:''}</div>
+      <div class="absa-chips">${top.map(pf=>`<button class="absa-chip" onclick="filtrarPorEstudiante('${pf.ced}')">${escapeHtml(nombreDe(pf.ced))} · ${pf.totalMenciones}</button>`).join('')}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Clic en un nombre para ver su detalle completo en la pestaña Estudiantes. Ranking completo en la pestaña Alertas.</div>
+    </div>`:''}`;
+}
+
+// Franja visual de sesiones ordenadas cronológicamente, marcando en qué sesión el
+// estudiante mandó audio (verde/gris) y en cuál reportó dificultad (rojo). Cada caja con
+// audio es clicable y abre verDetalleAudio() con la transcripción completa (sin truncar)
+// y todas las variables contadas de ESA grabación puntual — nada de tooltips truncados.
+function tiraDificultad(rows,sesionesRef,cedula,grande){
+  const porSesion={};
+  rows.forEach(r=>{porSesion[ns(r.Sesion)]=r;});
+  // La marca roja de "dificultad" sale del instrumento validado (ABSA_MODELO), no del conteo
+  // viejo de Sheets/Groq — mismo motivo que ddsTotal/difTotal en construirPerfil (ver 3.110).
+  // Sin ABSA_MODELO cargado para este curso, ninguna sesión se marca (no se inventa con Sheets).
+  const g=absaGrupo();
+  const sesionesConDificultad=new Set(
+    g?g.menciones.filter(m=>String(m.c)===String(cedula)&&m.d==='DIFICULTAD').map(m=>isoADmy(m.s)):[]
+  );
+  const cajas=sesionesRef.map(sv=>{
+    const r=porSesion[sv];
+    const lbl=labelSesion(sv,GP);
+    if(!r) return `<span class="dif-box dif-vacio" title="${lbl} (${sv}): sin audio enviado">${lbl}</span>`;
+    const dif=sesionesConDificultad.has(sv);
+    const cls=dif?'dif-si':'dif-no';
+    return `<span class="dif-box ${cls} clicable" title="Clic para ver el audio completo de ${lbl} (${sv})" onclick="verDetalleAudio('${cedula}','${sv}')">${lbl}${dif?' ⚠️':''}</span>`;
+  }).join('');
+  return `<div class="dif-strip${grande?' grande':''}">${cajas}</div>`;
+}
+
+// Escape mínimo antes de meter texto libre (transcripción real, puede venir con lo que
+// sea) dentro de innerHTML — evita que algo como "<" en el audio rompa el modal.
+function escapeHtml(s){
+  const d=document.createElement('div');
+  d.textContent=String(s==null?'':s);
+  return d.innerHTML;
+}
+
+// ── Resaltado de palabras clave en la transcripción ──
+// Diccionarios porteados TAL CUAL de scripts\lexico_matching.py (v3, ver
+// documentacion.md 3.87/3.88): negación ahora aplica también a DUDAS (antes
+// solo DIFICULTAD la tenía), ventana de negación con corte de cláusula en vez
+// de N fijo, negadores ampliados (ningún*, menos), y fix del homógrafo
+// "no se" (reflexivo, sin tilde) vs "no sé" (duda, con tilde). Se usan SOLO
+// para resaltar en el navegador las palabras que ya contó el backend — no se
+// recalcula ningún conteo aquí, los números siguen viniendo del pipeline de
+// Python (scripts\recalcular_dudas_dificultad_v3.py).
+const DICC_MULETILLAS=["eh","ehh","eeh","ah","em","emm","ehm","este","mmm","mmmm","pues","osea","o sea","o sea que","digamos","aja","tipo"];
+const DICC_DUDAS=["no se","nose","no sab*","no recuerd*","no record*","no me acuerdo","no me acord*","no comprendi","no comprend*","no capte","no capt*","no entendi","no entend*","no entiend*","no logre entender","no logro entender","no logr* entender","creo","creo que","creia","creiamos","pienso que","pensaba que","supongo","supon*","imagino","imagina","imaginan","imaginas","imaginamos","imaginaba","imaginabamos","imaginate","imaginese","imaginar","imaginado","imaginandome","imaginarmela","imaginarmelo","imaginarselo","me parece","me parece que","nos parece","tal vez","talvez","quizas","quiza","posiblemente","puede ser","puede que","no estoy seguro","no estoy segura","no estaba seguro","no estaba segura","no estamos seguros","mas o menos","algo asi","la verdad no se","honestamente no se","en realidad no se"];
+const DICC_DIFICULTAD=["dificil*","dificult*","difisil","complic*","complej*","confund*","confus*","se me complica","no le entiendo bien al tema","cuesta entender","me cuesta","se me cuesta","pesad*","abrumador*","me cost*","nos cost*","le cost*","me siento perdid*","estoy perdid*","me ha cost*","me esta cost*","nos ha cost*","le ha cost*","tan perdid*","poco perdid*"];
+const DICC_NEGADORES=new Set(["no","nunca","jamas","tampoco","ni","sin","nada","menos"]);
+const DICC_CONECTORES_CORTE=new Set(["pero","sino","aunque"]);
+const VENTANA_NEGACION_MAX=8;
+const PUNTUACION_CORTE=",.;:";
+
+function esNegador(norm){
+  return DICC_NEGADORES.has(norm) || norm.startsWith('ningun');
+}
+
+function normalizarPalabra(w){
+  return w.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,'');
+}
+
+// Tokeniza el texto ORIGINAL (conserva la posición real dentro del string) para poder
+// resaltar sobre el texto tal como se ve, sin alterar acentos/mayúsculas/puntuación.
+function tokenizarConPosicion(texto){
+  const tokens=[];
+  const re=/[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+/g;
+  let m;
+  while((m=re.exec(texto))!==null){
+    tokens.push({raw:m[0],norm:normalizarPalabra(m[0]),start:m.index,end:m.index+m[0].length});
+  }
+  return tokens;
+}
+
+// Camina hacia atrás desde i-1 buscando un negador, deteniéndose en el primer
+// corte de cláusula (puntuación fuerte o conector adversativo) -- el corte se
+// revisa ANTES de considerar cada token candidato, mirando el hueco entre ese
+// token y el siguiente (más cercano al match), incluyendo el hueco justo
+// antes del match mismo. Ver lexico_matching.py::_negado (misma lógica).
+function negado(texto,tokens,i){
+  let k=i-1,pasos=0;
+  while(k>=0&&pasos<VENTANA_NEGACION_MAX){
+    const entre=texto.slice(tokens[k].end,tokens[k+1].start);
+    if([...PUNTUACION_CORTE].some(p=>entre.includes(p)))return false;
+    if(DICC_CONECTORES_CORTE.has(tokens[k].norm))return false;
+    if(esNegador(tokens[k].norm))return true;
+    k--;pasos++;
+  }
+  return false;
+}
+
+// Mismo algoritmo de raíz (*) y consumo no-solapado que _contar_lista() en
+// procesar_curso.py, pero en vez de solo contar, devuelve los spans [start,end) del
+// texto original que matchearon, para poder envolverlos en <mark>.
+function encontrarSpans(texto,tokens,diccionario,excluirSiNegado){
+  const spans=[];
+  const usados=new Array(tokens.length).fill(false);
+  diccionario.forEach(entrada=>{
+    const palabras=entrada.split(' ');
+    const esRaiz=palabras.map(p=>p.endsWith('*'));
+    const raices=palabras.map((p,j)=>esRaiz[j]?p.slice(0,-1):p);
+    const m=palabras.length;
+    let i=0;
+    while(i<=tokens.length-m){
+      if(usados[i]){i++;continue;}
+      let match=true;
+      for(let j=0;j<m;j++){
+        const t=tokens[i+j];
+        if(!t||usados[i+j]){match=false;break;}
+        if(esRaiz[j]?!t.norm.startsWith(raices[j]):t.norm!==raices[j]){match=false;break;}
+      }
+      if(!match){i++;continue;}
+      // Fix homógrafo: "no se" solo cuenta como duda si el segundo token es
+      // literalmente "sé" (con tilde) en el texto crudo -- "no se" sin tilde
+      // es reflexivo/impersonal ("no se ha reflejado"), no expresa duda.
+      if(entrada==='no se'&&tokens[i+1].raw.toLowerCase()==='se'){i++;continue;}
+      let cuenta=true;
+      if(excluirSiNegado&&negado(texto,tokens,i))cuenta=false;
+      if(cuenta){
+        spans.push({start:tokens[i].start,end:tokens[i+m-1].end});
+        for(let j=0;j<m;j++)usados[i+j]=true;
+      }
+      i+=m;
+    }
+  });
+  return spans;
+}
+
+// Resalta en el texto ORIGINAL las palabras de los 3 diccionarios, cada uno con su
+// propio color (amarillo=muletillas, morado=dudas, rojo=percepción de dificultad).
+function resaltarTranscripcion(texto){
+  if(!texto) return '(sin transcripción)';
+  const tokens=tokenizarConPosicion(texto);
+  const todosSpans=[
+    ...encontrarSpans(texto,tokens,DICC_MULETILLAS,false).map(s=>({...s,tipo:'mul'})),
+    ...encontrarSpans(texto,tokens,DICC_DUDAS,true).map(s=>({...s,tipo:'dud'})),
+    ...encontrarSpans(texto,tokens,DICC_DIFICULTAD,true).map(s=>({...s,tipo:'dif'})),
+  ].sort((a,b)=>a.start-b.start);
+  let out='';
+  let cursor=0;
+  todosSpans.forEach(s=>{
+    if(s.start<cursor) return; // evita solapes entre diccionarios distintos (prioridad: el que aparece primero en la lista)
+    out+=escapeHtml(texto.slice(cursor,s.start));
+    out+=`<mark class="hl-${s.tipo}">${escapeHtml(texto.slice(s.start,s.end))}</mark>`;
+    cursor=s.end;
+  });
+  out+=escapeHtml(texto.slice(cursor));
+  return out;
+}
+
+// Detalle de UNA grabación puntual: transcripción completa + todas las variables que
+// calcula el pipeline para ese audio, coloreadas con los mismos umbrales que ya usa
+// tAlertas() (para que "rojo" signifique lo mismo en toda la app, no un criterio nuevo).
+function verDetalleAudio(cedula,sesionValue){
+  const r=DATA.find(x=>x.Grupo===GP&&String(x.Cedula)===String(cedula)&&ns(x.Sesion)===sesionValue);
+  if(!r){toast('No se encontró ese audio','error');return;}
+  const lbl=labelSesion(sesionValue,GP);
+  // Dudas/dificultad y la transcripción salen de ABSA_MODELO (instrumento validado, transcripción
+  // local) cuando existe registro para este audio puntual — nunca del conteo/texto de Sheets/Groq,
+  // que mide algo distinto (ver documentacion.md 3.110). Si el curso no tiene ABSA_MODELO cargado,
+  // o este audio en particular todavía no pasó por el pipeline local, se avisa en vez de inventar
+  // un conteo con Groq.
+  const g=absaGrupo();
+  const [dd,mm,yyyy]=sesionValue.split('/');
+  const claveAbsa=`${cedula}|${yyyy}-${mm}-${dd}`;
+  const menciones=g?g.menciones.filter(m=>String(m.c)===String(cedula)&&isoADmy(m.s)===sesionValue):[];
+  const nDudas=menciones.filter(m=>m.d==='DUDAS').length;
+  const nDif=menciones.filter(m=>m.d==='DIFICULTAD').length;
+  const transcripcionAbsa=g?g.transcripciones[claveAbsa]:null;
+  const usaAbsa=!!transcripcionAbsa;
+  const textoMostrado=usaAbsa?transcripcionAbsa:r.Transcripcion;
+  const vars=usaAbsa?[
+    {l:'Dudas',v:String(nDudas),alerta:nDudas>3},
+    {l:'Percepción dificultad',v:String(nDif),alerta:nDif>2},
+  ]:[];
+  const avisoSinAbsa=usaAbsa?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${g?'Este audio todavía no pasó por el pipeline local validado — se muestra la transcripción de Groq, sin conteo de dudas/dificultad.':'Este curso todavía no tiene el análisis validado cargado — se muestra la transcripción de Groq, sin conteo de dudas/dificultad.'}</div>`;
+  document.getElementById('modal-detalle-body').innerHTML=`
+    <div class="card-title">${escapeHtml(nombreDe(cedula))} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${escapeHtml(cedula)}</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">${lbl} · ${escapeHtml(ns(r.Sesion))}</div>
+    ${vars.length?`<div class="modal-vars">${vars.map(x=>`<span class="badge ${x.alerta?'b-red':'b-green'}">${x.l}: ${x.v}</span>`).join('')}</div>`:avisoSinAbsa}
+    <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa ${usaAbsa?'':'<span style="font-weight:400;color:var(--muted);font-size:11px">(Groq)</span>'}</div>
+    <div class="hl-legend">
+      <span><mark class="hl-mul">muletilla</mark></span>
+      <span><mark class="hl-dud">duda</mark></span>
+      <span><mark class="hl-dif">percepción de dificultad</mark></span>
+    </div>
+    <div class="modal-transcript">${resaltarTranscripcion(textoMostrado)}</div>
+  `;
+  document.getElementById('modal-detalle').classList.add('show');
+}
+function cerrarModalDetalle(){
+  document.getElementById('modal-detalle').classList.remove('show');
+}
+
+// Atajo desde la tabla de Estudiantes: filtra a un solo estudiante y lo manda a la pestaña
+// Resumen, donde vive la ficha de detalle con la franja grande — para no repetir la franja
+// completa dentro de cada fila de la tabla (eso era lo que desbordaba la tabla).
+function filtrarPorEstudiante(ced){
+  FILTRO_ESTUDIANTE=ced;
+  TAB_ACTIVA='resumen';
+  renderProf(DATA.filter(r=>r.Grupo===GP), NOTAS[GK]||[]);
+}
+
+// Badge con la predicción del modelo de riesgo de dos niveles (ver ALERTAS_MODELO, sección
+// 3.47 de documentacion.md) — solo aparece si el curso/estudiante ya tiene un resultado
+// subido a la carpeta de Drive; si no, no se muestra nada (no bloquea el resto del dash).
+function badgeModelo(cedula){
+  const entry=(ALERTAS_MODELO[GP]?.estudiantes||[]).find(e=>String(e.cedula_full)===String(cedula));
+  if(!entry) return '';
+  const map={alto:{cls:'b-red',label:'🔴 Modelo: prioridad máxima'},medio:{cls:'b-yellow',label:'🟡 Modelo: alerta general'},bajo:{cls:'b-green',label:'🟢 Modelo: sin alerta'}};
+  const m=map[entry.status]||map.bajo;
+  return `<span class="badge ${m.cls}" title="Probabilidad severo: ${Math.round(entry.proba_severo*100)}% · Probabilidad alto: ${Math.round(entry.proba_alto*100)}%">${m.label}</span>`;
+}
+
+// Busca, entre las menciones de ABSA_MODELO de un estudiante, la más reciente (duda o
+// dificultad) — para mostrar la frase real, no solo el número. Sale del instrumento
+// validado (transcripción local), no de Sheets/Groq (ver 3.110) — null si no hay
+// ABSA_MODELO cargado para este curso.
+function citaMasReciente(pf){
+  const g=absaGrupo();
+  if(!g) return null;
+  const menciones=g.menciones.filter(m=>String(m.c)===String(pf.ced));
+  if(!menciones.length) return null;
+  const m=[...menciones].sort((a,b)=>b.s.localeCompare(a.s))[0]; // 's' es ISO yyyy-MM-dd, ordena bien como texto
+  const texto=g.transcripciones[m.k]||'';
+  const ini0=Math.max(0,m.r[0]-100),fin0=Math.min(texto.length,m.r[1]+100);
+  let ini=ini0>0?texto.indexOf(' ',ini0):0;if(ini<0||ini>m.r[0])ini=ini0;
+  let fin=fin0<texto.length?texto.lastIndexOf(' ',fin0):texto.length;if(fin<m.r[1])fin=fin0;
+  const corta=(ini>0?'…':'')+texto.slice(ini,fin)+(fin<texto.length?'…':'');
+  return{sesion:isoADmy(m.s),texto:corta};
+}
+
+// Tarjeta compacta para un estudiante con dudas/dificultad expresadas — nombre, conteo
+// total, y la frase real (no solo el número) de su sesión más reciente con dificultad.
+// Clic en la tarjeta lleva al detalle completo (pestaña Estudiantes, sub-vista por
+// estudiante, con la franja de sesiones y el modal de cada audio).
+function tarjetaMenciones(pf,sesVistas){
+  const cita=citaMasReciente(pf);
+  return `<div class="card atencion-card" onclick="filtrarPorEstudiante('${pf.ced}')">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>${nombreDe(pf.ced)}<span style="font-family:var(--font-m);font-size:10px;color:var(--muted);margin-left:6px">${pf.ced}</span></div>
+      <span class="badge b-red">🗣️ ${pf.totalMenciones} mención${pf.totalMenciones===1?'':'es'}</span>
+    </div>
+    ${cita?`<div class="atencion-cita">💬 "${escapeHtml(cita.texto)}" <span style="opacity:0.7;font-style:normal">— ${labelSesion(cita.sesion,GP)}</span></div>`:''}
+    <div class="atencion-meta">${pf.difTotal} dificultad${pf.difTotal===1?'':'es'} · ${pf.ddsTotal} duda${pf.ddsTotal===1?'':'es'} · Sesiones enviadas: ${pf.enviadas}/${sesVistas.length} · Clic para ver el detalle completo →</div>
+  </div>`;
+}
+
+// Pestaña "Estudiantes": UNA sola pestaña con dos sub-vistas navegables (ver 3.107) — por
+// estudiante (roster + ficha individual) o por tema (ABSA) — en vez de dos pestañas
+// separadas, compartiendo siempre los mismos filtros globales de sesión/estudiante.
+function tEstudiantes(perfiles,sesVistas,absaDisponible){
+  return `
+    <div class="absa-chips" style="margin-bottom:16px">
+      <button class="absa-chip ${SUBVISTA_ESTUDIANTES==='estudiante'?'active':''}" onclick="cambiarSubvista('estudiante')">👥 Por estudiante</button>
+      <button class="absa-chip ${SUBVISTA_ESTUDIANTES==='tema'?'active':''}" onclick="cambiarSubvista('tema')">🧩 Por tema</button>
+    </div>
+    <div id="subvista-contenido">${SUBVISTA_ESTUDIANTES==='tema'?tAbsa():tPorEstudiante(perfiles,sesVistas,absaDisponible)}</div>`;
+}
+function cambiarSubvista(v){
+  SUBVISTA_ESTUDIANTES=v;
+  if(!DATA)return;
+  const{perfiles,sesVistas,absaDisponible}=datosFiltradosProf();
+  document.getElementById('t-estudiantes').innerHTML=tEstudiantes(perfiles,sesVistas,absaDisponible);
+  if(v==='tema') setTimeout(()=>renderChartsAbsa(),100);
+}
+
+function tPorEstudiante(perfiles,sesVistas,absaDisponible){
+  if(perfiles.length===1) return fichaEstudianteDetalle(perfiles[0],sesVistas,absaDisponible);
+  const g=absaGrupo();
+  const ordenados=[...perfiles].sort((a,b)=>nombreDe(a.ced).localeCompare(nombreDe(b.ced)));
+  const filaTabla=pf=>{
+    const pct=Math.round(pf.enviadas/sesVistas.length*100);
+    // Sesiones con dificultad: desde ABSA_MODELO (instrumento validado), no Sheets/Groq —
+    // mismo criterio que tiraDificultad()/construirPerfil (ver 3.110).
+    const nDif=g?new Set(g.menciones.filter(m=>String(m.c)===String(pf.ced)&&m.d==='DIFICULTAD').map(m=>m.s)).size:0;
+    const badgeDif=!absaDisponible?`<span style="color:var(--muted);font-size:11px">—</span>`:nDif>0
+      ?`<span class="badge b-red" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle">⚠️ ${nDif} sesi${nDif>1?'ones':'ón'}</span>`
+      :`<span class="badge b-green" style="cursor:pointer" onclick="filtrarPorEstudiante('${pf.ced}')" title="Ver detalle">✅</span>`;
+    return `<tr>
+      <td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>
+      <td>${pf.enviadas}/${sesVistas.length} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
+      <td>${absaDisponible?pf.ddsTotal:'—'}</td>
+      <td>${absaDisponible?pf.difTotal:'—'}</td>
+      <td>${badgeDif}</td>
+    </tr>`;
+  };
+  return `
+    <div class="card" style="font-size:12px;color:var(--muted)">💡 Usa el filtro de arriba (📅 Sesión / 🎓 Estudiante) para ver la ficha completa de una sola persona.${absaDisponible?'':' Las columnas de Dudas/Dificultades muestran "—" porque este curso todavía no tiene el análisis validado cargado (pestaña Por tema).'}</div>
+    <div class="tw"><table>
+      <tr><th>Estudiante</th><th>Sesiones</th><th>Dudas</th><th>Dificultades</th><th>Detalle</th></tr>
+      ${ordenados.map(filaTabla).join('')}
+    </table></div>`;
+}
+
+// Ficha de detalle de UN estudiante — aparece en la pestaña Estudiantes (sub-vista "Por
+// estudiante") cuando el filtro global deja exactamente uno. Ya no compara contra nota,
+// riqueza léxica ni similitud coseno (ver 3.107): solo la línea de tiempo de dudas/
+// dificultad y, si el análisis por tema está cargado, los temas que mencionó.
+function fichaEstudianteDetalle(pf,sesVistas,absaDisponible){
+  const g=absaGrupo();
+  const temasEst=g?absaAgregar((g.menciones||[]).filter(m=>String(m.c)===String(pf.ced))).lista:[];
+  return `
+    <div class="card">
+      <div class="card-title">${nombreDe(pf.ced)} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${pf.ced}</span></div>
+      <div class="mr">
+        <div class="ms"><div class="msl">Sesiones enviadas</div><div class="msv">${pf.enviadas}/${sesVistas.length}</div></div>
+        <div class="ms"><div class="msl">Dudas</div><div class="msv">${absaDisponible?pf.ddsTotal:'—'}</div></div>
+        <div class="ms"><div class="msl">Percepción dificultad</div><div class="msv">${absaDisponible?pf.difTotal:'—'}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗓️ Línea de tiempo</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${absaDisponible?'Las sesiones marcadas en rojo tuvieron percepción de dificultad explícita según el análisis validado.':'Este curso todavía no tiene el análisis validado cargado — ninguna sesión se marca con dificultad todavía.'} Clic en cualquier sesión para ver la transcripción completa de ese audio.</div>
+      ${tiraDificultad(pf.rows,sesVistas,pf.ced,true)}
+    </div>
+    ${temasEst.length?`<div class="card">
+      <div class="card-title">🧩 Temas que mencionó</div>
+      <div class="absa-chips">${temasEst.map(t=>`<span class="absa-chip">${escapeHtml(t.tema)} · ${t.n}</span>`).join('')}</div>
+    </div>`:''}`;
+}
+
+// Tarjeta de alertas del modelo (piloto local, "mientras tanto" — ver ALERTAS_MODELO).
+// modeloGrupo viene de ALERTAS_MODELO[GP], con la misma forma que arma exportar_datos_dashboard.py:
+// {n, n_alto, n_medio, n_bajo, estudiantes:[{cedula_full, status, proba_severo, proba_alto, cita, ...}]}.
+function renderAlertaModelo(modeloGrupo){
+  if(!modeloGrupo||!modeloGrupo.estudiantes||!modeloGrupo.estudiantes.length){
+    return `<div class="card"><div class="card-title">🔮 Alerta del modelo (piloto)</div>
+      <div style="color:var(--muted);font-size:13px">Todavía no se ha subido un resultado del modelo para este curso a la carpeta de Drive.</div></div>`;
+  }
+  const est=modeloGrupo.estudiantes;
+  const rojos=est.filter(e=>e.status==='alto');
+  const amarillos=est.filter(e=>e.status==='medio');
+  const fila=e=>`<tr>
+      <td>${nombreDe(e.cedula_full)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${e.cedula_full}</div></td>
+      <td>${Math.round(e.proba_severo*100)}%</td>
+      <td>${Math.round(e.proba_alto*100)}%</td>
+      <td style="font-size:12px;color:var(--muted)">${e.cita||''}</td>
+    </tr>`;
+  const tabla=(titulo,filas)=>filas.length?`<div class="card-title" style="margin-top:10px">${titulo}</div><div class="tw"><table>
+      <tr><th>Estudiante</th><th>Prob. severo</th><th>Prob. alto</th><th>Última sesión con dificultad</th></tr>
+      ${filas.map(fila).join('')}
+    </table></div>`:'';
+  return `<div class="card">
+    <div class="card-title">🔮 Alerta del modelo (piloto local, sin validar aún con nota real de este semestre)</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Predicción de un modelo entrenado sobre semestres anteriores, aplicada a este curso. No es un reporte de aciertos — se podrá validar cuando existan las notas reales de este parcial.</div>
+    ${tabla('🔴 Prioridad máxima',rojos)}
+    ${tabla('🟡 Alerta general',amarillos)}
+    ${!rojos.length&&!amarillos.length?'<div style="color:var(--green);font-size:13px">✅ Sin alertas del modelo en este curso</div>':''}
+  </div>`;
+}
+
+// Alertas = ranking simple por conteo total de dudas+dificultad expresadas (ver
+// documentacion.md 3.107) — NO un modelo predictivo ni un cruce con nota/riqueza léxica/
+// similitud coseno. Es literalmente lo que mide el instrumento léxico validado: quién ha
+// expresado más dudas o dificultad, en total, a lo largo de las sesiones visibles.
+function tAlertas(perfiles,sesVistas,absaDisponible){
+  const conMenciones=[...perfiles].filter(pf=>pf.totalMenciones>0).sort((a,b)=>b.totalMenciones-a.totalMenciones);
+  const pocas=perfiles.filter(pf=>pf.enviadas/sesVistas.length<0.6);
+  const cedCol=pf=>`<td>${nombreDe(pf.ced)}<div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">${pf.ced}</div></td>`;
+
+  return `
+    <div class="card" style="font-size:12px;color:var(--muted);line-height:1.5">
+      🗣️ Ranking simple: estudiantes ordenados por <b style="color:var(--text)">cuántas veces</b>
+      expresaron duda o dificultad en total. Es un conteo, no una predicción — sirve para saber con
+      quién vale la pena hablar, no para anticipar una nota.
+    </div>
+    ${!absaDisponible?`<div class="card absa-vacio">
+      <div style="font-size:30px;margin-bottom:8px">🧩</div>
+      <div style="font-size:13px">Sin análisis validado cargado para este curso todavía — sube el JSON en Estudiantes → Por tema para ver este ranking.</div>
+    </div>`:`
+    <div class="card-title" style="margin-top:4px">🗣️ Más dudas y dificultades expresadas (${conMenciones.length})</div>
+    ${conMenciones.length
+      ?conMenciones.map(pf=>tarjetaMenciones(pf,sesVistas)).join('')
+      :`<div class="card"><div style="color:var(--green);font-size:13px">✅ Nadie expresó dudas o dificultad en esta selección.</div></div>`}`}
+    ${pocas.length?`<div class="card"><div class="card-title">📭 Bajo cumplimiento (&lt;60%)</div><div class="tw"><table>
+      <tr><th>Estudiante</th><th>Enviadas</th><th>%</th></tr>
+      ${pocas.map(pf=>`<tr>${cedCol(pf)}<td>${pf.enviadas}/${sesVistas.length}</td><td>${Math.round(pf.enviadas/sesVistas.length*100)}%</td></tr>`).join('')}
+    </table></div></div>`:''}`;
+}
+
+
+// ══════════════════════════════════════════════════════
+// PESTAÑA "POR TEMA" (ABSA): en qué temas concretos se concentran las dudas y dificultades
+// que los estudiantes expresan en sus audios. Es SOLO análisis por tema — no mezcla las
+// alertas de riesgo de otras pestañas. Respeta los filtros globales de sesión/estudiante.
+// ══════════════════════════════════════════════════════
+const ABSA_STOP=new Set(['de','la','el','en','con','para','y','los','las','un','una','del','al','que','como','por','no','mas','tal','vez','sobre','esta','este','esa','ese','lo','se','su','sus','muy','bien']);
+function isoADmy(s){const [y,m,d]=String(s).split('-');return `${d}/${m}/${y}`;}
+function absaNorm(s){return s.toLowerCase().replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i').replace(/[óòö]/g,'o').replace(/[úùü]/g,'u');}
+function absaGrupo(){return ABSA_MODELO[GK]||null;}
+function absaFiltradas(){
+  const g=absaGrupo();if(!g)return[];
+  let m=g.menciones;
+  if(FILTRO_SESION)m=m.filter(x=>isoADmy(x.s)===FILTRO_SESION);
+  if(FILTRO_ESTUDIANTE)m=m.filter(x=>String(x.c)===FILTRO_ESTUDIANTE);
+  return m;
+}
+function absaAgregar(ms){
+  const temas={};let sinTema=0;
+  ms.forEach(m=>{
+    if(!m.t.length){sinTema++;return;}
+    m.t.forEach(t=>{
+      const o=temas[t]=temas[t]||{tema:t,n:0,DUDAS:0,DIFICULTAD:0,ests:new Set(),ses:{}};
+      o.n++;o[m.d]++;o.ests.add(String(m.c));
+      const s=isoADmy(m.s);o.ses[s]=(o.ses[s]||0)+1;
+    });
+  });
+  return{lista:Object.values(temas).sort((a,b)=>b.n-a.n||a.tema.localeCompare(b.tema)),sinTema};
+}
+function absaEmpty(){
+  return `<div class="card absa-vacio">
+    <div style="font-size:34px;margin-bottom:10px">🧩</div>
+    <div style="font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Aún no hay análisis por tema para este curso</div>
+    <div style="font-size:13px;max-width:520px;margin:0 auto 16px;line-height:1.55">Esta pestaña muestra en qué temas concretos se concentran las dudas y dificultades que expresan los estudiantes. Requiere el archivo de análisis generado localmente (<span style="font-family:var(--font-m)">absa_dashboard_data27sept.json</span>), que el backend expone como <span style="font-family:var(--font-m)">absaModelo</span>. Mientras tanto puedes cargarlo a mano — se lee solo en tu navegador, no se sube a ningún lado.</div>
+    <label class="btn-sm" style="display:inline-block;cursor:pointer;color:var(--accent2);border-color:var(--accent)">📂 Cargar archivo JSON<input type="file" accept=".json,application/json" style="display:none" onchange="cargarAbsaLocal(this)"/></label>
+  </div>`;
+}
+function absaToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+function cargarAbsaLocal(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const j=JSON.parse(rd.result);
+      if(!j||typeof j!=='object'||!Object.values(j).every(v=>v&&Array.isArray(v.menciones)))throw new Error('formato');
+      ABSA_MODELO=j;TEMA_ABSA='';ABSA_LIMITE=25;
+      if(!ABSA_MODELO[GK])absaToast('El archivo no trae datos para este curso ('+GK+')','error');
+      else absaToast('Análisis por tema cargado','ok');
+      refrescarAbsa();
+    }catch(e){absaToast('No se pudo leer el archivo: no tiene el formato esperado','error');}
+  };
+  rd.readAsText(f,'utf-8');
+}
+function refrescarAbsa(){
+  const el=document.getElementById('subvista-contenido');if(!el)return;
+  el.innerHTML=tAbsa();
+  renderChartsAbsa();
+}
+function seleccionarTemaAbsa(i){
+  const t=i<0?'':(ABSA_TEMAS_VISTOS[i]||'');
+  TEMA_ABSA=(t&&TEMA_ABSA===t)?'':t;ABSA_LIMITE=25;
+  refrescarAbsa();
+}
+function absaMasCitas(){ABSA_LIMITE+=25;refrescarAbsa();}
+
+function absaSnippet(texto,r,d){
+  const ini0=Math.max(0,r[0]-110),fin0=Math.min(texto.length,r[1]+110);
+  let ini=ini0>0?texto.indexOf(' ',ini0):0;if(ini<0||ini>r[0])ini=ini0;
+  let fin=fin0<texto.length?texto.lastIndexOf(' ',fin0):texto.length;if(fin<r[1])fin=fin0;
+  const cls=d==='DUDAS'?'hl-dud':'hl-dif';
+  return(ini>0?'…':'')+escapeHtml(texto.slice(ini,r[0]))+`<mark class="${cls}">${escapeHtml(texto.slice(r[0],r[1]))}</mark>`+escapeHtml(texto.slice(r[1],fin))+(fin<texto.length?'…':'');
+}
+
+function tAbsa(){
+  const g=absaGrupo();
+  if(!g)return absaEmpty();
+  const ms=absaFiltradas();
+  const{lista,sinTema}=absaAgregar(ms);
+  ABSA_TEMAS_VISTOS=lista.map(x=>x.tema);
+  const conTema=ms.length-sinTema;
+  const estsConMencion=new Set(ms.map(m=>String(m.c))).size;
+  const filtradas=TEMA_ABSA?ms.filter(m=>m.t.includes(TEMA_ABSA)):ms.filter(m=>m.t.length);
+  const ordenadas=[...filtradas].sort((a,b)=>b.s.localeCompare(a.s));
+  ABSA_LISTA_VISTA=ordenadas;
+  const top=lista[0];
+
+  const kpis=`<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Menciones con tema</div><div class="kpi-value">${conTema}</div><div class="kpi-sub">${sinTema} sin tema claro</div></div>
+    <div class="kpi"><div class="kpi-label">Temas distintos</div><div class="kpi-value">${lista.length}</div><div class="kpi-sub">${estsConMencion} estudiante${estsConMencion===1?'':'s'} con menciones</div></div>
+    <div class="kpi highlight" style="grid-column:span 2"><div class="kpi-label">Tema con más menciones</div><div class="kpi-value" style="font-size:20px;line-height:1.25">${top?escapeHtml(top.tema):'—'}</div><div class="kpi-sub">${top?`${top.n} mención${top.n===1?'':'es'} · ${top.ests.size} estudiante${top.ests.size===1?'':'s'}`:'Sin menciones con tema en esta selección'}</div></div>
+  </div>`;
+
+  if(!lista.length){
+    return kpis+`<div class="card absa-vacio"><div style="font-size:30px;margin-bottom:8px">🔍</div>Sin menciones con tema para esta combinación de filtros.</div>`;
+  }
+
+  const nTop=Math.min(12,lista.length);
+  const altoTemas=Math.max(220,nTop*30+50);
+
+  // Mapa de calor tema × sesión (top 10 temas)
+  const sesCols=getSesionesGrupo(GP).map(s=>s.v).filter(s=>!FILTRO_SESION||s===FILTRO_SESION);
+  const top10=lista.slice(0,10);
+  const maxCel=Math.max(1,...top10.flatMap(x=>sesCols.map(s=>x.ses[s]||0)));
+  const heat=`<div class="tw"><table class="heat">
+    <tr><th></th>${sesCols.map(s=>`<th title="${escapeHtml(s)}">${labelSesion(s,GP)}</th>`).join('')}</tr>
+    ${top10.map(x=>`<tr><td class="heat-tema" title="${escapeHtml(x.tema)}">${escapeHtml(x.tema)}</td>${sesCols.map(s=>{
+      const n=x.ses[s]||0;
+      return n?`<td class="heat-cell" style="background:rgba(94,224,163,${(0.15+0.7*n/maxCel).toFixed(2)});color:#08231A;font-weight:700">${n}</td>`:`<td class="heat-cell" style="background:var(--bg3);color:var(--muted);opacity:0.5">·</td>`;
+    }).join('')}</tr>`).join('')}
+  </table></div>`;
+
+  const chips=`<div class="absa-chips">
+    <button class="absa-chip ${TEMA_ABSA?'':'active'}" onclick="seleccionarTemaAbsa(-1)">Todos los temas</button>
+    ${lista.slice(0,15).map((x,i)=>`<button class="absa-chip ${TEMA_ABSA===x.tema?'active':''}" onclick="seleccionarTemaAbsa(${i})">${escapeHtml(x.tema)} · ${x.n}</button>`).join('')}
+  </div>`;
+
+  const citas=ordenadas.slice(0,ABSA_LIMITE).map((m,i)=>{
+    const texto=g.transcripciones[m.k]||'';
+    const dmy=isoADmy(m.s);
+    return `<div class="absa-cita">
+      <div class="absa-cita-head">
+        <b style="font-family:var(--font-d)">${escapeHtml(nombreDe(m.c))}</b>
+        <span style="color:var(--muted)">${labelSesion(dmy,GP)} · ${escapeHtml(dmy)}</span>
+        <span class="badge ${m.d==='DUDAS'?'b-blue':'b-red'}">${m.d==='DUDAS'?'Duda':'Dificultad'}</span>
+        ${m.t.map(t=>`<span class="badge b-green">${escapeHtml(t)}</span>`).join('')}
+      </div>
+      <div class="absa-cita-txt">${absaSnippet(texto,m.r,m.d)}</div>
+      <button class="btn-sm" style="margin-top:8px" onclick="verAbsaTranscripcion(${i})">📝 Ver transcripción completa</button>
+    </div>`;
+  }).join('');
+
+  return `${kpis}
+    <div class="grid-2">
+      <div class="card"><div class="card-title">🧩 Temas con más dudas y dificultades <span style="font-size:11px;color:var(--muted);font-weight:400">· clic en una barra para ver las citas</span></div>
+        <div style="position:relative;height:${altoTemas}px"><canvas id="ch-absa-temas"></canvas></div></div>
+      <div class="card"><div class="card-title">📅 Menciones por sesión</div>
+        <div class="cw-tall"><canvas id="ch-absa-ses"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-title">🔥 Cuándo aparece cada tema <span style="font-size:11px;color:var(--muted);font-weight:400">· los 10 temas más frecuentes por sesión</span></div>${heat}</div>
+    <div class="card"><div class="card-title">💬 Lo que dijeron los estudiantes ${TEMA_ABSA?`<span class="badge b-green">${escapeHtml(TEMA_ABSA)}</span>`:''}</div>
+      ${chips}
+      ${citas||'<div class="absa-vacio">Sin citas para esta selección.</div>'}
+      ${ordenadas.length>ABSA_LIMITE?`<div style="text-align:center;margin-top:14px"><button class="btn-sm" onclick="absaMasCitas()">Ver ${Math.min(25,ordenadas.length-ABSA_LIMITE)} más (${ordenadas.length-ABSA_LIMITE} restantes)</button></div>`:''}
+      <div class="absa-nota">Se muestran solo menciones vigentes (se excluyen las que el propio estudiante indica que ya resolvió). Análisis generado ${escapeHtml(g.generado||'')} sobre ${g.n_audios} audios transcritos localmente. Una mención que nombra dos temas cuenta en ambos. Es una lectura automática: úsala como punto de partida para revisar las citas, no como veredicto.</div>
+    </div>`;
+}
+
+function renderChartsAbsa(){
+  const g=absaGrupo();if(!g)return;
+  const cvT=document.getElementById('ch-absa-temas');
+  if(cvT){
+    const ms=absaFiltradas();
+    const{lista}=absaAgregar(ms);
+    const top=lista.slice(0,12);
+    try{if(CH['ch-absa-temas'])CH['ch-absa-temas'].destroy();}catch(e){}
+    CH['ch-absa-temas']=new Chart(cvT,{type:'bar',
+      data:{labels:top.map(x=>x.tema.length>34?x.tema.slice(0,33)+'…':x.tema),datasets:[
+        {label:'Dificultad',data:top.map(x=>x.DIFICULTAD),backgroundColor:'rgba(248,113,113,0.75)',borderRadius:3},
+        {label:'Duda',data:top.map(x=>x.DUDAS),backgroundColor:'rgba(167,139,250,0.75)',borderRadius:3}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:CD.plugins,
+        scales:{x:{...CD.scales.x,stacked:true,beginAtZero:true,ticks:{...CD.scales.x.ticks,precision:0}},y:{...CD.scales.y,stacked:true}},
+        onClick:(ev,els)=>{if(els.length){const i=ABSA_TEMAS_VISTOS.indexOf(top[els[0].index].tema);if(i>=0)seleccionarTemaAbsa(i);}}}});
+    const ses=getSesionesGrupo(GP).map(s=>s.v).filter(s=>!FILTRO_SESION||s===FILTRO_SESION);
+    const porSes=d=>ses.map(s=>ms.filter(m=>m.t.length&&m.d===d&&isoADmy(m.s)===s).length);
+    try{if(CH['ch-absa-ses'])CH['ch-absa-ses'].destroy();}catch(e){}
+    const cvS=document.getElementById('ch-absa-ses');
+    if(cvS)CH['ch-absa-ses']=new Chart(cvS,{type:'bar',
+      data:{labels:ses.map(s=>labelSesion(s,GP)),datasets:[
+        {label:'Dificultad',data:porSes('DIFICULTAD'),backgroundColor:'rgba(248,113,113,0.75)',borderRadius:3},
+        {label:'Duda',data:porSes('DUDAS'),backgroundColor:'rgba(167,139,250,0.75)',borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:CD.plugins,
+        scales:{x:{...CD.scales.x,stacked:true},y:{...CD.scales.y,stacked:true,beginAtZero:true,ticks:{...CD.scales.y.ticks,precision:0}}}}});
+  }
+}
+
+function verAbsaTranscripcion(i){
+  const m=ABSA_LISTA_VISTA[i],g=absaGrupo();
+  if(!m||!g)return;
+  const texto=g.transcripciones[m.k]||'';
+  const norm=absaNorm(texto);
+  const rangos=[{a:m.r[0],b:m.r[1],c:m.d==='DUDAS'?'hl-dud':'hl-dif'}];
+  // palabras del tema cerca de la mención (±250 caracteres), para no marcar el tema en toda la transcripción
+  const vi=Math.max(0,m.r[0]-250),vf=Math.min(texto.length,m.r[1]+250);
+  m.t.forEach(tema=>{
+    absaNorm(tema).split(/\s+/).filter(p=>p.length>=4&&!ABSA_STOP.has(p)).forEach(p=>{
+      const re=new RegExp('\\b'+p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\w*','g');let x;
+      while((x=re.exec(norm))){if(x.index>=vi&&x.index+x[0].length<=vf)rangos.push({a:x.index,b:x.index+x[0].length,c:'hl-tema'});}
+    });
+  });
+  rangos.sort((p,q)=>p.a-q.a||(p.c==='hl-tema'?1:-1));
+  let html='',pos=0;
+  rangos.forEach(r=>{
+    if(r.a<pos)return;
+    html+=escapeHtml(texto.slice(pos,r.a))+`<mark class="${r.c}">${escapeHtml(texto.slice(r.a,r.b))}</mark>`;
+    pos=r.b;
+  });
+  html+=escapeHtml(texto.slice(pos));
+  const dmy=isoADmy(m.s);
+  document.getElementById('modal-detalle-body').innerHTML=`
+    <div class="card-title">${escapeHtml(nombreDe(m.c))} <span style="font-family:var(--font-m);font-size:11px;color:var(--muted);font-weight:400">· ${escapeHtml(m.c)}</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">${labelSesion(dmy,GP)} · ${escapeHtml(dmy)}</div>
+    <div class="modal-vars"><span class="badge ${m.d==='DUDAS'?'b-blue':'b-red'}">${m.d==='DUDAS'?'Duda':'Dificultad'}: ${escapeHtml(m.e)}</span>${m.t.map(t=>`<span class="badge b-green">${escapeHtml(t)}</span>`).join('')}</div>
+    <div class="card-title" style="font-size:12px;margin-top:6px">📝 Transcripción completa</div>
+    <div class="hl-legend">
+      <span><mark class="${m.d==='DUDAS'?'hl-dud':'hl-dif'}">${m.d==='DUDAS'?'duda':'dificultad'}</mark></span>
+      <span><mark class="hl-tema">tema</mark></span>
+    </div>
+    <div class="modal-transcript">${html}</div>`;
+  document.getElementById('modal-detalle').classList.add('show');
+}
+
+function st(tab){
+  TAB_ACTIVA=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const btn=document.querySelector(`.tab[data-tab="${tab}"]`);
+  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('t-'+tab).classList.add('active');
+  if(DATA) setTimeout(()=>{
+    const{est,sesVistas,perfiles}=datosFiltradosProf();
+    renderChartsProf(est,sesVistas,perfiles);
+  },100);
+}
+
+function renderChartsProf(est,sesVistas,perfiles){
+  try{renderChartsAbsa();}catch(e){console.error(e);}
+  const bySes=gb(est,'Sesion');
+  const lbl=sesVistas.map(s=>labelSesion(s,GP));
+
+  // Conteo de dudas/dificultad por sesión — el instrumento léxico validado (ABSA_MODELO), NO
+  // Sheets/Groq (ver 3.110). absaFiltradas() ya respeta FILTRO_SESION/FILTRO_ESTUDIANTE.
+  const absaVista=absaFiltradas();
+  const dataDif=sesVistas.map(s=>absaVista.filter(m=>m.d==='DIFICULTAD'&&isoADmy(m.s)===s).length);
+  const dataDds=sesVistas.map(s=>absaVista.filter(m=>m.d==='DUDAS'&&isoADmy(m.s)===s).length);
+  const dataPart=sesVistas.map(s=>(bySes[s]||[]).length);
+
+  mkChart('ch-menciones-sesion','bar',lbl,[
+    {label:'Dificultad',data:dataDif,backgroundColor:'rgba(248,113,113,0.75)',borderRadius:4},
+    {label:'Duda',data:dataDds,backgroundColor:'rgba(167,139,250,0.75)',borderRadius:4}
+  ],{scales:{x:{...CD.scales.x,stacked:true},y:{...CD.scales.y,stacked:true,beginAtZero:true,ticks:{...CD.scales.y.ticks,precision:0}}}});
+  mkChart('ch-part','bar',lbl,[{label:'Estudiantes',data:dataPart,backgroundColor:'rgba(43,175,122,0.7)',borderRadius:4}]);
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD ESTUDIANTE
+// ══════════════════════════════════════════════════════
+function renderEst(reg, allNotas, ced, grupoKeyElegido){
+  // El grupo ya NO se auto-detecta del primer registro que aparezca — si la persona
+  // está en 2 cursos, eso mezclaría sus audios de ambos sin avisar. Se filtra explícito
+  // por el grupo que se eligió en el login.
+  const grupoNombreEsperado=GRUPOS[grupoKeyElegido]||'';
+  const misRegTodos=reg.filter(r=>String(r.Cedula)===ced&&r.Es_Profesor!=='SÍ'&&r.Grupo===grupoNombreEsperado);
+  if(misRegTodos.length===0){
+    document.getElementById('dm').innerHTML='<div style="text-align:center;padding:60px"><div style="font-size:40px;margin-bottom:12px">🎙️</div><div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:8px">Aún no tienes audios registrados</div><div style="font-size:13px;color:var(--muted)">Cuando envíes tu primer audio verás tus estadísticas aquí.</div></div>';
+    return;
+  }
+  const grupoNombre=grupoNombreEsperado;
+  const grupoKey=grupoKeyElegido;
+  const notas=allNotas[grupoKey]||[];
+
+  // Mis sesiones (todas, para el selector — el filtro se aplica después)
+  const sesionesDisponibles=[...new Set(misRegTodos.map(r=>ns(r.Sesion)))].sort((a,b)=>ordenSesion(a,grupoNombre)-ordenSesion(b,grupoNombre));
+  const misReg=FILTRO_SESION_EST?misRegTodos.filter(r=>ns(r.Sesion)===FILTRO_SESION_EST):misRegTodos;
+  const sesEnv=[...new Set(misReg.map(r=>ns(r.Sesion)))];
+  const ord=[...misReg].sort((a,b)=>ordenSesion(ns(a.Sesion),grupoNombre)-ordenSesion(ns(b.Sesion),grupoNombre));
+
+  // Mis notas (no cambian con el filtro de sesión — la nota no es por audio individual)
+  const miNota=notaEst(notas,ced);
+  const miNP=calcPromedio(miNota,grupoKey);
+  const miCl=clasificar(miNP?.promedio||null);
+
+  // Comparativa grupo — todos los estudiantes del mismo grupo, respetando el mismo filtro de sesión
+  let grupoReg=reg.filter(r=>r.Grupo===grupoNombre&&r.Es_Profesor!=='SÍ'&&String(r.Cedula)!=='654321');
+  if(FILTRO_SESION_EST) grupoReg=grupoReg.filter(r=>ns(r.Sesion)===FILTRO_SESION_EST);
+  const ceds=[...new Set(grupoReg.map(r=>String(r.Cedula)))];
+  const grupoPerfiles=ceds.map(c=>{
+    const rows=grupoReg.filter(r=>String(r.Cedula)===c);
+    const np=calcPromedio(notaEst(notas,c),grupoKey);
+    return{ced:c,rl:p(rows,'riqueza_lexica'),mts:p(rows,'conteo_muletillas'),dds:p(rows,'conteo_dudas'),
+      neg:p(rows,'conteo_negaciones'),sim:p(rows,'similitud_coseno'),pal:p(rows,'num_palabras'),
+      ppm:p(rows,'palabras_por_minuto'),rep:p(rows,'conteo_repeticiones'),dif:p(rows,'conteo_percepcion_dificultad'),np};
+  });
+
+  const promedio=calcularPromedioGrupo(grupoPerfiles);
+  const criterio=criterioComparacion(grupoPerfiles);
+  const yo={rl:p(misReg,'riqueza_lexica'),mts:p(misReg,'conteo_muletillas'),dds:p(misReg,'conteo_dudas'),
+    neg:p(misReg,'conteo_negaciones'),sim:p(misReg,'similitud_coseno'),pal:p(misReg,'num_palabras'),
+    ppm:p(misReg,'palabras_por_minuto'),rep:p(misReg,'conteo_repeticiones'),
+    pausas:p(misReg,'num_pausas'),dif:p(misReg,'conteo_percepcion_dificultad'),
+    nota:miNP?.promedio};
+
+  const vars=[
+    {k:'rl',l:'Riqueza léxica',f:v=>(v*100).toFixed(1)+'%',max:1},
+    {k:'pal',l:'Palabras prom.',f:v=>Math.round(v)+'',max:300},
+    {k:'sim',l:'Sim. coseno',f:v=>isNaN(v)||v===0?'—':(v*100).toFixed(0)+'%',max:1},
+    {k:'mts',l:'Muletillas',f:v=>v.toFixed(1),max:20},
+    {k:'dds',l:'Dudas',f:v=>v.toFixed(1),max:10},
+    {k:'neg',l:'Negaciones',f:v=>v.toFixed(1),max:10},
+    {k:'ppm',l:'Vel. habla',f:v=>Math.round(v)+' ppm',max:250},
+    {k:'rep',l:'Repeticiones',f:v=>v.toFixed(1),max:10},
+  ];
+
+  const selectorSesion=`
+    <div class="card" style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:12px;color:var(--muted)">📅 Sesión:</span>
+      <select class="sel-est" id="filtro-sesion-est" onchange="aplicarFiltroSesionEst()">
+        <option value="">Todas (promedio general)</option>
+        ${sesionesDisponibles.map(s=>`<option value="${s}" ${s===FILTRO_SESION_EST?'selected':''}>${labelSesion(s,grupoNombre)}</option>`).join('')}
+      </select>
+      ${FILTRO_SESION_EST?`<button class="btn-sm" onclick="limpiarFiltroSesionEst()">✕ Limpiar</button>`:''}
+    </div>`;
+
+  if(misReg.length===0){
+    document.getElementById('dm').innerHTML=`
+      <div class="page-title">Mis estadísticas</div>
+      <div class="page-sub"><span style="font-family:var(--font-m);color:var(--accent2)">${ced}</span> · ${grupoNombre}</div>
+      ${selectorSesion}
+      <div class="card" style="text-align:center;padding:40px;color:var(--muted)">No enviaste audio en esa sesión.</div>`;
+    return;
+  }
+
+  document.getElementById('dm').innerHTML=`
+    <div class="page-title">Mis estadísticas</div>
+    <div class="page-sub"><span style="font-family:var(--font-m);color:var(--accent2)">${ced}</span> · ${grupoNombre}</div>
+
+    ${selectorSesion}
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Sesiones enviadas</div><div class="kpi-value">${sesEnv.length}</div><div class="kpi-sub">de ${sesionesDisponibles.length} totales</div></div>
+      <div class="kpi"><div class="kpi-label">Cumplimiento</div><div class="kpi-value">${Math.round(sesionesDisponibles.length?sesEnv.length/sesionesDisponibles.length*100:0)}%</div><div class="kpi-sub">${sesEnv.length>=sesionesDisponibles.length*0.8?'✓ Excelente':sesEnv.length>=sesionesDisponibles.length*0.5?'Mejorable':'Bajo'}</div></div>
+      <div class="kpi"><div class="kpi-label">Riqueza léxica</div><div class="kpi-value">${(yo.rl*100).toFixed(1)}%</div><div class="kpi-sub">${FILTRO_SESION_EST?'esta sesión':'promedio personal'}</div></div>
+      ${miNP?`<div class="kpi highlight"><div class="kpi-label">Tu desempeño</div><div class="kpi-value" style="font-size:22px">${miCl.emoji} ${miNP.promedio.toFixed(1)}</div><div class="kpi-sub"><span class="badge ${miCl.cls}">${miCl.label}</span></div></div>`
+      :`<div class="kpi"><div class="kpi-label">Desempeño</div><div class="kpi-value" style="font-size:18px">—</div><div class="kpi-sub">Sin nota registrada aún</div></div>`}
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧭 Qué significa esto</div>
+      ${interpretar(yo,promedio,criterio).map(i=>`<div class="interp"><div class="ii">${i.icon}</div><div class="it">${i.text}</div></div>`).join('')}
+    </div>
+
+    ${miNP?`
+    <div class="card">
+      <div class="card-title">📝 Tus notas</div>
+      <div class="nota-grid">
+        <div class="nota-card"><div class="nota-card-label">Parcial</div><div class="nota-card-value" style="color:var(--accent2)">${miNP.parcial.toFixed(1)}</div></div>
+        <div class="nota-card"><div class="nota-card-label">Actividades prom.</div><div class="nota-card-value">${miNP.actividades.toFixed(1)}</div></div>
+        <div class="nota-card"><div class="nota-card-label">Nota final</div><div class="nota-card-value" style="color:${miCl.cls==='b-green'?'var(--green)':miCl.cls==='b-yellow'?'var(--yellow)':'var(--red)'}">${miNP.promedio.toFixed(1)}</div></div>
+      </div>
+    </div>`:''}
+
+    <div class="card">
+      <div class="card-title">📅 Sesiones grabadas</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+        Has enviado <strong style="color:var(--text);font-size:18px;font-family:var(--font-d)">${sesEnv.length}</strong> audios de un total de <strong style="color:var(--text)">${sesionesDisponibles.length}</strong> sesiones del curso.
+        ${misReg.length>0?`<br/>Última sesión grabada: <span style="color:var(--accent2);font-family:var(--font-m)">${ns(ord[ord.length-1]?.Sesion||'')}</span>`:''}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card"><div class="card-title">📈 Tu riqueza léxica por sesión</div><div class="cw"><canvas id="ch-e-rl"></canvas></div></div>
+      <div class="card"><div class="card-title">💬 Muletillas y dudas por sesión</div><div class="cw"><canvas id="ch-e-mts"></canvas></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 Tú vs el promedio del grupo</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Comparado contra ${criterio==='nota'?'la nota promedio':'la riqueza léxica promedio (aún sin suficientes notas registradas)'} del grupo${FILTRO_SESION_EST?' · solo esta sesión':''}</div>
+      <div class="cmp-legend">
+        <span><span class="cmp-dot" style="background:#5EE0A3"></span>Tú</span>
+        <span><span class="cmp-dot" style="background:#A78BFA"></span>Promedio del grupo</span>
+      </div>
+      <div class="cmp-row">
+        ${vars.map(v=>{
+          const vYo=yo[v.k]||0, vProm=promedio[v.k]||0;
+          const mx=Math.max(vYo,vProm,v.max)*1.1||1;
+          return `<div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">${v.l}</div>
+            <div class="cmp-item"><div class="cmp-label">Tú</div><div class="cmp-bar"><div class="cmp-fill me" style="width:${Math.min(100,vYo/mx*100)}%"></div></div><div class="cmp-val">${v.f(vYo)}</div></div>
+            <div class="cmp-item" style="margin-top:4px"><div class="cmp-label">Promedio</div><div class="cmp-bar"><div class="cmp-fill prom" style="width:${Math.min(100,vProm/mx*100)}%"></div></div><div class="cmp-val">${v.f(vProm)}</div></div>
+          </div>`;
+        }).join('<div style="height:1px;background:var(--border);margin:8px 0"></div>')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Tus promedios ${FILTRO_SESION_EST?'de esta sesión':'generales'}</div>
+      <div class="mr">
+        <div class="ms"><div class="msl">Riqueza léxica</div><div class="msv">${(yo.rl*100).toFixed(1)}%</div></div>
+        <div class="ms"><div class="msl">Muletillas</div><div class="msv">${yo.mts.toFixed(1)}</div><div class="mss">por audio</div></div>
+        <div class="ms"><div class="msl">Dudas</div><div class="msv">${yo.dds.toFixed(1)}</div><div class="mss">por audio</div></div>
+        <div class="ms"><div class="msl">Negaciones</div><div class="msv">${yo.neg.toFixed(1)}</div><div class="mss">por audio</div></div>
+        <div class="ms"><div class="msl">Sim. coseno</div><div class="msv">${isNaN(yo.sim)||yo.sim===0?'—':(yo.sim*100).toFixed(0)+'%'}</div></div>
+        <div class="ms"><div class="msl">Palabras prom.</div><div class="msv">${Math.round(yo.pal)}</div></div>
+        <div class="ms"><div class="msl">Vel. habla</div><div class="msv">${Math.round(yo.ppm)} ppm</div></div>
+        <div class="ms"><div class="msl">Repeticiones</div><div class="msv">${yo.rep.toFixed(1)}</div><div class="mss">por audio</div></div>
+        <div class="ms"><div class="msl">Pausas</div><div class="msv">${yo.pausas.toFixed(1)}</div><div class="mss">por audio</div></div>
+        <div class="ms"><div class="msl">Perc. dificultad</div><div class="msv">${yo.dif.toFixed(1)}</div><div class="mss">por audio</div></div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    const lb=ord.map(r=>labelSesion(ns(r.Sesion),grupoNombre));
+    mkChart('ch-e-rl','line',lb,[{label:'Riqueza léxica (%)',data:ord.map(r=>(parseFloat(r.riqueza_lexica||0)*100).toFixed(2)),borderColor:'#5EE0A3',backgroundColor:'rgba(94,224,163,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#5EE0A3',pointRadius:4}]);
+    mkChart('ch-e-mts','bar',lb,[
+      {label:'Muletillas',data:ord.map(r=>r.conteo_muletillas||0),backgroundColor:'rgba(251,191,36,0.7)',borderRadius:4},
+      {label:'Dudas',data:ord.map(r=>r.conteo_dudas||0),backgroundColor:'rgba(248,113,113,0.7)',borderRadius:4}
+    ]);
+  },100);
+}
+
+function aplicarFiltroSesionEst(){
+  FILTRO_SESION_EST=document.getElementById('filtro-sesion-est').value;
+  renderEst(DATA, NOTAS, CED);
+}
+function limpiarFiltroSesionEst(){
+  FILTRO_SESION_EST='';
+  renderEst(DATA, NOTAS, CED);
+}
+</script>
+</body>
+</html>
