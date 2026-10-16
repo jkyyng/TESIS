@@ -253,6 +253,12 @@ body.vn .bar .clr.salir{opacity:1;pointer-events:auto}
 .nt-spin{width:34px;height:34px;border-radius:50%;border:3px solid rgba(212,232,220,.2);border-top-color:var(--mint);margin:0 auto 12px;animation:sp 1s linear infinite}
 @media(max-width:900px){#vn .wrap{padding:16px 14px 50px}#vn .kpis{grid-template-columns:repeat(2,1fr)}#vn .tw{max-height:none}}
 
+.drawer .vc{margin-top:8px;background:transparent;color:var(--mint);border:1.5px solid var(--mint);border-radius:999px;padding:5px 14px;font:700 11px var(--b);cursor:pointer}
+.drawer .vc:hover{background:var(--mint);color:#022B1A}.drawer .vc:disabled{opacity:.6;cursor:default}
+.drawer .full{display:none;margin-top:10px;padding:12px 14px;background:rgba(3,75,45,.55);border:1px solid rgba(212,232,220,.14);border-radius:12px;font-size:13px;line-height:1.6;color:var(--mist)}
+.drawer .full .fl{font:600 10px var(--b);letter-spacing:1.4px;text-transform:uppercase;color:var(--sage);margin-bottom:6px}
+.drawer .full mark{background:rgba(94,224,163,.3);color:#fff;border-radius:4px;padding:1px 3px}
+
 body.locked .bar,body.locked .tabs,body.locked .dots,body.locked .view,body.locked #emptyG{visibility:hidden}
 #login{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:var(--bg);overflow:auto}
 body.locked #login{display:flex}
@@ -416,9 +422,17 @@ function qResumen(){
   const L=(c,t,k)=>`<span><i style="background:${c}"></i>${t} · ${k}</span>`;
   g('ql2').innerHTML=L('var(--coral)','le costó',est.reporta_dificultad)+L('var(--mint)','no le costó',est.dice_que_no)+(est.posible?L('var(--amber)','respondió, sin clasificar',est.posible):'')+L('rgba(137,184,154,.3)','sin respuesta',est.sin_respuesta);
 }
-function qOpen(q){openDr('qdr',QQ[q].t,qItems(q).map(i=>{const c=i.tipo?CHIP[i.tipo]:null;
-  return `<div class="it"><div class="m">${nomE(i.a.ced)} · ${fecha(i.a.sesion)} ${c?`<span class="chip" style="background:${c[1]};color:${c[2]}">${c[0]}</span>`:''}</div><p>“${esc(i.t)}”</p></div>`}).join(''))}
-function rq(){qAud=rows().map(x=>({ced:x.c,...x.a})).sort((a,b)=>b.sesion.localeCompare(a.sesion));
+function qOpen(q){openDr('qdr',QQ[q].t,qItems(q).map((i,ix)=>{const c=i.tipo?CHIP[i.tipo]:null;
+  return `<div class="it"><div class="m">${nomE(i.a.ced)} · ${fecha(i.a.sesion)} ${c?`<span class="chip" style="background:${c[1]};color:${c[2]}">${c[0]}</span>`:''}</div><p>“${esc(i.t)}”</p><button class="vc" onclick="qFull(this,${q},${ix})">Ver cita completa</button><div class="full"></div></div>`}).join(''))}
+let TXC=null;
+function cargarTX(cb){if(TXC)return cb();pedir('getPanelTx').then(d=>{TXC=d.TX||{};cb()}).catch(()=>{TXC={};cb()})}
+function qFull(b,q,ix){const it=qItems(q)[ix],box=b.nextElementSibling;
+  if(box.dataset.ok){const ab=box.style.display!='none';box.style.display=ab?'none':'block';b.textContent=ab?'Ver cita completa':'Ocultar cita completa';return}
+  b.disabled=true;b.textContent='Cargando...';
+  cargarTX(()=>{const tx=((TXC[it.a.k]||{})[it.a.ced+'|'+it.a.sesion])||'',j=tx.indexOf(it.t);
+    box.innerHTML=tx?`<div class="fl">Audio completo · ${fecha(it.a.sesion)}</div>`+(j>=0?esc(tx.slice(0,j))+'<mark>'+esc(it.t)+'</mark>'+esc(tx.slice(j+it.t.length)):esc(tx)):'<i>No hay transcripción completa de este audio.</i>';
+    box.dataset.ok=1;box.style.display='block';b.disabled=false;b.textContent='Ocultar cita completa'})}
+function rq(){qAud=rows().map(x=>({ced:x.c,k:x.k,...x.a})).sort((a,b)=>b.sesion.localeCompare(a.sesion));
   qResumen();[1,2,3].forEach(qPreg);observar(vq)}
 
 /* ================= VISTA 2 · TEMAS ================= */
@@ -653,7 +667,7 @@ lg('lgL').onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{try{
     const d=JSON.parse(r.result);CRED=null;
-    window.pedir=async a=>{if(a==='getPanelTr')return {TR:d.TR||{}};const e=new Error('Las notas solo se ven entrando con tu cuenta de profesor.');e.servidor=true;throw e};
+    window.pedir=async a=>{if(a==='getPanelTr')return {TR:d.TR||{}};if(a==='getPanelTx')return {TX:d.TX||{}};const e=new Error('Las notas solo se ven entrando con tu cuenta de profesor.');e.servidor=true;throw e};
     mostrarPanel(d.PD,d.TD,d.NOM);
   }catch(err){lg('lgM').className='lg-msg';lg('lgM').textContent='Ese archivo no es un panel válido.'}};
   r.readAsText(f);
