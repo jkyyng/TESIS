@@ -633,7 +633,7 @@ function mostrarPanel(pd,td,nom){
 }
 lg('lgF').onsubmit=async e=>{
   e.preventDefault();
-  CRED={c:lg('lgC').value.trim(),k:lg('lgK').value.trim()};
+  CRED={c:lg('lgC').value.trim(),k:lg('lgK').value.trim().toUpperCase()};
   lg('lgB').disabled=true;lg('lgB').textContent='Verificando...';lg('lgM').textContent='';
   document.querySelector('.lg-box').classList.add('cargando');
   try{
