@@ -624,7 +624,7 @@ async function pedir(accion){
 }
 function mostrarPanel(pd,td,nom){
   window.__PD=pd;window.__TD=td;window.__NOM=(nom&&Object.keys(nom).length)?nom:null;
-  if(!Object.keys(pd).length)throw new Error('El archivo no trae cursos.');
+  if(!Object.keys(pd).length){const e=new Error('Tu cédula no figura como profesor de ningún curso del panel.');e.servidor=true;throw e}
   document.body.classList.remove('locked');
   const sc=document.createElement('script');sc.textContent=document.getElementById('panel-js').textContent;
   document.body.appendChild(sc);
