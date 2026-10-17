@@ -657,7 +657,20 @@ function volverACedula() {
 }
 
 // ── Paso 3: Grabar ──
+let grabarListo = false;
+// Compuerta: la pantalla de grabar queda tapada hasta confirmar cuántos audios debe el estudiante.
+function gate(html){
+  let g=document.getElementById('gate-validando');
+  const card=document.querySelector('#view-grabar .card');
+  if(!g){g=document.createElement('div');g.id='gate-validando';
+    g.style.cssText='position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;border-radius:inherit;background:var(--bg2,#0f2e20);color:var(--text,#fff);font-size:15px;line-height:1.6;';
+    card.style.position='relative';card.appendChild(g);}
+  g.innerHTML=html;
+}
+function quitarGate(){const g=document.getElementById('gate-validando');if(g)g.remove();}
 async function prepararGrabar() {
+  grabarListo=false;
+  gate('<div style="font-size:30px">⏳</div><div>Validando tus audios pendientes…<br/><span style="opacity:.7;font-size:13px">Un momento, no cierres esta página.</span></div>');
   const label = esProfesor ? '👨‍🏫 Profesor — ' + GRUPOS[grupoActual] : GRUPOS[grupoActual];
   document.getElementById('lbl-grabar-info').textContent = label;
 
@@ -701,31 +714,33 @@ async function prepararGrabar() {
   if (prevWarn) prevWarn.remove();
   pendientesActuales = [];
 
-  // Verificar pendientes solo para estudiantes
-  if (!esProfesor) {
-    try {
-      const url = `${CONFIG.APPS_SCRIPT_URL}?cedula=${cedulaActual}&grupo=${grupoActual}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.ok) {
-        const pasadas = SESIONES.filter(s => {
-          const [d,m,y] = s.value.split('/');
-          return new Date(`${y}-${m}-${d}T00:00:00`) <= hoyBog;
-        }).map(s => s.value);
-        const pendientes = pasadas.filter(s => !data.enviadas.includes(s));
-        pendientesActuales = pendientes;
-        if (pendientes.length > 0) {
-          sel.value = pendientes[0];
-          sel.disabled = true; // no puede elegir otra sesión hasta poner al día la más vieja pendiente
-          const warn = document.createElement('div');
-          warn.id = 'warn-pendientes';
-          warn.style.cssText = 'background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#F87171;line-height:1.7;';
-          const labels = pendientes.map(v => SESIONES.find(s=>s.value===v)?.label || v);
-          warn.innerHTML = `📌 <strong>Debes todavía ${pendientes.length} audio${pendientes.length>1?'s':''}:</strong><br/>${labels.join('<br/>')}<br/><br/>Primero manda el de <strong>${labels[0]}</strong> — no puedes elegir otra sesión hasta que lo envíes.`;
-          document.getElementById('sel-sesion').insertAdjacentElement('afterend', warn);
-        }
+  // Verificar pendientes (estudiantes y profesores)
+  try {
+    const url = `${CONFIG.APPS_SCRIPT_URL}?cedula=${cedulaActual}&grupo=${grupoActual}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.ok) {
+      const pasadas = SESIONES.filter(s => {
+        const [d,m,y] = s.value.split('/');
+        return new Date(`${y}-${m}-${d}T00:00:00`) <= hoyBog;
+      }).map(s => s.value);
+      const pendientes = pasadas.filter(s => !data.enviadas.includes(s));
+      pendientesActuales = pendientes;
+      if (pendientes.length > 0) {
+        sel.value = pendientes[0];
+        sel.disabled = true; // no puede elegir otra sesión hasta poner al día la más vieja pendiente
+        const warn = document.createElement('div');
+        warn.id = 'warn-pendientes';
+        warn.style.cssText = 'background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.35);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#F87171;line-height:1.7;';
+        const labels = pendientes.map(v => SESIONES.find(s=>s.value===v)?.label || v);
+        warn.innerHTML = `📌 <strong>Debes todavía ${pendientes.length} audio${pendientes.length>1?'s':''}:</strong><br/>${labels.join('<br/>')}<br/><br/>Primero manda el de <strong>${labels[0]}</strong> — no puedes elegir otra sesión hasta que lo envíes.`;
+        document.getElementById('sel-sesion').insertAdjacentElement('afterend', warn);
       }
-    } catch(e) { /* si falla la consulta, continuar normal (no bloquea por un error de red) */ }
+      grabarListo = true; quitarGate();
+    } else { throw new Error(data.error||'respuesta inválida'); }
+  } catch(e) {
+    // Sin confirmar los pendientes NO se deja grabar ni enviar (evita envíos fuera de orden).
+    gate('<div style="font-size:30px">⚠️</div><div>No pudimos validar tus audios pendientes.<br/><span style="opacity:.7;font-size:13px">Revisa tu conexión e inténtalo de nuevo.</span></div><button class="btn-primary" style="max-width:240px" onclick="prepararGrabar()">Reintentar</button>');
   }
 
   resetRecorder();
@@ -852,6 +867,7 @@ function advanceStep(){
 function resetSteps(){stepIdx=0;STEPS.forEach(id=>{document.getElementById(id).className='proc-step';});}
 
 async function submitAudio(){
+  if(!grabarListo){toast('Espera a que se validen tus audios pendientes','error');return;}
   if(!audioBlob){toast('Graba un audio primero','error');return;}
   const sesion=document.getElementById('sel-sesion').value;
   if(!sesion){toast('Selecciona una sesión','error');return;}
