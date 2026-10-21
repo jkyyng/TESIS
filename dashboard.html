@@ -336,7 +336,7 @@ body.locked #login{display:flex}
 <div class="drawer" id="qdr"><header><h3 id="qdrT"></h3><button class="x" onclick="closeDr()">✕</button></header><div class="list" id="qdrL"></div></div>
 <div class="drawer" id="tdr"><header><h3 id="tdrT"></h3><button class="x" onclick="closeDr()">✕</button></header><div class="list" id="tdrL"></div></div>
 
-<script type="text/plain" id="panel-js">
+<style>.bar label.f:has(#fT){display:none!important}.rk-nota{font-size:13px;opacity:.7;margin:0 0 10px}</style><script type="text/plain" id="panel-js">
 const PD=window.__PD,TD=window.__TD,KS=Object.keys(PD);
 let TRC=null;const TRX=k=>TRC?TRC[k]||{}:{};
 function cargarTR(cb){if(TRC)return cb();pedir('getPanelTr').then(d=>{TRC=d.TR||{};cb()}).catch(()=>{TRC={};cb()})}
@@ -619,6 +619,38 @@ function nCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}));
   a.download='notas_'+g.key+'.csv';document.body.appendChild(a);a.click();a.remove()}
 
+
+;(function(){
+  const _qPreg=qPreg;
+  qPreg=function(q){
+    _qPreg(q);
+    if(q==2){
+      const b=document.querySelector('#qs2 .cards .btn');
+      if(b){const r=document.createElement('button');r.className='btn rv d6';r.style.marginTop='8px';
+        r.textContent='Ranking de estudiantes con más dificultad →';r.onclick=rkOpen;b.insertAdjacentElement('afterend',r)}
+    }
+  };
+  window.rkOpen=function(){
+    const by={};qAud.forEach(a=>{(by[a.ced]=by[a.ced]||[]).push(a)});
+    const L=Object.entries(by).map(([c,aa])=>{
+      aa.sort((x,y)=>x.sesion<y.sesion?-1:1);
+      const dd=aa.filter(a=>a.P2_estado=='reporta_dificultad');
+      const cs=[];dd.forEach(a=>(a.P2||[]).filter(x=>x.tipo=='D+').forEach(x=>cs.push(x.cita)));
+      const PER=/\b(se me|me|nos|se nos)\s+(ha |han |hizo |hace |puso )?(dificult|cost|complic|confund)|\bno (lo |la |los |las )?(entend|comprend|logr|pud|supe)/i;
+      const ok=cs.filter(t=>t.length>=50&&t.length<=230),buenas=ok.filter(t=>PER.test(t)).length?ok.filter(t=>PER.test(t)):ok;
+      return {c,n:aa.length,k:dd.length,m:cs.length,cita:(buenas.length?buenas[buenas.length-1]:(cs[cs.length-1]||''))};
+    }).filter(x=>x.k>0).sort((x,y)=>y.k-x.k||y.k/y.n-x.k/x.n||y.m-x.m||String(x.c).localeCompare(String(y.c))).slice(0,10);
+    const h='<p class="rk-nota">Estudiantes con más audios en los que reportan dificultad. Es una guía para saber a quién atender primero, no una calificación.</p>'
+      +(L.map((x,i)=>'<div class="it"><div class="m">'+(i+1)+'. '+esc(nomE(x.c))+' · '+x.k+' de '+x.n+' audio'+(x.n==1?'':'s')+' · '+x.m+(x.m==1?' mención':' menciones')
+        +(x.k>=2?'<span class="chip" style="background:rgba(255,122,102,.2);color:#FF7A66">recurrente</span>':'')+'</div>'
+        +(x.cita?'<p>“'+esc(x.cita.length>230?x.cita.slice(0,230)+'…':x.cita)+'”</p>':'')
+        +'<button class="vc" onclick="rkSolo(\''+String(x.c).replace(/'/g,'')+'\')">Ver solo a este estudiante</button></div>').join('')
+      ||'<div class="sub">Sin dificultades reportadas con estos filtros.</div>');
+    openDr('qdr','Estudiantes con más dificultad',h);
+  };
+  window.rkSolo=function(c){F.e=String(c);closeDr();filtros();todo()};
+  todo();
+})();
 </script>
 <script>
 const URL_AS='https://script.google.com/macros/s/AKfycbw12TxEJDssZ8JYEx7GH7nd0TD5IfELgqki5KmuCbRp7kDlPIdyVO8Aka0zGtQlbIAe0A/exec';
