@@ -1,0 +1,11 @@
+﻿# Carpetas de datos de estudiantes y archivos generados: no se publican
+*.webm
+*.m4a
+*.mp3
+*.wav
+*.jsonl
+*.csv
+*.xlsx
+resultados/
+datos/
+_ejecucion/
